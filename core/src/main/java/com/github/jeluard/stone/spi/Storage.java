@@ -29,6 +29,13 @@ import org.joda.time.Interval;
  */
 public interface Storage {
 
+  /**
+   *
+   * At this point parameter has been validated and is not null.
+   *
+   * @param aggregates
+   * @throws IOException 
+   */
   void append(DataAggregates aggregates) throws IOException;
 
   Optional<DateTime> last() throws IOException;

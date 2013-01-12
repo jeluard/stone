@@ -28,8 +28,6 @@ public class MaxConsolidator implements Consolidator {
 
   @Override
   public synchronized void accumulate(final long timestamp, final long value) {
-    Preconditions.checkNotNull(timestamp, "null timestamp");
-
     if (value > this.currentMax) {
       this.currentMax = value;
     }

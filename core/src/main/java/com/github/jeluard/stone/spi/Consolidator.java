@@ -21,6 +21,13 @@ package com.github.jeluard.stone.spi;
  */
 public interface Consolidator {
 
+  /**
+   *
+   * At this point both parameters have been validated and are not null.
+   *
+   * @param timestamp
+   * @param value 
+   */
   void accumulate(long timestamp, long value);
 
   long consolidateAndReset();

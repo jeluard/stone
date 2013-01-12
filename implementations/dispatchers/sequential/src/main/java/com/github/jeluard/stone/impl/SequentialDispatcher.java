@@ -20,7 +20,6 @@ import com.github.jeluard.stone.api.DataAggregates;
 import com.github.jeluard.stone.spi.BaseDispatcher;
 import com.github.jeluard.stone.spi.Consolidator;
 import com.github.jeluard.stone.spi.Dispatcher;
-import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,9 +33,6 @@ public class SequentialDispatcher extends BaseDispatcher {
 
   @Override
   public void accumulate(final long timestamp, final int value) {
-    Preconditions.checkNotNull(timestamp, "null timestamp");
-    Preconditions.checkNotNull(value, "null value");
-
     for (final Consolidator consolidator : getConsolidators()) {
       consolidator.accumulate(timestamp, value);
     }
