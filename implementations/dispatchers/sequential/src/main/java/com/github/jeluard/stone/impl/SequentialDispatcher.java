@@ -17,7 +17,6 @@
 package com.github.jeluard.stone.impl;
 
 import com.github.jeluard.stone.api.DataAggregates;
-import com.github.jeluard.stone.api.DataPoint;
 import com.github.jeluard.stone.spi.BaseDispatcher;
 import com.github.jeluard.stone.spi.Consolidator;
 import com.github.jeluard.stone.spi.Dispatcher;
@@ -34,20 +33,21 @@ import org.joda.time.DateTime;
 public class SequentialDispatcher extends BaseDispatcher {
 
   @Override
-  public void accumulate(final DataPoint dataPoint) {
-    Preconditions.checkNotNull(dataPoint, "null dataPoint");
+  public void accumulate(final long timestamp, final int value) {
+    Preconditions.checkNotNull(timestamp, "null timestamp");
+    Preconditions.checkNotNull(value, "null value");
 
     for (final Consolidator consolidator : getConsolidators()) {
-      consolidator.accumulate(dataPoint);
+      consolidator.accumulate(timestamp, value);
     }
   }
 
   @Override
   public DataAggregates reduce() {
     final List<Consolidator> consolidators = getConsolidators();
-    final List<Integer> integers = new ArrayList<Integer>(consolidators.size());
+    final List<Long> integers = new ArrayList<Long>(consolidators.size());
     for (final Consolidator consolidator : consolidators) {
-      integers.add(consolidator.consolidateAndReset().getValue());
+      integers.add(consolidator.consolidateAndReset());
     }
     return new DataAggregates(DateTime.now(), integers);
   }

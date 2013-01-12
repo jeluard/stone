@@ -17,13 +17,11 @@
 package com.github.jeluard.stone.impl;
 
 import com.github.jeluard.stone.api.DataAggregates;
-import com.github.jeluard.stone.api.DataPoint;
 import com.github.jeluard.stone.spi.BaseStorage;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.AbstractIterator;
-import com.google.common.collect.Iterables;
-import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -31,6 +29,7 @@ import java.util.Iterator;
 import journal.io.api.Journal;
 import journal.io.api.Location;
 import journal.io.api.WriteCallback;
+
 import org.joda.time.DateTime;
 /**
  * http://www.oracle.com/technetwork/database/berkeleydb/downloads/maven-087630.html
@@ -68,7 +67,7 @@ public class JournalIOStorage extends BaseStorage {
   public void append(final DataAggregates aggregates) throws IOException {
     Preconditions.checkNotNull(aggregates, "null aggregates");
 
-    final byte[] bytes = Ints.toByteArray(aggregates.getValues().get(0));
+    final byte[] bytes = Longs.toByteArray(aggregates.getValues().get(0));
     //http://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html
     this.journal.write(bytes, Journal.WriteType.SYNC, JournalIOStorage.LOGGING_WRITE_CALLBACK);
   }

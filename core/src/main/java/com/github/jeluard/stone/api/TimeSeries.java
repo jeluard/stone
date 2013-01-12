@@ -35,8 +35,8 @@ public class TimeSeries {
   private final long windowDurationInMillis;
   private final Storage storage;
   private final Dispatcher dispatcher;
-  private final AtomicReference<DateTime> lastDateReference;
-  private final AtomicReference<DateTime> previousWindowCompletionDateReference;
+  private final AtomicReference<Long> lastDateReference;
+  private long beginning;
 
   public TimeSeries(final Duration windowDuration, final Dispatcher dispatcher, final Storage storage, final Consolidator ... consolidators) throws IOException {
     this.windowDurationInMillis = Preconditions.checkNotNull(windowDuration, "null windowDuration").getMillis();
@@ -44,8 +44,8 @@ public class TimeSeries {
     this.storage = Preconditions.checkNotNull(storage, "null storage");
     this.dispatcher = Preconditions.checkNotNull(dispatcher, "null dispatcher");
     final DateTime lastStorageDate = this.storage.last().or(DateTime.now());
-    this.lastDateReference = new AtomicReference<DateTime>(lastStorageDate);
-    this.previousWindowCompletionDateReference = new AtomicReference<DateTime>(lastStorageDate);
+    this.beginning = lastStorageDate.getMillis();
+    this.lastDateReference = new AtomicReference<Long>(lastStorageDate.getMillis());
 
     Preconditions.checkNotNull(consolidators, "null consolidators");
     for (final Consolidator consolidator : consolidators) {
@@ -53,32 +53,42 @@ public class TimeSeries {
     }
   }
 
-  private void checkNotBeforeLatestDataPoint(final DateTime currentDate) {
-    final DateTime previousDate = this.lastDateReference.getAndSet(currentDate);
-    if (!currentDate.isAfter(previousDate)) {
+  private long checkNotBeforeLatestDataPoint(final long currentDate) {
+    final long previousDate = this.lastDateReference.getAndSet(currentDate);
+    if (!(currentDate > previousDate)) {
       throw new IllegalArgumentException("Provided dataPoint from <"+currentDate+"> must be more recent than <"+previousDate+">");
     }
+    return previousDate;
   }
 
-  private synchronized boolean hasWindowBeenCompleted(final DateTime currentDate) {
-    final DateTime previousWindowCompletionDate = this.previousWindowCompletionDateReference.get();
-    final long duration = currentDate.getMillis() - previousWindowCompletionDate.getMillis();
-    final boolean hasBeenCompleted = duration > this.windowDurationInMillis;
-    if (hasBeenCompleted) {
-      this.previousWindowCompletionDateReference.set(currentDate);
-    }
-    return hasBeenCompleted;
+  private long windowId(final long timestamp) {
+    return (timestamp - this.beginning) / this.windowDurationInMillis;
+  }
+
+  private boolean hasWindowBeenCompleted(final long currentDate, final long previousDate) {
+    final long currentWindowId = windowId(currentDate);
+    final long previousWindowId = windowId(previousDate);
+    return currentWindowId != previousWindowId;
+  }
+
+  private void accumulate(final long timestamp, final int value) {
+    this.dispatcher.accumulate(timestamp, value);
+  }
+
+  private void persist() throws IOException {
+    this.storage.append(this.dispatcher.reduce());
   }
 
   //https://blogs.oracle.com/dholmes/entry/inside_the_hotspot_vm_clocks
-  public void publish(final DataPoint dataPoint) throws IOException {
-    Preconditions.checkNotNull(dataPoint, "null dataPoint");
-    checkNotBeforeLatestDataPoint(dataPoint.getDate());
+  public void publish(final long timestamp, final int value) throws IOException {
+    Preconditions.checkNotNull(timestamp, "null timestamp");
+    Preconditions.checkNotNull(value, "null value");
 
-    this.dispatcher.accumulate(dataPoint);
-    if (hasWindowBeenCompleted(dataPoint.getDate())) {
-      System.out.println("reduce...");
-      this.storage.append(this.dispatcher.reduce());
+    final long previousDate = checkNotBeforeLatestDataPoint(timestamp);
+
+    accumulate(timestamp, value);
+    if (hasWindowBeenCompleted(timestamp, previousDate)) {
+      persist();
     }
   }
 

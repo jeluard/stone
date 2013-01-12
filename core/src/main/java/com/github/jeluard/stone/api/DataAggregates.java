@@ -28,9 +28,9 @@ import org.joda.time.DateTime;
 public final class DataAggregates {
 
   private final DateTime date;
-  private final List<Integer> values;
+  private final List<Long> values;
 
-  public DataAggregates(final DateTime date, final List<Integer> values) {
+  public DataAggregates(final DateTime date, final List<Long> values) {
     this.date = Preconditions.checkNotNull(date, "null date");
     this.values = Preconditions.checkNotNull(values, "null values");
   }
@@ -39,7 +39,7 @@ public final class DataAggregates {
     return this.date;
   }
 
-  public List<Integer> getValues() {
+  public List<Long> getValues() {
     return this.values;
   }
 

@@ -17,7 +17,6 @@
 package com.github.jeluard.stone.spi;
 
 import com.github.jeluard.stone.api.DataAggregates;
-import com.github.jeluard.stone.api.DataPoint;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.google.common.base.Optional;
 
@@ -37,34 +36,29 @@ public class TimeSeriesTest {
     return mock;
   }
 
-  private Storage createStorageMock() throws IOException {
-    return createStorageMock(Optional.<DateTime>absent());
-  }
-
   @Test(expected=IllegalArgumentException.class)
   public void shouldOldDataPointBeRejected() throws IOException {
     final DateTime last = DateTime.now();
     final TimeSeries timeSeries = new TimeSeries(Duration.ZERO, Mockito.mock(Dispatcher.class), createStorageMock(Optional.of(last)), Mockito.mock(Consolidator.class));
-    final DateTime now = DateTime.now();
-    timeSeries.publish(new DataPoint(now, 0));
-    timeSeries.publish(new DataPoint(now, 0));
+    final long now = System.currentTimeMillis();
+    timeSeries.publish(now, 0);
+    timeSeries.publish(now, 0);
   }
 
   @Test(expected=IllegalArgumentException.class)
   public void shouldDataPointWithSameDateAsStorageLastBeRejected() throws IOException {
-    final DateTime now = DateTime.now();
-    final TimeSeries timeSeries = new TimeSeries(Duration.standardMinutes(2), Mockito.mock(Dispatcher.class), createStorageMock(Optional.of(now)), Mockito.mock(Consolidator.class));
-    timeSeries.publish(new DataPoint(now, 0));
+    final long now = System.currentTimeMillis();
+    final TimeSeries timeSeries = new TimeSeries(Duration.standardSeconds(2), Mockito.mock(Dispatcher.class), createStorageMock(Optional.of(DateTime.now())), Mockito.mock(Consolidator.class));
+    timeSeries.publish(now, 0);
   }
 
   @Test
   public void shouldStorageAppendBeInvokedOnceWhenOnePeriodIsCrossed() throws IOException {
     final DateTime now = DateTime.now();
     final Storage storage = createStorageMock(Optional.of(now));
-    final TimeSeries timeSeries = new TimeSeries(Duration.standardMinutes(2), Mockito.mock(Dispatcher.class), storage, Mockito.mock(Consolidator.class));
-    timeSeries.publish(new DataPoint(now.plus(Period.millis(1)), 0));
-    timeSeries.publish(new DataPoint(now.plus(Period.millis(2)), 0));
-    timeSeries.publish(new DataPoint(now.plus(Period.millis(5)), 0));
+    final TimeSeries timeSeries = new TimeSeries(Duration.standardSeconds(2), Mockito.mock(Dispatcher.class), storage, Mockito.mock(Consolidator.class));
+    timeSeries.publish(now.plus(Period.seconds(1)).getMillis(), 0);
+    timeSeries.publish(now.plus(Period.seconds(2)).getMillis(), 0);
 
     Mockito.verify(storage).append(Mockito.<DataAggregates>any());
   }
@@ -73,10 +67,14 @@ public class TimeSeriesTest {
   public void shouldStorageAppendBeInvokedTwiceWhenTwoPeriodIsCrossed() throws IOException {
     final DateTime now = DateTime.now();
     final Storage storage = createStorageMock(Optional.of(now));
-    final TimeSeries timeSeries = new TimeSeries(Duration.standardMinutes(2), Mockito.mock(Dispatcher.class), storage, Mockito.mock(Consolidator.class));
-    timeSeries.publish(new DataPoint(now.plus(Period.millis(1)), 0));
-    timeSeries.publish(new DataPoint(now.plus(Period.millis(5)), 0));
-    timeSeries.publish(new DataPoint(now.plus(Period.millis(10)), 0));
+    final TimeSeries timeSeries = new TimeSeries(Duration.standardSeconds(2), Mockito.mock(Dispatcher.class), storage, Mockito.mock(Consolidator.class));
+    timeSeries.publish(now.plus(Period.seconds(1)).getMillis(), 0);
+    timeSeries.publish(now.plus(Period.seconds(2)).getMillis(), 0);
+
+    Mockito.verify(storage).append(Mockito.<DataAggregates>any());
+
+    timeSeries.publish(now.plus(Period.seconds(3)).getMillis(), 0);
+    timeSeries.publish(now.plus(Period.seconds(4)).getMillis(), 0);
 
     Mockito.verify(storage, Mockito.times(2)).append(Mockito.<DataAggregates>any());
   }

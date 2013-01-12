@@ -17,8 +17,6 @@
 package com.github.jeluard.stone.spi;
 
 import com.github.jeluard.stone.api.DataAggregates;
-import com.github.jeluard.stone.api.DataPoint;
-import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -56,7 +54,7 @@ public class AbstractStorageTest {
       }
       @Override
       public Iterable<DataAggregates> all() throws IOException {
-        return Arrays.asList(new DataAggregates(DateTime.now(), Collections.<Integer>emptyList()));
+        return Arrays.asList(new DataAggregates(DateTime.now(), Collections.<Long>emptyList()));
       }
     };
 

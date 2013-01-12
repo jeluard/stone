@@ -17,33 +17,30 @@
 package com.github.jeluard.stone.impl;
 
 import com.github.jeluard.stone.spi.Consolidator;
-import com.github.jeluard.stone.api.DataPoint;
 import com.google.common.base.Preconditions;
-import org.joda.time.DateTime;
 
 /**
  *
  */
 public class MaxConsolidator implements Consolidator {
 
-  private static final DataPoint NULL_DATA_POINT = new DataPoint(DateTime.now(), Integer.MIN_VALUE);
-  private DataPoint currentMax = MaxConsolidator.NULL_DATA_POINT;
+  private long currentMax = Integer.MIN_VALUE;
 
   @Override
-  public synchronized void accumulate(final DataPoint dataPoint) {
-    Preconditions.checkNotNull(dataPoint, "null dataPoint");
+  public synchronized void accumulate(final long timestamp, final long value) {
+    Preconditions.checkNotNull(timestamp, "null timestamp");
 
-    if (dataPoint.getValue() > this.currentMax.getValue()) {
-      this.currentMax = dataPoint;
+    if (value > this.currentMax) {
+      this.currentMax = value;
     }
   }
 
   @Override
-  public DataPoint consolidateAndReset() {
+  public long consolidateAndReset() {
     try {
       return this.currentMax;
     } finally {
-      this.currentMax = MaxConsolidator.NULL_DATA_POINT;
+      this.currentMax = Integer.MIN_VALUE;
     }
   }
 

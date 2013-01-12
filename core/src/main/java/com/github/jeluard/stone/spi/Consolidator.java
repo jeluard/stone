@@ -16,23 +16,13 @@
  */
 package com.github.jeluard.stone.spi;
 
-import com.github.jeluard.stone.api.DataPoint;
-
 /**
  *
  */
 public interface Consolidator {
 
-  /**
-   * 
-   * @param dataPoint 
-   */
-  void accumulate(DataPoint dataPoint);
+  void accumulate(long timestamp, long value);
 
-  /**
-   * 
-   * @return 
-   */
-  DataPoint consolidateAndReset();
+  long consolidateAndReset();
 
 }

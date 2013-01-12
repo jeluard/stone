@@ -16,24 +16,6 @@
  */
 package com.github.jeluard.stone;
 
-/*
- * Copyright 2012 julien.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-import com.github.jeluard.stone.api.DataPoint;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.impl.JournalIOStorage;
 import com.github.jeluard.stone.impl.MaxConsolidator;
@@ -61,7 +43,7 @@ public class Test {
       final long before = System.currentTimeMillis();
       for (int j = 0; j < 100000; j++) {
         Thread.sleep(1);
-        timeSeries.publish(new DataPoint(DateTime.now(), (int) Math.random()));
+        timeSeries.publish(System.currentTimeMillis(), (int) Math.random());
       }
       System.out.println(System.currentTimeMillis()-before);
     }

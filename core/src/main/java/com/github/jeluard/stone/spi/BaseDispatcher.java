@@ -16,7 +16,6 @@
  */
 package com.github.jeluard.stone.spi;
 
-import com.github.jeluard.stone.api.DataPoint;
 import com.google.common.base.Preconditions;
 
 import java.util.Collections;
