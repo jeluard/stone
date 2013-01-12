@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.github.jeluard.stone.implementations.storages</groupId>
+  <artifactId>stone-storages-parent</artifactId>
+  <packaging>pom</packaging>
+
+  <name>Stone storages</name>
+
+  <parent>
+    <groupId>com.github.jeluard.stone.implementations</groupId>
+    <artifactId>stone-implementations-parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <modules>
+    <module>journalio</module>
+  </modules>
+
+  <repositories>
+    <repository>
+        <id>Journal.IO</id>
+        <url>https://raw.github.com/sbtourist/Journal.IO/master/m2/repo</url>
+    </repository>
+  </repositories>
+
+</project>

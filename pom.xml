@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.github.jeluard.stone</groupId>
+  <artifactId>stone-parent</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <name>Stone</name>
+  <inceptionYear>2012</inceptionYear>
+
+  <parent>
+    <groupId>com.github.jeluard</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>5</version>
+  </parent>
+
+  <modules>
+    <module>core</module>
+    <module>implementations</module>
+    <module>example</module>
+  </modules>
+
+  <properties>
+    <guayabaVersion>0.9.1-SNAPSHOT</guayabaVersion>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>13.0.1</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.jeluard</groupId>
+        <artifactId>guayaba</artifactId>
+        <version>${guayabaVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.jeluard</groupId>
+        <artifactId>guayaba</artifactId>
+        <version>${guayabaVersion}</version>
+        <classifier>tests</classifier>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>4.11</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>1.9.5</version>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>maven-bundle-plugin</artifactId>
+          <version>2.3.7</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+  <scm>
+    <connection>scm:git:git@github.com:jeluard/stone</connection>
+    <developerConnection>scm:git:git@github.com:jeluard/stone</developerConnection>
+    <url>scm:git:git@github.com:jeluard/stone</url>
+  </scm>
+
+</project>
