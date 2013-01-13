@@ -31,6 +31,7 @@ import journal.io.api.Location;
 import journal.io.api.WriteCallback;
 
 import org.joda.time.DateTime;
+import org.joda.time.Interval;
 /**
  * http://www.oracle.com/technetwork/database/berkeleydb/downloads/maven-087630.html
  * http://docs.oracle.com/cd/E17277_02/html/index.html
@@ -71,13 +72,13 @@ public class JournalIOStorage extends BaseStorage {
   }
 
   @Override
-  public Optional<DateTime> last() throws IOException {
-    final Iterator<Location> iterator = this.journal.undo().iterator();
-    if (!iterator.hasNext()) {
+  public Optional<Interval> interval() throws IOException {
+    final Iterator<Location> undo = this.journal.undo().iterator();
+    if (!undo.hasNext()) {
       return Optional.absent();
     }
     //TODO
-    return Optional.of(DateTime.now());//Optional.of(this.journal.read(iterator.next(), Journal.ReadType.ASYNC));
+    return Optional.of(new Interval(DateTime.now(), DateTime.now()));//Optional.of(this.journal.read(iterator.next(), Journal.ReadType.ASYNC));
   }
 
   @Override

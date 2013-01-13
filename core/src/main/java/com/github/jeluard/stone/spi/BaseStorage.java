@@ -21,6 +21,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -35,16 +36,17 @@ import org.joda.time.Interval;
 public abstract class BaseStorage implements Storage {
 
   /**
-   * Default implementation relying on {@link #all()}: it iterates over all elements to access the last one.
+   * Default implementation relying on {@link #all()}: it iterates over {@link Storage#all()} elements to access the first/last ones.
    *
    * {@inheritDoc}
    *
    * @see Iterables#getLast(java.lang.Iterable)
    */
   @Override
-  public Optional<DateTime> last() throws IOException {
+  public Optional<Interval> interval() throws IOException {
     try {
-      return Optional.of(Iterables.getLast(all()).getDate());
+      final Iterator<DataAggregates> aggregates = all().iterator();
+      return Optional.of(new Interval(aggregates.next().getDate(), Iterators.getLast(aggregates).getDate()));
     } catch (NoSuchElementException e) {
       return Optional.absent();
     }

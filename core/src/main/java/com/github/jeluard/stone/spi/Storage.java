@@ -38,7 +38,11 @@ public interface Storage {
    */
   void append(int[] aggregates) throws IOException;
 
-  Optional<DateTime> last() throws IOException;
+  /**
+   * @return interval of values stored, if any
+   * @throws IOException 
+   */
+  Optional<Interval> interval() throws IOException;
 
   Iterable<DataAggregates> all() throws IOException;
 

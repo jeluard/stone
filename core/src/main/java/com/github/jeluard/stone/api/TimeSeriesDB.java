@@ -19,30 +19,34 @@ package com.github.jeluard.stone.api;
 import com.github.jeluard.stone.spi.Consolidator;
 import com.github.jeluard.stone.spi.Dispatcher;
 import com.github.jeluard.stone.spi.Storage;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.joda.time.DateTime;
+import org.joda.time.Interval;
 
 public class TimeSeriesDB {
 
   private final Storage storage;
   private final TimeSerie[] timeSeries;
   private final Dispatcher dispatcher;
-  private final AtomicReference<Long> lastDateReference;
+  private AtomicReference<Long> lastDateReference;
   private long beginning;
 
   public TimeSeriesDB(final Storage storage, final Dispatcher dispatcher, final TimeSerie ... timeSeries) throws IOException {
     this.storage = Preconditions.checkNotNull(storage, "null storage");
     this.dispatcher = Preconditions.checkNotNull(dispatcher, "null dispatcher");
     this.timeSeries = Preconditions.checkNotNull(timeSeries, "null timeSeries");
-    final DateTime lastStorageDate = this.storage.last().or(DateTime.now());
-    this.beginning = lastStorageDate.getMillis();
-    this.lastDateReference = new AtomicReference<Long>(lastStorageDate.getMillis());
+    final Optional<Interval> interval = this.storage.interval();
+    if (interval.isPresent()) {
+      //Storage is not empty
+      this.beginning = interval.get().getStartMillis();
+      this.lastDateReference = new AtomicReference<Long>(interval.get().getEndMillis());
+    }
+    //TODO deal with empty storage
   }
 
   private long checkNotBeforeLatestDataPoint(final long currentDate) {
@@ -78,9 +82,11 @@ public class TimeSeriesDB {
 
     final long previousDate = checkNotBeforeLatestDataPoint(timestamp);
 
+    //TODO // ?
     for (final TimeSerie timeSerie : this.timeSeries) {
       final Collection<Consolidator> consolidators = timeSerie.getConsolidators();
 
+      //TODO sort by frame, ts with same frame can be optimized
       for (final TimeSerie.SamplingFrame samplingFrame : timeSerie.getSamplingFrames()) {
         accumulate(timestamp, value, consolidators);
 
