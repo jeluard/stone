@@ -20,9 +20,8 @@ import com.github.jeluard.stone.spi.Consolidator;
 import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.joda.time.Duration;
 
@@ -52,13 +51,13 @@ public final class TimeSerie {
   }
 
   private final String id;
-  private final List<Consolidator> consolidators;
-  private List<TimeSerie.SamplingFrame> samplingFrames;
+  private final Collection<Consolidator> consolidators;
+  private final List<TimeSerie.SamplingFrame> samplingFrames;
 
-  public TimeSerie(final String id, final List<? extends Consolidator> consolidators, final TimeSerie.SamplingFrame samplingFrame) {
+  public TimeSerie(final String id, final Collection<? extends Consolidator> consolidators, final List<TimeSerie.SamplingFrame> samplingFrames) {
     this.id = Preconditions.checkNotNull(id, "null id");
     this.consolidators = new ArrayList<Consolidator>(Preconditions.checkNotNull(consolidators, "null consolidators"));
-    this.samplingFrames = new CopyOnWriteArrayList<TimeSerie.SamplingFrame>(Arrays.asList(samplingFrame));
+    this.samplingFrames = new ArrayList<TimeSerie.SamplingFrame>(Preconditions.checkNotNull(samplingFrames, "null samplingFrames"));
   }
 
   public TimeSerie then(final TimeSerie.SamplingFrame samplingFrame) {
@@ -70,12 +69,12 @@ public final class TimeSerie {
     return this.id;
   }
 
-  public List<Consolidator> getConsolidators() {
-    return new ArrayList<Consolidator>(this.consolidators);
+  public Collection<Consolidator> getConsolidators() {
+    return this.consolidators;
   }
 
   public List<SamplingFrame> getSamplingFrames() {
-    return new ArrayList<SamplingFrame>(this.samplingFrames);
+    return this.samplingFrames;
   }
 
 }

@@ -40,7 +40,7 @@ public class Test {
     journal.setPhysicalSync(true);
     journal.open();
 
-    final TimeSerie timeSerie = new TimeSerie("test", Arrays.asList(new MaxConsolidator()), new TimeSerie.SamplingFrame(Duration.standardMinutes(5), Duration.standardHours(1)));
+    final TimeSerie timeSerie = new TimeSerie("test", Arrays.asList(new MaxConsolidator()), Arrays.asList(new TimeSerie.SamplingFrame(Duration.standardMinutes(5), Duration.standardHours(1))));
     final TimeSeriesDB timeSeries = new TimeSeriesDB(new JournalIOStorage(journal), new SequentialDispatcher(), timeSerie);
 
     while (true) {
