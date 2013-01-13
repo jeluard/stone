@@ -17,27 +17,26 @@
 package com.github.jeluard.stone.impl;
 
 import com.github.jeluard.guayaba.lang.Iterables2;
-import com.github.jeluard.stone.spi.BaseDispatcher;
 import com.github.jeluard.stone.spi.Consolidator;
 import com.github.jeluard.stone.spi.Dispatcher;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
  * {@link Dispatcher} implementation executing {@link Consolidator#accumulate(com.github.jeluard.stone.api.DataPoint)} in the caller thread.
  */
-public class SequentialDispatcher extends BaseDispatcher {
+public class SequentialDispatcher implements Dispatcher {
 
   @Override
-  public void accumulate(final long timestamp, final int value) {
-    for (final Consolidator consolidator : getConsolidators()) {
+  public void accumulate(final long timestamp, final int value, final Collection<Consolidator> consolidators) {
+    for (final Consolidator consolidator : consolidators) {
       consolidator.accumulate(timestamp, value);
     }
   }
 
   @Override
-  public int[] reduce() {
-    final List<Consolidator> consolidators = getConsolidators();
+  public int[] reduce(final Collection<Consolidator> consolidators) {
     final int[] integers = new int[consolidators.size()];
     for (final Iterables2.Indexed<Consolidator> indexedConsolidator : Iterables2.withIndex(consolidators)) {
       final int index = indexedConsolidator.getIndex();

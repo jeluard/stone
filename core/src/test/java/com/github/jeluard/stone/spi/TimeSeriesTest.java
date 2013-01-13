@@ -17,7 +17,6 @@
 package com.github.jeluard.stone.spi;
 
 import com.github.jeluard.stone.api.DataAggregates;
-import com.github.jeluard.stone.api.TimeSeries;
 import com.google.common.base.Optional;
 
 import java.io.IOException;
@@ -36,7 +35,7 @@ public class TimeSeriesTest {
     return mock;
   }
 
-  @Test(expected=IllegalArgumentException.class)
+  /*@Test(expected=IllegalArgumentException.class)
   public void shouldOldDataPointBeRejected() throws IOException {
     final DateTime last = DateTime.now();
     final TimeSeries timeSeries = new TimeSeries(Duration.ZERO, Mockito.mock(Dispatcher.class), createStorageMock(Optional.of(last)), Mockito.mock(Consolidator.class));
@@ -77,6 +76,6 @@ public class TimeSeriesTest {
     timeSeries.publish(now.plus(Period.seconds(4)).getMillis(), 0);
 
     Mockito.verify(storage, Mockito.times(2)).append(Mockito.<int[]>any());
-  }
+  }*/
 
 }

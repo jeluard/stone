@@ -18,6 +18,7 @@ package com.github.jeluard.stone.spi;
 
 import com.github.jeluard.guayaba.annotation.Idempotent;
 import com.github.jeluard.stone.api.DataAggregates;
+import java.util.Collection;
 
 /**
  * Dispatches {@link DataPoint}s to currently configured {@link Consolidator}.
@@ -26,12 +27,6 @@ import com.github.jeluard.stone.api.DataAggregates;
  */
 public interface Dispatcher {
 
-  @Idempotent
-  boolean addConsolidator(Consolidator consolidator);
-
-  @Idempotent
-  boolean removeConsolidator(Consolidator consolidator);
-
   /**
    *
    * At this point both parameters have been validated and are not null.
@@ -39,8 +34,8 @@ public interface Dispatcher {
    * @param timestamp
    * @param value 
    */
-  void accumulate(long timestamp, int value);
+  void accumulate(long timestamp, int value, Collection<Consolidator> consolidators);
 
-  int[] reduce();
+  int[] reduce(Collection<Consolidator> consolidators);
 
 }

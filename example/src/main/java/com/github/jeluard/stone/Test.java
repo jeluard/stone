@@ -16,12 +16,14 @@
  */
 package com.github.jeluard.stone;
 
-import com.github.jeluard.stone.api.TimeSeries;
+import com.github.jeluard.stone.api.TimeSerie;
+import com.github.jeluard.stone.api.TimeSeriesDB;
 import com.github.jeluard.stone.impl.JournalIOStorage;
 import com.github.jeluard.stone.impl.MaxConsolidator;
 import com.github.jeluard.stone.impl.SequentialDispatcher;
 
 import java.io.File;
+import java.util.Arrays;
 import journal.io.api.Journal;
 import journal.io.api.RecoveryErrorHandler;
 
@@ -37,7 +39,9 @@ public class Test {
     journal.setRecoveryErrorHandler(RecoveryErrorHandler.ABORT);
     journal.setPhysicalSync(true);
     journal.open();
-    final TimeSeries timeSeries = new TimeSeries(Duration.standardMinutes(1), new SequentialDispatcher(), new JournalIOStorage(journal), new MaxConsolidator());
+
+    final TimeSerie timeSerie = new TimeSerie("test", Arrays.asList(new MaxConsolidator()), new TimeSerie.SamplingFrame(Duration.standardMinutes(5), Duration.standardHours(1)));
+    final TimeSeriesDB timeSeries = new TimeSeriesDB(new JournalIOStorage(journal), new SequentialDispatcher(), timeSerie);
 
     while (true) {
       final long before = System.currentTimeMillis();
