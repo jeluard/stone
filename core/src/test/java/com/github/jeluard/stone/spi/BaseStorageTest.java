@@ -27,13 +27,13 @@ import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class AbstractStorageTest {
+public class BaseStorageTest {
 
   @Test
   public void shouldLastReturnAbsentWhenAllIsEmpty() throws IOException {
     final BaseStorage storage = new BaseStorage() {
       @Override
-      public void append(DataAggregates data) throws IOException {
+      public void append(int[] data) throws IOException {
         throw new UnsupportedOperationException("Not supported yet.");
       }
       @Override
@@ -49,7 +49,7 @@ public class AbstractStorageTest {
   public void shouldLastReturnPresentWhenAllReturnsOneElement() throws IOException {
     final BaseStorage storage = new BaseStorage() {
       @Override
-      public void append(DataAggregates data) throws IOException {
+      public void append(int[] data) throws IOException {
         throw new UnsupportedOperationException("Not supported yet.");
       }
       @Override
