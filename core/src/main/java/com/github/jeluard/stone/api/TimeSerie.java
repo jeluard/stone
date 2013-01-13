@@ -31,7 +31,7 @@ import org.joda.time.Duration;
  */
 public final class TimeSerie {
 
-  public static class SamplingFrame {
+  public static final class SamplingFrame {
 
     private final Duration resolution;
     private final Duration duration;
@@ -39,6 +39,10 @@ public final class TimeSerie {
     public SamplingFrame(final Duration resolution, final Duration duration) {
       this.resolution = Preconditions.checkNotNull(resolution, "null resolution");
       this.duration = Preconditions.checkNotNull(duration, "null duration");
+    }
+
+    public Duration getResolution() {
+      return resolution;
     }
 
     public long getDuration() {
@@ -62,12 +66,16 @@ public final class TimeSerie {
     return this;
   }
 
+  public String getId() {
+    return this.id;
+  }
+
   public List<Consolidator> getConsolidators() {
-    return this.consolidators;
+    return new ArrayList<Consolidator>(this.consolidators);
   }
 
   public List<SamplingFrame> getSamplingFrames() {
-    return this.samplingFrames;
+    return new ArrayList<SamplingFrame>(this.samplingFrames);
   }
 
 }
