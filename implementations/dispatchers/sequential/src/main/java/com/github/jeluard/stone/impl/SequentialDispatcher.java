@@ -16,15 +16,12 @@
  */
 package com.github.jeluard.stone.impl;
 
-import com.github.jeluard.stone.api.DataAggregates;
+import com.github.jeluard.guayaba.lang.Iterables2;
 import com.github.jeluard.stone.spi.BaseDispatcher;
 import com.github.jeluard.stone.spi.Consolidator;
 import com.github.jeluard.stone.spi.Dispatcher;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import org.joda.time.DateTime;
 
 /**
  * {@link Dispatcher} implementation executing {@link Consolidator#accumulate(com.github.jeluard.stone.api.DataPoint)} in the caller thread.
@@ -42,9 +39,10 @@ public class SequentialDispatcher extends BaseDispatcher {
   public int[] reduce() {
     final List<Consolidator> consolidators = getConsolidators();
     final int[] integers = new int[consolidators.size()];
-    int i = 0;
-    for (final Consolidator consolidator : consolidators) {
-      integers[i] = consolidator.consolidateAndReset();
+    for (final Iterables2.Indexed<Consolidator> indexedConsolidator : Iterables2.withIndex(consolidators)) {
+      final int index = indexedConsolidator.getIndex();
+      final Consolidator consolidator = indexedConsolidator.getValue();
+      integers[index] = consolidator.consolidateAndReset();
     }
     return integers;
   }
