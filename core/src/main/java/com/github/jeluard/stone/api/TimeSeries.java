@@ -87,6 +87,7 @@ public class TimeSeries {
     final long previousDate = checkNotBeforeLatestDataPoint(timestamp);
 
     accumulate(timestamp, value);
+
     if (hasWindowBeenCompleted(timestamp, previousDate)) {
       persist();
     }

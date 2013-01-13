@@ -28,8 +28,8 @@ public interface Consolidator {
    * @param timestamp
    * @param value 
    */
-  void accumulate(long timestamp, long value);
+  void accumulate(long timestamp, int value);
 
-  long consolidateAndReset();
+  int consolidateAndReset();
 
 }

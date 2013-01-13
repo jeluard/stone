@@ -17,28 +17,25 @@
 package com.github.jeluard.stone.impl;
 
 import com.github.jeluard.stone.spi.Consolidator;
-import com.google.common.base.Preconditions;
 
-/**
- *
- */
 public class MaxConsolidator implements Consolidator {
 
-  private long currentMax = Integer.MIN_VALUE;
+  private static final int DEFAULT_VALUE = Integer.MIN_VALUE;
+  private int currentMax = MaxConsolidator.DEFAULT_VALUE;
 
   @Override
-  public synchronized void accumulate(final long timestamp, final long value) {
+  public synchronized void accumulate(final long timestamp, final int value) {
     if (value > this.currentMax) {
       this.currentMax = value;
     }
   }
 
   @Override
-  public long consolidateAndReset() {
+  public int consolidateAndReset() {
     try {
       return this.currentMax;
     } finally {
-      this.currentMax = Integer.MIN_VALUE;
+      this.currentMax = MaxConsolidator.DEFAULT_VALUE;
     }
   }
 

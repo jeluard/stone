@@ -36,7 +36,7 @@ public interface Storage {
    * @param aggregates
    * @throws IOException 
    */
-  void append(DataAggregates aggregates) throws IOException;
+  void append(int[] aggregates) throws IOException;
 
   Optional<DateTime> last() throws IOException;
 

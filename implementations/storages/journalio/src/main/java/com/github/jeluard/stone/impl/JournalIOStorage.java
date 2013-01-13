@@ -64,8 +64,8 @@ public class JournalIOStorage extends BaseStorage {
   }
 
   @Override
-  public void append(final DataAggregates aggregates) throws IOException {
-    final byte[] bytes = Longs.toByteArray(aggregates.getValues().get(0));
+  public void append(final int[] aggregates) throws IOException {
+    final byte[] bytes = Longs.toByteArray(aggregates[0]);
     //http://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html
     this.journal.write(bytes, Journal.WriteType.SYNC, JournalIOStorage.LOGGING_WRITE_CALLBACK);
   }

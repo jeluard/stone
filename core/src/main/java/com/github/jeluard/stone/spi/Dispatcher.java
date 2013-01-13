@@ -41,6 +41,6 @@ public interface Dispatcher {
    */
   void accumulate(long timestamp, int value);
 
-  DataAggregates reduce();
+  int[] reduce();
 
 }

@@ -39,13 +39,14 @@ public class SequentialDispatcher extends BaseDispatcher {
   }
 
   @Override
-  public DataAggregates reduce() {
+  public int[] reduce() {
     final List<Consolidator> consolidators = getConsolidators();
-    final List<Long> integers = new ArrayList<Long>(consolidators.size());
+    final int[] integers = new int[consolidators.size()];
+    int i = 0;
     for (final Consolidator consolidator : consolidators) {
-      integers.add(consolidator.consolidateAndReset());
+      integers[i] = consolidator.consolidateAndReset();
     }
-    return new DataAggregates(DateTime.now(), integers);
+    return integers;
   }
 
 }

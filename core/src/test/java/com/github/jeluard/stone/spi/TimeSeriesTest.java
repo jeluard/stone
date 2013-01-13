@@ -60,7 +60,7 @@ public class TimeSeriesTest {
     timeSeries.publish(now.plus(Period.seconds(1)).getMillis(), 0);
     timeSeries.publish(now.plus(Period.seconds(2)).getMillis(), 0);
 
-    Mockito.verify(storage).append(Mockito.<DataAggregates>any());
+    Mockito.verify(storage).append(Mockito.<int[]>any());
   }
 
   @Test
@@ -71,12 +71,12 @@ public class TimeSeriesTest {
     timeSeries.publish(now.plus(Period.seconds(1)).getMillis(), 0);
     timeSeries.publish(now.plus(Period.seconds(2)).getMillis(), 0);
 
-    Mockito.verify(storage).append(Mockito.<DataAggregates>any());
+    Mockito.verify(storage).append(Mockito.<int[]>any());
 
     timeSeries.publish(now.plus(Period.seconds(3)).getMillis(), 0);
     timeSeries.publish(now.plus(Period.seconds(4)).getMillis(), 0);
 
-    Mockito.verify(storage, Mockito.times(2)).append(Mockito.<DataAggregates>any());
+    Mockito.verify(storage, Mockito.times(2)).append(Mockito.<int[]>any());
   }
 
 }
