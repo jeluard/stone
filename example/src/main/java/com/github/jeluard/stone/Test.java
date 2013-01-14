@@ -16,8 +16,9 @@
  */
 package com.github.jeluard.stone;
 
-import com.github.jeluard.stone.api.TimeSerie;
-import com.github.jeluard.stone.api.TimeSeriesDB;
+import com.github.jeluard.stone.api.Archive;
+import com.github.jeluard.stone.api.SamplingWindow;
+import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.impl.JournalIOStorage;
 import com.github.jeluard.stone.impl.MaxConsolidator;
 import com.github.jeluard.stone.impl.SequentialDispatcher;
@@ -27,7 +28,6 @@ import java.util.Arrays;
 import journal.io.api.Journal;
 import journal.io.api.RecoveryErrorHandler;
 
-import org.joda.time.DateTime;
 import org.joda.time.Duration;
 
 public class Test {
@@ -40,8 +40,10 @@ public class Test {
     journal.setPhysicalSync(true);
     journal.open();
 
-    final TimeSerie timeSerie = new TimeSerie("test", Arrays.asList(new MaxConsolidator()), Arrays.asList(new TimeSerie.SamplingFrame(Duration.standardMinutes(5), Duration.standardHours(1))));
-    final TimeSeriesDB timeSeries = new TimeSeriesDB(new JournalIOStorage(journal), new SequentialDispatcher(), timeSerie);
+    final Archive archive1 = new Archive(Arrays.asList(new MaxConsolidator()), 
+            Arrays.asList(new SamplingWindow(Duration.standardMinutes(5), Duration.standardHours(1))),
+            new JournalIOStorage(journal));
+    final TimeSeries timeSeries = new TimeSeries("ping-server1", Arrays.asList(archive1), new SequentialDispatcher());
 
     while (true) {
       final long before = System.currentTimeMillis();
