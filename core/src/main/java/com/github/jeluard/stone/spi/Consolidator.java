@@ -17,12 +17,13 @@
 package com.github.jeluard.stone.spi;
 
 /**
- *
+ * Abstracts logic of consolidating values from a {@link com.github.jeluard.stone.api.SamplingWindow} into a single {@code value}.
  */
 public interface Consolidator {
 
   /**
-   *
+   * Accumulate a new value that will be considered for the consolidation process.
+   * <br />
    * At this point both parameters have been validated and are not null.
    *
    * @param timestamp
@@ -30,6 +31,13 @@ public interface Consolidator {
    */
   void accumulate(long timestamp, int value);
 
+  /**
+   * Atomically compute consolidated value and reset itself for next consolidation cycle.
+   * <br />
+   * When called {@link #accumulate(long, int)} has been called at least once.
+   *
+   * @return result of consolidation of all values accumulated since last call
+   */
   int consolidateAndReset();
 
 }
