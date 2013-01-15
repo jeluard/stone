@@ -20,7 +20,7 @@ import com.github.jeluard.stone.api.Archive;
 import com.github.jeluard.stone.api.SamplingWindow;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.impl.JournalIOStorage;
-import com.github.jeluard.stone.impl.MaxConsolidator;
+import com.github.jeluard.stone.impl.consolidators.MaxConsolidator;
 import com.github.jeluard.stone.impl.SequentialDispatcher;
 
 import java.io.File;
