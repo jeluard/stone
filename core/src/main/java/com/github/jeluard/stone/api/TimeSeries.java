@@ -191,7 +191,7 @@ public class TimeSeries implements Closeable {
         accumulate(timestamp, value, consolidators);
 
         if (previousTimestamp != null) {
-          final long duration = samplingWindow.getDuration().getMillis();
+          final long duration = samplingWindow.getResolution().getMillis();
           final long currentWindowId = windowId(beginningTimestamp, timestamp, duration);
           final long previousWindowId = windowId(beginningTimestamp, previousTimestamp, duration);
           if (currentWindowId != previousWindowId) {
