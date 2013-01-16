@@ -177,7 +177,6 @@ public class TimeSeries implements Closeable {
   //https://blogs.oracle.com/dholmes/entry/inside_the_hotspot_vm_clocks
   public void publish(final long timestamp, final int value) throws IOException {
     Preconditions.checkNotNull(timestamp, "null timestamp");
-    Preconditions.checkNotNull(value, "null value");
 
     //TODO check thread-safety
     final Long previousTimestamp = recordLatest(timestamp);
