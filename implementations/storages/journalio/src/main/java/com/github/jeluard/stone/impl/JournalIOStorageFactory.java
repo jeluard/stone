@@ -117,6 +117,9 @@ public class JournalIOStorageFactory implements StorageFactory {
     if (!file.isDirectory()) {
       throw new IllegalArgumentException("Main directory <"+mainDirectory+"> is not a directory");
     }
+    if (!file.canWrite()) {
+      throw new IllegalArgumentException("No write access to <"+mainDirectory+">");
+    }
     journal.setDirectory(file);
     final Optional<String> filePrefix = filePrefix(id, archive, samplingWindow);
     if (filePrefix.isPresent()) {
