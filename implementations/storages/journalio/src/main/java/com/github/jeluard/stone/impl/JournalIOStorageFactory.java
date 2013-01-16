@@ -60,7 +60,7 @@ public class JournalIOStorageFactory implements StorageFactory {
     this.disposerScheduledExecutorService = Preconditions.checkNotNull(disposerScheduledExecutorService, "null disposerScheduledExecutorService");
   }
 
-  protected String mainDirectory(final String id, final Archive archive, final SamplingWindow samplingWindow) {
+  protected String mainDirectoryPath(final String id, final Archive archive, final SamplingWindow samplingWindow) {
     return "stone-journal";
   }
 
@@ -109,16 +109,19 @@ public class JournalIOStorageFactory implements StorageFactory {
    */
   protected Journal createJournal(final String id, final Archive archive, final SamplingWindow samplingWindow) throws IOException {
     final Journal journal = new Journal();
-    final String mainDirectory = mainDirectory(id, archive, samplingWindow);
+    final String mainDirectory = mainDirectoryPath(id, archive, samplingWindow);
     final File file = new File(mainDirectory);
+    //If main directory path exists check its a directory
+    //If it does not exists create it
+    //Also ensures current user has write access
+    if (file.exists() && !file.isDirectory()) {
+      throw new IllegalArgumentException("Main directory <"+mainDirectory+"> is not a directory");
+    }
     if (!file.exists() && !file.mkdirs()) {
       throw new IllegalArgumentException("Failed to create main directory <"+mainDirectory+">");
     }
-    if (!file.isDirectory()) {
-      throw new IllegalArgumentException("Main directory <"+mainDirectory+"> is not a directory");
-    }
     if (!file.canWrite()) {
-      throw new IllegalArgumentException("No write access to <"+mainDirectory+">");
+      throw new IllegalArgumentException("Cannot write to main directory <"+mainDirectory+">");
     }
     journal.setDirectory(file);
     final Optional<String> filePrefix = filePrefix(id, archive, samplingWindow);
