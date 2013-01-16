@@ -21,7 +21,6 @@ import com.github.jeluard.stone.spi.Consolidator;
 import com.github.jeluard.stone.spi.Dispatcher;
 
 import java.util.Collection;
-import java.util.List;
 
 /**
  * {@link Dispatcher} implementation executing {@link Consolidator#accumulate(com.github.jeluard.stone.api.DataPoint)} in the caller thread.
