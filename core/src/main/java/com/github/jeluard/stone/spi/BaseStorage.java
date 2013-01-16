@@ -43,8 +43,8 @@ public abstract class BaseStorage implements Storage {
   @Override
   public Optional<Interval> interval() throws IOException {
     try {
-      final Iterator<Pair<Long, int[]>> aggregates = all().iterator();
-      return Optional.of(new Interval(aggregates.next().first, Iterators.getLast(aggregates).first));
+      final Iterator<Pair<Long, int[]>> consolidates = all().iterator();
+      return Optional.of(new Interval(consolidates.next().first, Iterators.getLast(consolidates).first));
     } catch (NoSuchElementException e) {
       return Optional.absent();
     }
@@ -69,8 +69,8 @@ public abstract class BaseStorage implements Storage {
           @Override
           protected Pair<Long, int[]> computeNext() {
             while (all.hasNext()) {
-              final Pair<Long, int[]> aggregates = all.next();
-              final long timestamp = aggregates.first;
+              final Pair<Long, int[]> consolidates = all.next();
+              final long timestamp = consolidates.first;
               if (timestamp < interval.getStartMillis()) {
                 //Before the interval
                 continue;
@@ -80,7 +80,7 @@ public abstract class BaseStorage implements Storage {
                 break;
               }
 
-              return aggregates;
+              return consolidates;
             }
             return endOfData();
           }

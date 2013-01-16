@@ -54,11 +54,11 @@ public abstract class BaseBinaryStorage extends BaseStorage {
   }
 
   @Override
-  public void append(final long timestamp, final int[] aggregates) throws IOException {
-    final int capacity = 8 + 4 * aggregates.length;
+  public void append(final long timestamp, final int[] consolidates) throws IOException {
+    final int capacity = 8 + 4 * consolidates.length;
     final ByteBuffer buffer = createByteBuffer(capacity);
     put(timestamp, buffer);
-    put(aggregates, buffer);
+    put(consolidates, buffer);
 
     append(buffer);
   }

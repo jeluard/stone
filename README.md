@@ -1,4 +1,4 @@
-Stone is a timeseries database library focused on simplicity/evolutivity, efficiency and robustness. It does only one thing but well: storing aggregates of values evoluing over time (timeseries).
+Stone is a timeseries database library focused on simplicity/evolutivity, efficiency and robustness. It does only one thing but well: storing consolidates of values changing over time (timeseries).
 
 ## Inspiration
 

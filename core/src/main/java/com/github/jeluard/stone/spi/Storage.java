@@ -33,10 +33,10 @@ public interface Storage {
    * At this point parameter has been validated and is not null.
    *
    * @param timestamp the beginning of the associated window
-   * @param aggregates
+   * @param consolidates
    * @throws IOException 
    */
-  void append(long timestamp, int[] aggregates) throws IOException;
+  void append(long timestamp, int[] consolidates) throws IOException;
 
   /**
    * @return interval of values stored, if any
