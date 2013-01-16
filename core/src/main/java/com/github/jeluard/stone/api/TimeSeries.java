@@ -17,67 +17,105 @@
 package com.github.jeluard.stone.api;
 
 import com.github.jeluard.guayaba.base.Preconditions2;
-import com.github.jeluard.guayaba.util.concurrent.ConcurrentMaps;
 import com.github.jeluard.stone.spi.Consolidator;
 import com.github.jeluard.stone.spi.Dispatcher;
 import com.github.jeluard.stone.spi.Storage;
 import com.github.jeluard.stone.spi.StorageFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.joda.time.Interval;
 
-public class TimeSeries {
+public class TimeSeries implements Closeable {
+
+  private final static class StorageKey {
+
+    private final String id;
+    private final Archive archive;
+    private final SamplingWindow samplingWindow;
+
+    public StorageKey(final String id, final Archive archive, final SamplingWindow samplingWindow) {
+      this.id = Preconditions.checkNotNull(id, "null id");
+      this.archive = Preconditions.checkNotNull(archive, "null archive");
+      this.samplingWindow = Preconditions.checkNotNull(samplingWindow, "null samplingWindow");
+    }
+
+    @Override
+    public int hashCode() {
+      return this.id.hashCode()+this.archive.hashCode()+this.samplingWindow.hashCode();
+    }
+
+    @Override
+    public boolean equals(final Object object) {
+      if (!(object instanceof StorageKey)) {
+        return false;
+      }
+
+      final StorageKey other = (StorageKey) object;
+      return this.id.equals(other.id) && this.archive.equals(other.archive) && this.samplingWindow.equals(other.samplingWindow);
+    }
+
+  }
 
   private final String id;
   private final Collection<Archive> archives;
   private final Dispatcher dispatcher;
-  private final StorageFactory storageFactory;
-  private final ConcurrentMap<Archive, Long> beginnings = new ConcurrentHashMap<Archive, Long>();
+  private final Map<StorageKey, Storage> storages;
+  private final AtomicReference<Long> beginning;
   private final AtomicReference<Long> latest;
-  private final AtomicReference<Long> firstReceived = new AtomicReference<Long>(null);
+ // private final AtomicReference<Long> firstReceived = new AtomicReference<Long>(null);
 
   public TimeSeries(final String id, final Collection<Archive> archives, final Dispatcher dispatcher, final StorageFactory storageFactory) throws IOException {
     this.id = Preconditions.checkNotNull(id, "null id");
     this.archives = new ArrayList<Archive>(Preconditions2.checkNotEmpty(archives, "null archives"));
     this.dispatcher = Preconditions.checkNotNull(dispatcher, "null dispatcher");
-    this.storageFactory = Preconditions.checkNotNull(storageFactory, "null storageFactory");
+    this.storages = new HashMap<StorageKey, Storage>(createStorages(storageFactory, id, archives));
     //TODO Should all archive share beginning?? Would simplify quite a lot
-    this.beginnings.putAll(extractBeginnings(archives));
-    this.latest = new AtomicReference<Long>(extractLatest(archives));
+    this.beginning = new AtomicReference<Long>(extractBeginning(this.storages.values().iterator().next()));
+    this.latest = new AtomicReference<Long>(extractLatest(this.storages.values()));
   }
 
-  private Map<Archive, Long> extractBeginnings(final Collection<Archive> archives) throws IOException {
-    final Map<Archive, Long> storageBeginnings = new HashMap<Archive, Long>();
+  private Map<StorageKey, Storage> createStorages(final StorageFactory storageFactory, final String id, final Collection<Archive> archives) throws IOException {
+    final Map<StorageKey, Storage> newStorages = new HashMap<StorageKey, Storage>();
     for (final Archive archive : archives) {
-      final Optional<Interval> interval = getStorage(archive).interval(); 
-      if (interval.isPresent()) {
-        storageBeginnings.put(archive, interval.get().getStartMillis());
+      for (final SamplingWindow samplingWindow : archive.getSamplingWindows()) {
+        newStorages.put(new StorageKey(id, archive, samplingWindow), storageFactory.createOrOpen(id, archive, samplingWindow));
       }
     }
-    return storageBeginnings;
+    return newStorages;
   }
 
   /**
-   * @param archives
+   * @param storage
+   * @return beginning of {@link Storage#interval()} if any; null otherwise
+   * @throws IOException 
+   */
+  private Long extractBeginning(final Storage storage) throws IOException {
+    final Optional<Interval> interval = storage.interval();
+    if (interval.isPresent()) {
+      return interval.get().getStartMillis();
+    }
+    return null;
+  }
+
+  /**
+   * @param storages
    * @return latest (more recent) timestamp stored in specified {@link archives}; null if all archive are empty
    * @throws IOException 
    */
-  private Long extractLatest(final Collection<Archive> archives) throws IOException {
+  private Long extractLatest(final Collection<Storage> storages) throws IOException {
     Long storageLatest = null;
-    for (final Archive archive : archives) {
-      final Optional<Interval> optionalInterval = getStorage(archive).interval(); 
+    for (final Storage storage : storages) {
+      final Optional<Interval> optionalInterval = storage.interval(); 
       if (optionalInterval.isPresent()) {
         final long endInterval = optionalInterval.get().getEndMillis();
         if (storageLatest == null) {
@@ -98,9 +136,8 @@ public class TimeSeries {
     return Collections.unmodifiableCollection(this.archives);
   }
 
-  private Storage getStorage(final Archive archive) throws IOException {
-    //TODO add caching
-    return this.storageFactory.createOrOpen(getId(), archive);
+  private Storage getStorage(final Archive archive, final SamplingWindow samplingWindow) throws IOException {
+    return this.storages.get(new StorageKey(this.id, archive, samplingWindow));
   }
 
   private long windowId(final long beginning, final long timestamp, final long duration) {
@@ -113,15 +150,6 @@ public class TimeSeries {
 
   private void persist(final long timestamp, final Storage storage, final Collection<Consolidator> consolidators) throws IOException {
     storage.append(timestamp, this.dispatcher.reduce(consolidators));
-  }
-
-  /**
-   * @param archive
-   * @param firstTimestampReceived
-   * @return beginning as reported by {@link Storage#interval()} or {@code firstTimestampReceived} value
-   */
-  private long beginningFor(final Archive archive, final long firstTimestampReceived) {
-    return ConcurrentMaps.putIfAbsentAndReturn(this.beginnings, archive, Suppliers.ofInstance(firstTimestampReceived));
   }
 
   private long checkNotBeforeLatestTimestamp(final Long previousTimestamp, final long currentTimestamp) {
@@ -138,9 +166,11 @@ public class TimeSeries {
     return previousTimestamp;
   }
 
-  private synchronized long recordFirst(final long timestamp) {
-    this.firstReceived.compareAndSet(null, timestamp);
-    return this.firstReceived.get();
+  private synchronized long inferBeginning(final long timestamp) {
+    //If beginning is still null (i.e. all storages where empty) sets it's value to timestamp
+    //This will be done only once (hence track the first timestamp received)
+    this.beginning.compareAndSet(null, timestamp);
+    return this.beginning.get();
   }
 
   //https://blogs.oracle.com/dholmes/entry/inside_the_hotspot_vm_clocks
@@ -150,24 +180,41 @@ public class TimeSeries {
 
     //TODO check thread-safety
     final Long previousTimestamp = recordLatest(timestamp);
-    final long firstTimestamp = recordFirst(timestamp);
+    final long beginningTimestamp = inferBeginning(timestamp);
 
     //TODO // ?
     for (final Archive archive : this.archives) {
       //TODO sort by window resolution, ts with same frame can be optimized
-      final Storage storage = getStorage(archive);
       final Collection<Consolidator> consolidators = archive.getConsolidators();
       for (final SamplingWindow samplingWindow : archive.getSamplingWindows()) {
         accumulate(timestamp, value, consolidators);
 
-        final long beginning = beginningFor(archive, firstTimestamp);
-        final long currentWindowId = windowId(beginning, timestamp, samplingWindow.getDuration());
-        final long previousWindowId = windowId(beginning, previousTimestamp, samplingWindow.getDuration());
+        final long duration = samplingWindow.getDuration().getMillis();
+        final long currentWindowId = windowId(beginningTimestamp, timestamp, duration);
+        final long previousWindowId = windowId(beginningTimestamp, previousTimestamp, duration);
         if (previousTimestamp != null && currentWindowId != previousWindowId) {
           //previousTimestamp will be null on first run with empty archives
-          final long previousWindowBeginning = beginning + previousWindowId * samplingWindow.getDuration();
-          persist(previousWindowBeginning, storage, consolidators);
+          final long previousWindowBeginning = beginningTimestamp + previousWindowId * duration;
+          persist(previousWindowBeginning, getStorage(archive, samplingWindow), consolidators);
         }
+      }
+    }
+  }
+
+  /**
+   * Calls {@link Closeable#close()} on all {@link Storage} implementing {@link Closeable}.
+   *
+   * @throws IOException 
+   */
+  @Override
+  public void close() throws IOException {
+    for (final Storage storage : this.storages.values()) {
+      try {
+        if (storage instanceof Closeable) {
+          Closeable.class.cast(storage).close();
+        }
+      } catch (IOException e) {
+        //TODO add logging
       }
     }
   }

@@ -17,6 +17,7 @@
 package com.github.jeluard.stone.impl;
 
 import com.github.jeluard.stone.api.Archive;
+import com.github.jeluard.stone.api.SamplingWindow;
 import com.github.jeluard.stone.spi.Consolidator;
 import com.github.jeluard.stone.spi.Storage;
 import com.github.jeluard.stone.spi.StorageFactory;
@@ -59,7 +60,7 @@ public class JournalIOStorageFactory implements StorageFactory {
     this.disposerScheduledExecutorService = Preconditions.checkNotNull(disposerScheduledExecutorService, "null disposerScheduledExecutorService");
   }
 
-  protected String mainDirectory(final String id, final Archive archive) {
+  protected String mainDirectory(final String id, final Archive archive, final SamplingWindow samplingWindow) {
     return "stone-journal";
   }
 
@@ -85,9 +86,9 @@ public class JournalIOStorageFactory implements StorageFactory {
    * @param archive
    * @return an optional prefix used when creating file names
    */
-  protected Optional<String> filePrefix(final String id, final Archive archive) {
+  protected Optional<String> filePrefix(final String id, final Archive archive, final SamplingWindow samplingWindow) {
     final Collection<String> consolidatorIdentifiers = extractConsolidatorIdentifiers(archive.getConsolidators());
-    return Optional.of(Joiner.on("-").join(consolidatorIdentifiers));
+    return Optional.of(Joiner.on("-").join(consolidatorIdentifiers)+"-"+samplingWindow.getDuration()+"@"+samplingWindow.getResolution());
   }
 
   /**
@@ -95,19 +96,20 @@ public class JournalIOStorageFactory implements StorageFactory {
    * @param archive
    * @return an optional suffix used when creating file names
    */
-  protected Optional<String> fileSuffix(final String id, final Archive archive) {
+  protected Optional<String> fileSuffix(final String id, final Archive archive, final SamplingWindow samplingWindow) {
     return Optional.absent();
   }
 
   /**
    * @param id
    * @param archive
-   * @return an initialized {@link Journal} dedicated to this {@link id} / {@link archive} pair
+   * @param samplingWindow 
+   * @return an initialized {@link Journal} dedicated to this {@code id} / {@code archive} / {@code samplingWindow} tuple
    * @throws IOException 
    */
-  protected Journal createJournal(final String id, final Archive archive) throws IOException {
+  protected Journal createJournal(final String id, final Archive archive, final SamplingWindow samplingWindow) throws IOException {
     final Journal journal = new Journal();
-    final String mainDirectory = mainDirectory(id, archive);
+    final String mainDirectory = mainDirectory(id, archive, samplingWindow);
     final File file = new File(mainDirectory);
     if (!file.isDirectory()) {
       throw new IllegalArgumentException("Main directory <"+mainDirectory+"> is not a directory");
@@ -116,11 +118,11 @@ public class JournalIOStorageFactory implements StorageFactory {
       throw new IllegalArgumentException("Failed to create main directory <"+mainDirectory+">");
     }
     journal.setDirectory(file);
-    final Optional<String> filePrefix = filePrefix(id, archive);
+    final Optional<String> filePrefix = filePrefix(id, archive, samplingWindow);
     if (filePrefix.isPresent()) {
       journal.setFilePrefix(filePrefix.get());
     }
-    final Optional<String> fileSuffix = fileSuffix(id, archive);
+    final Optional<String> fileSuffix = fileSuffix(id, archive, samplingWindow);
     if (fileSuffix.isPresent()) {
       journal.setFileSuffix(fileSuffix.get());
     }
@@ -138,11 +140,12 @@ public class JournalIOStorageFactory implements StorageFactory {
   }
 
   @Override
-  public final Storage createOrOpen(final String id, final Archive archive) throws IOException {
+  public final Storage createOrOpen(final String id, final Archive archive, final SamplingWindow samplingWindow) throws IOException {
     Preconditions.checkNotNull(id, "null id");
     Preconditions.checkNotNull(archive, "null archive");
+    Preconditions.checkNotNull(samplingWindow, "null samplingWindow");
 
-    return new JournalIOStorage(createJournal(id, archive));
+    return new JournalIOStorage(createJournal(id, archive, samplingWindow));
   }
 
 }

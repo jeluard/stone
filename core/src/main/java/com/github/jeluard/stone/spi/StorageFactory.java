@@ -17,6 +17,7 @@
 package com.github.jeluard.stone.spi;
 
 import com.github.jeluard.stone.api.Archive;
+import com.github.jeluard.stone.api.SamplingWindow;
 
 import java.io.IOException;
 
@@ -28,9 +29,9 @@ import java.io.IOException;
 public interface StorageFactory {
 
   /**
-   * Create or open a {@link Storage} specific to provided {@code id} and {@link Archive}.
+   * Create or open a {@link Storage} specific to provided {@code id}, {@link Archive} and {@link SamplingWindow}.
    * This {@link Storage} will then only be used to persist associated data.
-   * Internal resources can be shared but {@link Storage} methods should be isolated to others {@code id} and {@link Archive}.
+   * Internal resources can be shared but {@link Storage} methods should be isolated to others {@code id}, {@link Archive} and {@link SamplingWindow}.
    * <br>
    * At this stage {@link Storage} is initialized and ready to be used.
    * <br>
@@ -38,9 +39,10 @@ public interface StorageFactory {
    *
    * @param id unique id of associated {@link com.github.jeluard.stone.api.TimeSeries}
    * @param archive associated {@link Archive}
+   * @param samplingWindow associated {@link SamplingWindow}
    * @return a fully initialized {@link Storage}
    * @throws IOException 
    */
-  Storage createOrOpen(String id, Archive archive) throws IOException;
+  Storage createOrOpen(String id, Archive archive, SamplingWindow samplingWindow) throws IOException;
 
 }

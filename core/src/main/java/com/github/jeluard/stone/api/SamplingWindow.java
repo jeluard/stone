@@ -30,11 +30,26 @@ public final class SamplingWindow {
   }
 
   public Duration getResolution() {
-    return resolution;
+    return this.resolution;
   }
 
-  public long getDuration() {
-    return this.duration.getMillis();
+  public Duration getDuration() {
+    return this.duration;
   }
 
+  @Override
+  public int hashCode() {
+    return this.resolution.hashCode() + this.duration.hashCode();
+  }
+
+  @Override
+  public boolean equals(final Object object) {
+    if (!(object instanceof SamplingWindow)) {
+      return false;
+    }
+
+    final SamplingWindow other = (SamplingWindow) object;
+    return this.duration.equals(other.duration) && this.resolution.equals(other.duration);
+  }
+  
 }

@@ -33,13 +33,17 @@ public class Test {
             Arrays.asList(new SamplingWindow(Duration.standardMinutes(5), Duration.standardHours(1))));
     final TimeSeries timeSeries = new TimeSeries("ping-server1", Arrays.asList(archive1), new SequentialDispatcher(), new JournalIOStorageFactory());
 
-    while (true) {
-      final long before = System.currentTimeMillis();
-      for (int j = 0; j < 100000; j++) {
-        Thread.sleep(1);
-        timeSeries.publish(System.currentTimeMillis(), (int) Math.random());
+    try {
+      for (int i = 0; i < 1000; i++) {
+        final long before = System.currentTimeMillis();
+        for (int j = 0; j < 1000; j++) {
+          Thread.sleep(1);
+          timeSeries.publish(System.currentTimeMillis(), (int) Math.random());
+        }
+        System.out.println(System.currentTimeMillis()-before);
       }
-      System.out.println(System.currentTimeMillis()-before);
+    } finally {
+      timeSeries.close();
     }
   }
 }
