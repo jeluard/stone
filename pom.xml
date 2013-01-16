@@ -8,7 +8,7 @@
   <packaging>pom</packaging>
 
   <name>Stone</name>
-  <inceptionYear>2012</inceptionYear>
+  <inceptionYear>2013</inceptionYear>
 
   <parent>
     <groupId>com.github.jeluard</groupId>
