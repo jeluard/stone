@@ -16,7 +16,6 @@
  */
 package com.github.jeluard.stone.impl.consolidators;
 
-import com.github.jeluard.stone.spi.Consolidator;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
 

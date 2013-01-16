@@ -20,7 +20,6 @@ import com.github.jeluard.stone.api.DataAggregates;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.AbstractIterator;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 
 import java.io.IOException;

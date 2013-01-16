@@ -16,8 +16,6 @@
  */
 package com.github.jeluard.stone.impl.consolidators;
 
-import com.github.jeluard.stone.spi.Consolidator;
-
 import java.util.LinkedList;
 import java.util.List;
 

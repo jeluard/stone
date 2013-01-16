@@ -16,8 +16,6 @@
  */
 package com.github.jeluard.stone.spi;
 
-import com.github.jeluard.guayaba.annotation.Idempotent;
-import com.github.jeluard.stone.api.DataAggregates;
 import java.util.Collection;
 
 /**
