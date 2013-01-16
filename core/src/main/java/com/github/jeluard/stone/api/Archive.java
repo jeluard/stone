@@ -17,7 +17,6 @@
 package com.github.jeluard.stone.api;
 
 import com.github.jeluard.stone.spi.Consolidator;
-import com.github.jeluard.stone.spi.Storage;
 import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
@@ -32,12 +31,10 @@ public final class Archive {
 
   private final Collection<? extends Consolidator> consolidators;
   private final List<SamplingWindow> samplingWindows;
-  private final Storage storage;
 
-  public Archive(final Collection<? extends Consolidator> consolidators, final List<SamplingWindow> samplingWindows, final Storage storage) {
+  public Archive(final Collection<? extends Consolidator> consolidators, final List<SamplingWindow> samplingWindows) {
     this.consolidators = new ArrayList<Consolidator>(Preconditions.checkNotNull(consolidators, "null consolidators"));
     this.samplingWindows = new ArrayList<SamplingWindow>(Preconditions.checkNotNull(samplingWindows, "null samplingWindows"));
-    this.storage = Preconditions.checkNotNull(storage, "null storage");
   }
 
   public Collection<Consolidator> getConsolidators() {
@@ -46,10 +43,6 @@ public final class Archive {
 
   public List<SamplingWindow> getSamplingWindows() {
     return this.samplingWindows;
-  }
-
-  public Storage getStorage() {
-    return this.storage;
   }
 
 }

@@ -19,31 +19,19 @@ package com.github.jeluard.stone;
 import com.github.jeluard.stone.api.Archive;
 import com.github.jeluard.stone.api.SamplingWindow;
 import com.github.jeluard.stone.api.TimeSeries;
-import com.github.jeluard.stone.impl.JournalIOStorage;
+import com.github.jeluard.stone.impl.JournalIOStorageFactory;
 import com.github.jeluard.stone.impl.consolidators.MaxConsolidator;
 import com.github.jeluard.stone.impl.SequentialDispatcher;
 
-import java.io.File;
 import java.util.Arrays;
-import journal.io.api.Journal;
-import journal.io.api.RecoveryErrorHandler;
 
 import org.joda.time.Duration;
 
 public class Test {
   public static void main(String[] args) throws Exception {
-    final Journal journal = new Journal();
-    final File file = new File("stone-journal");
-    file.mkdir();
-    journal.setDirectory(file);
-    journal.setRecoveryErrorHandler(RecoveryErrorHandler.ABORT);
-    journal.setPhysicalSync(true);
-    journal.open();
-
     final Archive archive1 = new Archive(Arrays.asList(new MaxConsolidator()), 
-            Arrays.asList(new SamplingWindow(Duration.standardMinutes(5), Duration.standardHours(1))),
-            new JournalIOStorage(journal));
-    final TimeSeries timeSeries = new TimeSeries("ping-server1", Arrays.asList(archive1), new SequentialDispatcher());
+            Arrays.asList(new SamplingWindow(Duration.standardMinutes(5), Duration.standardHours(1))));
+    final TimeSeries timeSeries = new TimeSeries("ping-server1", Arrays.asList(archive1), new SequentialDispatcher(), new JournalIOStorageFactory());
 
     while (true) {
       final long before = System.currentTimeMillis();

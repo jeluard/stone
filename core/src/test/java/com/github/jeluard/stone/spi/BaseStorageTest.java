@@ -33,7 +33,7 @@ public class BaseStorageTest {
   public void shouldLastReturnAbsentWhenAllIsEmpty() throws IOException {
     final BaseStorage storage = new BaseStorage() {
       @Override
-      public void append(int[] data) throws IOException {
+      public void append(long timestamp, int[] data) throws IOException {
         throw new UnsupportedOperationException("Not supported yet.");
       }
       @Override
@@ -49,7 +49,7 @@ public class BaseStorageTest {
   public void shouldLastReturnPresentWhenAllReturnsOneElement() throws IOException {
     final BaseStorage storage = new BaseStorage() {
       @Override
-      public void append(int[] data) throws IOException {
+      public void append(long timestamp, int[] data) throws IOException {
         throw new UnsupportedOperationException("Not supported yet.");
       }
       @Override

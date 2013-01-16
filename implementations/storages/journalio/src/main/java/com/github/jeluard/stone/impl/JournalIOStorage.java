@@ -32,12 +32,6 @@ import journal.io.api.WriteCallback;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
-/**
- * http://www.oracle.com/technetwork/database/berkeleydb/downloads/maven-087630.html
- * http://docs.oracle.com/cd/E17277_02/html/index.html
- * http://download.oracle.com/otndocs/products/berkeleydb/html/je/je-5.0.58_changelog.html
- */
-
 
 /**
  * Reads are down in {@link Journal.ReadType#ASYNC} mode as no delete is performed.
@@ -65,7 +59,7 @@ public class JournalIOStorage extends BaseStorage {
   }
 
   @Override
-  public void append(final int[] aggregates) throws IOException {
+  public void append(final long timestamp, final int[] aggregates) throws IOException {
     final byte[] bytes = Longs.toByteArray(aggregates[0]);
     //http://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html
     this.journal.write(bytes, Journal.WriteType.SYNC, JournalIOStorage.LOGGING_WRITE_CALLBACK);
