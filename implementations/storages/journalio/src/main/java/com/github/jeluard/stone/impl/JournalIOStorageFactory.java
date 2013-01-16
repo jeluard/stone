@@ -111,11 +111,11 @@ public class JournalIOStorageFactory implements StorageFactory {
     final Journal journal = new Journal();
     final String mainDirectory = mainDirectory(id, archive, samplingWindow);
     final File file = new File(mainDirectory);
-    if (!file.isDirectory()) {
-      throw new IllegalArgumentException("Main directory <"+mainDirectory+"> is not a directory");
-    }
     if (!file.exists() && !file.mkdirs()) {
       throw new IllegalArgumentException("Failed to create main directory <"+mainDirectory+">");
+    }
+    if (!file.isDirectory()) {
+      throw new IllegalArgumentException("Main directory <"+mainDirectory+"> is not a directory");
     }
     journal.setDirectory(file);
     final Optional<String> filePrefix = filePrefix(id, archive, samplingWindow);
