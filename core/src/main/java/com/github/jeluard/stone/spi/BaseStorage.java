@@ -25,6 +25,7 @@ import com.google.common.collect.Iterators;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import org.joda.time.DateTime;
 
 import org.joda.time.Interval;
 
@@ -34,24 +35,39 @@ import org.joda.time.Interval;
 public abstract class BaseStorage implements Storage {
 
   /**
-   * Default implementation relying on {@link #all()}: it iterates over {@link Storage#all()} elements to access the first/last ones.
+   * Default implementation relying on {@link #all()}.
    *
    * {@inheritDoc}
-   *
-   * @see Iterables#getLast(java.lang.Iterable)
    */
   @Override
-  public Optional<Interval> interval() throws IOException {
+  public Optional<DateTime> beginning() throws IOException {
     try {
       final Iterator<Pair<Long, int[]>> consolidates = all().iterator();
-      return Optional.of(new Interval(consolidates.next().first, Iterators.getLast(consolidates).first));
+      return Optional.of(new DateTime(consolidates.next().first));
     } catch (NoSuchElementException e) {
       return Optional.absent();
     }
   }
 
   /**
-   * Default implementation relying on {@link #all()}: it iterates over all elements while they are parts of specified `interval`.
+   * Default implementation relying on {@link #all()}: it iterates over {@link Storage#all()} elements to access the last one.
+   *
+   * {@inheritDoc}
+   *
+   * @see Iterables#getLast(java.lang.Iterable)
+   */
+  @Override
+  public Optional<DateTime> end() throws IOException {
+    try {
+      final Iterator<Pair<Long, int[]>> consolidates = all().iterator();
+      return Optional.of(new DateTime(Iterators.getLast(consolidates).first));
+    } catch (NoSuchElementException e) {
+      return Optional.absent();
+    }
+  }
+
+  /**
+   * Default implementation relying on {@link #all()}: it iterates over all elements while they are parts of specified `beginning`.
    *
    * {@inheritDoc}
    *
@@ -72,11 +88,11 @@ public abstract class BaseStorage implements Storage {
               final Pair<Long, int[]> consolidates = all.next();
               final long timestamp = consolidates.first;
               if (timestamp < interval.getStartMillis()) {
-                //Before the interval
+                //Before the beginning
                 continue;
               }
               if (timestamp > interval.getEndMillis()) {
-                //After the interval
+                //After the beginning
                 break;
               }
 

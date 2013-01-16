@@ -40,7 +40,7 @@ public class BaseStorageTest {
       }
     };
 
-    Assert.assertFalse(storage.interval().isPresent());
+    Assert.assertFalse(storage.beginning().isPresent());
   }
 
   @Test
@@ -55,7 +55,7 @@ public class BaseStorageTest {
       }
     };
 
-    Assert.assertTrue(storage.interval().isPresent());
+    Assert.assertTrue(storage.beginning().isPresent());
   }
 
 }

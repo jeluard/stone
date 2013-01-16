@@ -19,15 +19,15 @@ package com.github.jeluard.stone.spi;
 import com.google.common.base.Optional;
 
 import java.io.IOException;
+import org.joda.time.DateTime;
 
-import org.joda.time.Interval;
 import org.mockito.Mockito;
 
 public class TimeSeriesTest {
 
-  private Storage createStorageMock(final Optional<Interval> interval) throws IOException {
+  private Storage createStorageMock(final Optional<DateTime> date) throws IOException {
     final Storage mock = Mockito.mock(Storage.class);
-    Mockito.when(mock.interval()).thenReturn(interval);
+    Mockito.when(mock.beginning()).thenReturn(date);
     return mock;
   }
 

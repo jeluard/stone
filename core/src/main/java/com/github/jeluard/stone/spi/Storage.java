@@ -20,6 +20,7 @@ import com.github.jeluard.guayaba.base.Pair;
 import com.google.common.base.Optional;
 
 import java.io.IOException;
+import org.joda.time.DateTime;
 
 import org.joda.time.Interval;
 
@@ -39,10 +40,16 @@ public interface Storage {
   void append(long timestamp, int[] consolidates) throws IOException;
 
   /**
-   * @return interval of values stored, if any
+   * @return beginning of values stored, if any
    * @throws IOException 
    */
-  Optional<Interval> interval() throws IOException;
+  Optional<DateTime> beginning() throws IOException;
+
+  /**
+   * @return end of values stored, if any
+   * @throws IOException 
+   */
+  Optional<DateTime> end() throws IOException;
 
   Iterable<Pair<Long, int[]>> all() throws IOException;
 

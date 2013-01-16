@@ -31,7 +31,7 @@ import journal.io.api.Journal;
 import journal.io.api.Location;
 import journal.io.api.WriteCallback;
 
-import org.joda.time.Interval;
+import org.joda.time.DateTime;
 
 /**
  * Reads are down in {@link Journal.ReadType#ASYNC} mode as no delete is performed.
@@ -67,17 +67,22 @@ public class JournalIOStorage extends BaseBinaryStorage implements Closeable {
     this.journal.write(buffer.array(), Journal.WriteType.SYNC, JournalIOStorage.LOGGING_WRITE_CALLBACK);
   }
 
-  @Override
-  public final Optional<Interval> interval() throws IOException {
-    final Iterator<Location> redo = this.journal.redo().iterator();
-    final Iterator<Location> undo = this.journal.undo().iterator();
-    if (!undo.hasNext() || !redo.hasNext()) {
+  protected final Optional<DateTime> nextTimestampIfAny(final Iterator<Location> locations) throws IOException {
+    if (!locations.hasNext()) {
       return Optional.absent();
     }
 
-    final long beginningTimestamp = getTimestamp(readNextLocation(redo));
-    final long endTimestamp = getTimestamp(readNextLocation(undo));
-    return Optional.of(new Interval(beginningTimestamp, endTimestamp));
+    return Optional.of(new DateTime(getTimestamp(readNextLocation(locations))));
+  }
+
+  @Override
+  public final Optional<DateTime> beginning() throws IOException {
+    return nextTimestampIfAny(this.journal.redo().iterator());
+  }
+
+  @Override
+  public final Optional<DateTime> end() throws IOException {
+    return nextTimestampIfAny(this.journal.undo().iterator());
   }
 
   @Override

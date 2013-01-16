@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.joda.time.Interval;
+import org.joda.time.DateTime;
 
 public class TimeSeries implements Closeable {
 
@@ -98,13 +98,13 @@ public class TimeSeries implements Closeable {
 
   /**
    * @param storage
-   * @return beginning of {@link Storage#interval()} if any; null otherwise
+   * @return beginning of {@link Storage#beginning()} if any; null otherwise
    * @throws IOException 
    */
   private Long extractBeginning(final Storage storage) throws IOException {
-    final Optional<Interval> interval = storage.interval();
+    final Optional<DateTime> interval = storage.beginning();
     if (interval.isPresent()) {
-      return interval.get().getStartMillis();
+      return interval.get().getMillis();
     }
     return null;
   }
@@ -117,9 +117,9 @@ public class TimeSeries implements Closeable {
   private Long extractLatest(final Collection<Storage> storages) throws IOException {
     Long storageLatest = null;
     for (final Storage storage : storages) {
-      final Optional<Interval> optionalInterval = storage.interval(); 
+      final Optional<DateTime> optionalInterval = storage.end(); 
       if (optionalInterval.isPresent()) {
-        final long endInterval = optionalInterval.get().getEndMillis();
+        final long endInterval = optionalInterval.get().getMillis();
         if (storageLatest == null) {
           storageLatest = endInterval;
         } else if (endInterval > storageLatest) {
