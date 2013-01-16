@@ -23,6 +23,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.primitives.Longs;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Iterator;
 
@@ -36,7 +37,7 @@ import org.joda.time.Interval;
 /**
  * Reads are down in {@link Journal.ReadType#ASYNC} mode as no delete is performed.
  */
-public class JournalIOStorage extends BaseStorage {
+public class JournalIOStorage extends BaseStorage implements Closeable {
 
   private static final WriteCallback LOGGING_WRITE_CALLBACK = new WriteCallback() {
     @Override
@@ -92,6 +93,11 @@ public class JournalIOStorage extends BaseStorage {
         };
       }
     };
+  }
+
+  @Override
+  public void close() throws IOException {
+    this.journal.close();
   }
 
 }
