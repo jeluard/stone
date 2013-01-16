@@ -114,7 +114,7 @@ public class JournalIOStorageFactory implements StorageFactory {
     if (!file.isDirectory()) {
       throw new IllegalArgumentException("Main directory <"+mainDirectory+"> is not a directory");
     }
-    if (!file.mkdirs()) {
+    if (!file.exists() && !file.mkdirs()) {
       throw new IllegalArgumentException("Failed to create main directory <"+mainDirectory+">");
     }
     journal.setDirectory(file);
