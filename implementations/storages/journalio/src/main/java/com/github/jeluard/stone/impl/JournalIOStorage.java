@@ -51,20 +51,20 @@ public class JournalIOStorage extends BaseBinaryStorage implements Closeable {
 
   /**
    * 
-   * @param journal life-cycle won't be handled her, manually initialize/clean
+   * @param journal life-cycle won't be handled here, manually initialize/clean
    * @param compressor 
    */
   public JournalIOStorage(final Journal journal) throws IOException {
     this.journal = Preconditions.checkNotNull(journal, "null journal");
   }
 
-  protected final byte[] readNextLocation(final Iterator<Location> locations) throws IOException {
-    return this.journal.read(locations.next(), Journal.ReadType.SYNC);
-  }
-
   @Override
   protected final void append(final ByteBuffer buffer) throws IOException {
     this.journal.write(buffer.array(), Journal.WriteType.SYNC, JournalIOStorage.LOGGING_WRITE_CALLBACK);
+  }
+
+  protected final byte[] readNextLocation(final Iterator<Location> locations) throws IOException {
+    return this.journal.read(locations.next(), Journal.ReadType.SYNC);
   }
 
   protected final Optional<DateTime> nextTimestampIfAny(final Iterator<Location> locations) throws IOException {

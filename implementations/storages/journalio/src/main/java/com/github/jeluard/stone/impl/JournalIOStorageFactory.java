@@ -132,6 +132,7 @@ public class JournalIOStorageFactory implements StorageFactory {
     if (fileSuffix.isPresent()) {
       journal.setFileSuffix(fileSuffix.get());
     }
+    //Do not archive deleted entries
     journal.setArchiveFiles(false);
     journal.setChecksum(true);
     journal.setRecoveryErrorHandler(RecoveryErrorHandler.ABORT);
