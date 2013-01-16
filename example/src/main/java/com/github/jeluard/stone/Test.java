@@ -24,6 +24,7 @@ import com.github.jeluard.stone.impl.consolidators.MaxConsolidator;
 import com.github.jeluard.stone.impl.SequentialDispatcher;
 
 import java.util.Arrays;
+import java.util.Random;
 
 import org.joda.time.Duration;
 
@@ -34,11 +35,12 @@ public class Test {
     final TimeSeries timeSeries = new TimeSeries("ping-server1", Arrays.asList(archive1), new SequentialDispatcher(), new JournalIOStorageFactory());
 
     try {
+      final Random random = new Random();
       for (int i = 0; i < 1000; i++) {
         final long before = System.currentTimeMillis();
         for (int j = 0; j < 1000; j++) {
           Thread.sleep(1);
-          timeSeries.publish(System.currentTimeMillis(), (int) Math.random());
+          timeSeries.publish(System.currentTimeMillis(), 100+random.nextInt(25));
         }
         System.out.println(System.currentTimeMillis()-before);
       }
