@@ -16,7 +16,7 @@
  */
 package com.github.jeluard.stone.spi;
 
-import com.github.jeluard.stone.api.DataAggregates;
+import com.github.jeluard.guayaba.base.Pair;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.AbstractIterator;
@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import org.joda.time.DateTime;
 import org.joda.time.Interval;
 
 /**
@@ -44,8 +43,8 @@ public abstract class BaseStorage implements Storage {
   @Override
   public Optional<Interval> interval() throws IOException {
     try {
-      final Iterator<DataAggregates> aggregates = all().iterator();
-      return Optional.of(new Interval(aggregates.next().getDate(), Iterators.getLast(aggregates).getDate()));
+      final Iterator<Pair<Long, int[]>> aggregates = all().iterator();
+      return Optional.of(new Interval(aggregates.next().first, Iterators.getLast(aggregates).first));
     } catch (NoSuchElementException e) {
       return Optional.absent();
     }
@@ -59,26 +58,28 @@ public abstract class BaseStorage implements Storage {
    * @see AbstractIterator
    */
   @Override
-  public Iterable<DataAggregates> during(final Interval interval) throws IOException {
+  public Iterable<Pair<Long, int[]>> during(final Interval interval) throws IOException {
     Preconditions.checkNotNull(interval, "null interval");
 
-    final Iterator<DataAggregates> all = all().iterator();
-    return new Iterable<DataAggregates>() {
+    final Iterator<Pair<Long, int[]>> all = all().iterator();
+    return new Iterable<Pair<Long, int[]>>() {
       @Override 
-      public Iterator<DataAggregates> iterator() {
-        return new AbstractIterator<DataAggregates>() {
+      public Iterator<Pair<Long, int[]>> iterator() {
+        return new AbstractIterator<Pair<Long, int[]>>() {
           @Override
-          protected DataAggregates computeNext() {
+          protected Pair<Long, int[]> computeNext() {
             while (all.hasNext()) {
-              final DataAggregates aggregates = all.next();
-              final DateTime date = aggregates.getDate();
-              if (!interval.contains(date)) {
-                if (interval.isBefore(date)) {
-                  break;
-                } else {
-                  continue;
-                }
+              final Pair<Long, int[]> aggregates = all.next();
+              final long timestamp = aggregates.first;
+              if (timestamp < interval.getStartMillis()) {
+                //Before the interval
+                continue;
               }
+              if (timestamp > interval.getEndMillis()) {
+                //After the interval
+                break;
+              }
+
               return aggregates;
             }
             return endOfData();

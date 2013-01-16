@@ -16,7 +16,7 @@
  */
 package com.github.jeluard.stone.spi;
 
-import com.github.jeluard.stone.api.DataAggregates;
+import com.github.jeluard.guayaba.base.Pair;
 import com.google.common.base.Optional;
 
 import java.io.IOException;
@@ -44,8 +44,8 @@ public interface Storage {
    */
   Optional<Interval> interval() throws IOException;
 
-  Iterable<DataAggregates> all() throws IOException;
+  Iterable<Pair<Long, int[]>> all() throws IOException;
 
-  Iterable<DataAggregates> during(Interval interval) throws IOException;
+  Iterable<Pair<Long, int[]>> during(Interval interval) throws IOException;
 
 }

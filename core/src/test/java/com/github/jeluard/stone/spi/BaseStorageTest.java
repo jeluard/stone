@@ -16,11 +16,10 @@
  */
 package com.github.jeluard.stone.spi;
 
-import com.github.jeluard.stone.api.DataAggregates;
+import com.github.jeluard.guayaba.base.Pair;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedList;
 
 import org.joda.time.DateTime;
@@ -34,11 +33,10 @@ public class BaseStorageTest {
     final BaseStorage storage = new BaseStorage() {
       @Override
       public void append(long timestamp, int[] data) throws IOException {
-        throw new UnsupportedOperationException("Not supported yet.");
       }
       @Override
-      public Iterable<DataAggregates> all() throws IOException {
-        return new LinkedList<DataAggregates>();
+      public Iterable<Pair<Long, int[]>> all() throws IOException {
+        return new LinkedList<Pair<Long, int[]>>();
       }
     };
 
@@ -50,11 +48,10 @@ public class BaseStorageTest {
     final BaseStorage storage = new BaseStorage() {
       @Override
       public void append(long timestamp, int[] data) throws IOException {
-        throw new UnsupportedOperationException("Not supported yet.");
       }
       @Override
-      public Iterable<DataAggregates> all() throws IOException {
-        return Arrays.asList(new DataAggregates(DateTime.now(), Collections.<Long>emptyList()));
+      public Iterable<Pair<Long, int[]>> all() throws IOException {
+        return Arrays.asList(new Pair<Long, int[]>(DateTime.now().getMillis(), new int[0]));
       }
     };
 

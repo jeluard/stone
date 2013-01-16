@@ -16,28 +16,27 @@
  */
 package com.github.jeluard.stone.impl;
 
-import com.github.jeluard.stone.api.DataAggregates;
-import com.github.jeluard.stone.spi.BaseStorage;
+import com.github.jeluard.guayaba.base.Pair;
+import com.github.jeluard.stone.spi.BaseBinaryStorage;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.AbstractIterator;
-import com.google.common.primitives.Longs;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Iterator;
 
 import journal.io.api.Journal;
 import journal.io.api.Location;
 import journal.io.api.WriteCallback;
 
-import org.joda.time.DateTime;
 import org.joda.time.Interval;
 
 /**
  * Reads are down in {@link Journal.ReadType#ASYNC} mode as no delete is performed.
  */
-public class JournalIOStorage extends BaseStorage implements Closeable {
+public class JournalIOStorage extends BaseBinaryStorage implements Closeable {
 
   private static final WriteCallback LOGGING_WRITE_CALLBACK = new WriteCallback() {
     @Override
@@ -59,34 +58,45 @@ public class JournalIOStorage extends BaseStorage implements Closeable {
     this.journal = Preconditions.checkNotNull(journal, "null journal");
   }
 
-  @Override
-  public void append(final long timestamp, final int[] aggregates) throws IOException {
-    final byte[] bytes = Longs.toByteArray(aggregates[0]);
-    //http://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html
-    this.journal.write(bytes, Journal.WriteType.SYNC, JournalIOStorage.LOGGING_WRITE_CALLBACK);
+  protected final byte[] readNextLocation(final Iterator<Location> locations) throws IOException {
+    return this.journal.read(locations.next(), Journal.ReadType.SYNC);
   }
 
   @Override
-  public Optional<Interval> interval() throws IOException {
+  protected final void append(final ByteBuffer buffer) throws IOException {
+    this.journal.write(buffer.array(), Journal.WriteType.SYNC, JournalIOStorage.LOGGING_WRITE_CALLBACK);
+  }
+
+  @Override
+  public final Optional<Interval> interval() throws IOException {
+    final Iterator<Location> redo = this.journal.redo().iterator();
     final Iterator<Location> undo = this.journal.undo().iterator();
-    if (!undo.hasNext()) {
+    if (!undo.hasNext() || !redo.hasNext()) {
       return Optional.absent();
     }
-    //TODO
-    return Optional.of(new Interval(DateTime.now(), DateTime.now()));//Optional.of(this.journal.read(iterator.next(), Journal.ReadType.ASYNC));
+
+    final long beginningTimestamp = getTimestamp(readNextLocation(redo));
+    final long endTimestamp = getTimestamp(readNextLocation(undo));
+    return Optional.of(new Interval(beginningTimestamp, endTimestamp));
   }
 
   @Override
-  public Iterable<DataAggregates> all() throws IOException {
+  public Iterable<Pair<Long, int[]>> all() throws IOException {
     final Iterator<Location> locations = JournalIOStorage.this.journal.redo().iterator();
-    return new Iterable<DataAggregates>() {
+    return new Iterable<Pair<Long, int[]>>() {
       @Override
-      public Iterator<DataAggregates> iterator() {
-        return new AbstractIterator<DataAggregates>() {
+      public Iterator<Pair<Long, int[]>> iterator() {
+        return new AbstractIterator<Pair<Long, int[]>>() {
           @Override
-          protected DataAggregates computeNext() {
+          protected Pair<Long, int[]> computeNext() {
             if (locations.hasNext()) {
-              return null;//JournalIOStorage.this.journal.read(locations.next(), Journal.ReadType.SYNC);
+              try {
+                final long timestamp = getTimestamp(readNextLocation(locations));
+                final int[] consolidates = getConsolidates(readNextLocation(locations));
+                return new Pair<Long, int[]>(timestamp, consolidates);
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
             }
             return endOfData();
           }
