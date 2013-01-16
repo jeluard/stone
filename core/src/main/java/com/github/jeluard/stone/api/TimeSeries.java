@@ -152,11 +152,10 @@ public class TimeSeries implements Closeable {
     storage.append(timestamp, this.dispatcher.reduce(consolidators));
   }
 
-  private long checkNotBeforeLatestTimestamp(final Long previousTimestamp, final long currentTimestamp) {
+  private void checkNotBeforeLatestTimestamp(final Long previousTimestamp, final long currentTimestamp) {
     if (previousTimestamp != null && !(currentTimestamp > previousTimestamp)) {
       throw new IllegalArgumentException("Provided timestamp from <"+currentTimestamp+"> must be more recent than <"+previousTimestamp+">");
     }
-    return previousTimestamp;
   }
 
   private long recordLatest(final long timestamp) {
