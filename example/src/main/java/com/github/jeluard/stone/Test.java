@@ -30,7 +30,7 @@ import org.joda.time.Duration;
 public class Test {
   public static void main(String[] args) throws Exception {
     final Archive archive1 = new Archive(Arrays.asList(new MaxConsolidator()), 
-            Arrays.asList(new SamplingWindow(Duration.standardMinutes(5), Duration.standardHours(1))));
+            Arrays.asList(new SamplingWindow(Duration.standardMinutes(1), Duration.standardHours(1))));
     final TimeSeries timeSeries = new TimeSeries("ping-server1", Arrays.asList(archive1), new SequentialDispatcher(), new JournalIOStorageFactory());
 
     try {
