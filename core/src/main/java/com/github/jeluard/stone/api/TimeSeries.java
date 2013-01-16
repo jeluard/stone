@@ -32,12 +32,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.joda.time.Interval;
 
 public class TimeSeries implements Closeable {
 
-  private final static class StorageKey {
+  private static final class StorageKey {
 
     private final String id;
     private final Archive archive;
@@ -66,20 +68,20 @@ public class TimeSeries implements Closeable {
 
   }
 
+  private static final Logger LOGGER = Logger.getLogger("com.github.jeluard.stone");
+
   private final String id;
   private final Collection<Archive> archives;
   private final Dispatcher dispatcher;
   private final Map<StorageKey, Storage> storages;
   private final AtomicReference<Long> beginning;
   private final AtomicReference<Long> latest;
- // private final AtomicReference<Long> firstReceived = new AtomicReference<Long>(null);
 
   public TimeSeries(final String id, final Collection<Archive> archives, final Dispatcher dispatcher, final StorageFactory storageFactory) throws IOException {
     this.id = Preconditions.checkNotNull(id, "null id");
     this.archives = new ArrayList<Archive>(Preconditions2.checkNotEmpty(archives, "null archives"));
     this.dispatcher = Preconditions.checkNotNull(dispatcher, "null dispatcher");
     this.storages = new HashMap<StorageKey, Storage>(createStorages(storageFactory, id, archives));
-    //TODO Should all archive share beginning?? Would simplify quite a lot
     this.beginning = new AtomicReference<Long>(extractBeginning(this.storages.values().iterator().next()));
     this.latest = new AtomicReference<Long>(extractLatest(this.storages.values()));
   }
@@ -215,7 +217,9 @@ public class TimeSeries implements Closeable {
           Closeable.class.cast(storage).close();
         }
       } catch (IOException e) {
-        //TODO add logging
+        if (TimeSeries.LOGGER.isLoggable(Level.WARNING)) {
+          TimeSeries.LOGGER.log(Level.WARNING, "Got an exception while closing <"+storage+">", e);
+        }
       }
     }
   }
