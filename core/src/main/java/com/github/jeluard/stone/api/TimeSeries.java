@@ -158,7 +158,7 @@ public class TimeSeries implements Closeable {
     }
   }
 
-  private long recordLatest(final long timestamp) {
+  private Long recordLatest(final long timestamp) {
     //Atomically set to the new timestamp if value is null (i.e. no value as yet been recorded)
     final Long previousTimestamp = this.latest.getAndSet(timestamp);
     checkNotBeforeLatestTimestamp(previousTimestamp, timestamp);
@@ -188,13 +188,15 @@ public class TimeSeries implements Closeable {
       for (final SamplingWindow samplingWindow : archive.getSamplingWindows()) {
         accumulate(timestamp, value, consolidators);
 
-        final long duration = samplingWindow.getDuration().getMillis();
-        final long currentWindowId = windowId(beginningTimestamp, timestamp, duration);
-        final long previousWindowId = windowId(beginningTimestamp, previousTimestamp, duration);
-        if (previousTimestamp != null && currentWindowId != previousWindowId) {
-          //previousTimestamp will be null on first run with empty archives
-          final long previousWindowBeginning = beginningTimestamp + previousWindowId * duration;
-          persist(previousWindowBeginning, getStorage(archive, samplingWindow), consolidators);
+        if (previousTimestamp != null) {
+          final long duration = samplingWindow.getDuration().getMillis();
+          final long currentWindowId = windowId(beginningTimestamp, timestamp, duration);
+          final long previousWindowId = windowId(beginningTimestamp, previousTimestamp, duration);
+          if (currentWindowId != previousWindowId) {
+            //previousTimestamp will be null on first run with empty archives
+            final long previousWindowBeginning = beginningTimestamp + previousWindowId * duration;
+            persist(previousWindowBeginning, getStorage(archive, samplingWindow), consolidators);
+          }
         }
       }
     }
