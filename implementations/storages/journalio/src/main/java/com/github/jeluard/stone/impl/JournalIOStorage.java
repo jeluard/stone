@@ -46,6 +46,9 @@ import org.joda.time.DateTime;
  *
  * Timestamp are not necessarily consecutive. Missing window are not encoded.
  * <br>
+ * Estimated size on disk is 8 (timestamp) + 4 * n (n being number of consolidates) + 30 (Journal.IO overhead per location).
+ * <br>
+ * <br>
  * This format is both easy to implement and fast to parse but waste significant space.
  */
 public class JournalIOStorage extends BaseBinaryStorage implements Closeable {
