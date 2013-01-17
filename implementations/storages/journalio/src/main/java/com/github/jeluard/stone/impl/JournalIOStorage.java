@@ -34,7 +34,17 @@ import journal.io.api.WriteCallback;
 import org.joda.time.DateTime;
 
 /**
- * Reads are down in {@link Journal.ReadType#ASYNC} mode as no delete is performed.
+ * A {@link Storage} implementation relying on <a href="https://github.com/sbtourist/Journal.IO">Journal.IO</a>.
+ * <br>
+ * Data is stored in the format:
+ *
+ * +-----------+---------------+-----+---------------+-----------+-----+
+ * | timestamp | consolidate-1 | ... | consolidate-n | timestamp | ... |
+ * +-----------+---------------+-----+---------------+-----------+-----+
+ *
+ * Timestamp are not necessarily consecutive. Missing window are not encoded.
+ * <br>
+ * This format is both easy to implement and fast to parse but waste significant space.
  */
 public class JournalIOStorage extends BaseBinaryStorage implements Closeable {
 
@@ -63,10 +73,20 @@ public class JournalIOStorage extends BaseBinaryStorage implements Closeable {
     this.journal.write(buffer.array(), Journal.WriteType.SYNC, JournalIOStorage.LOGGING_WRITE_CALLBACK);
   }
 
+  /**
+   * @param locations
+   * @return the content as {@link byte[]} of the next {@link Location} from {@code locations}
+   * @throws IOException 
+   */
   protected final byte[] readNextLocation(final Iterator<Location> locations) throws IOException {
     return this.journal.read(locations.next(), Journal.ReadType.SYNC);
   }
 
+  /**
+   * @param locations
+   * @return the next timestamp among {@link locations} if any
+   * @throws IOException 
+   */
   protected final Optional<DateTime> nextTimestampIfAny(final Iterator<Location> locations) throws IOException {
     if (!locations.hasNext()) {
       return Optional.absent();
