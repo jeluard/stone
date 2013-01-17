@@ -16,6 +16,7 @@
  */
 package com.github.jeluard.stone.api;
 
+import com.github.jeluard.guayaba.base.Pair;
 import com.github.jeluard.guayaba.base.Preconditions2;
 import com.github.jeluard.stone.spi.Consolidator;
 import com.github.jeluard.stone.spi.Dispatcher;
@@ -39,58 +40,29 @@ import org.joda.time.DateTime;
 
 public class TimeSeries implements Closeable {
 
-  private static final class StorageKey {
-
-    private final String id;
-    private final Archive archive;
-    private final SamplingWindow samplingWindow;
-
-    public StorageKey(final String id, final Archive archive, final SamplingWindow samplingWindow) {
-      this.id = Preconditions.checkNotNull(id, "null id");
-      this.archive = Preconditions.checkNotNull(archive, "null archive");
-      this.samplingWindow = Preconditions.checkNotNull(samplingWindow, "null samplingWindow");
-    }
-
-    @Override
-    public int hashCode() {
-      return this.id.hashCode()+this.archive.hashCode()+this.samplingWindow.hashCode();
-    }
-
-    @Override
-    public boolean equals(final Object object) {
-      if (!(object instanceof StorageKey)) {
-        return false;
-      }
-
-      final StorageKey other = (StorageKey) object;
-      return this.id.equals(other.id) && this.archive.equals(other.archive) && this.samplingWindow.equals(other.samplingWindow);
-    }
-
-  }
-
   private static final Logger LOGGER = Logger.getLogger("com.github.jeluard.stone");
 
   private final String id;
   private final Collection<Archive> archives;
   private final Dispatcher dispatcher;
-  private final Map<StorageKey, Storage> storages;
+  private final Map<Pair<Archive, SamplingWindow>, Storage> storages;
   private final AtomicReference<Long> beginning;
   private final AtomicReference<Long> latest;
 
   public TimeSeries(final String id, final Collection<Archive> archives, final Dispatcher dispatcher, final StorageFactory storageFactory) throws IOException {
-    this.id = Preconditions.checkNotNull(id, "null id");
+    this.id = Preconditions.checkNotNull(id, "null id");//TODO id must be unique per-vm
     this.archives = new ArrayList<Archive>(Preconditions2.checkNotEmpty(archives, "null archives"));
     this.dispatcher = Preconditions.checkNotNull(dispatcher, "null dispatcher");
-    this.storages = new HashMap<StorageKey, Storage>(createStorages(storageFactory, id, archives));
+    this.storages = new HashMap<Pair<Archive, SamplingWindow>, Storage>(createStorages(storageFactory, id, archives));
     this.beginning = new AtomicReference<Long>(extractBeginning(this.storages.values().iterator().next()));
     this.latest = new AtomicReference<Long>(extractLatest(this.storages.values()));
   }
 
-  private Map<StorageKey, Storage> createStorages(final StorageFactory storageFactory, final String id, final Collection<Archive> archives) throws IOException {
-    final Map<StorageKey, Storage> newStorages = new HashMap<StorageKey, Storage>();
+  private Map<Pair<Archive, SamplingWindow>, Storage> createStorages(final StorageFactory storageFactory, final String id, final Collection<Archive> archives) throws IOException {
+    final Map<Pair<Archive, SamplingWindow>, Storage> newStorages = new HashMap<Pair<Archive, SamplingWindow>, Storage>();
     for (final Archive archive : archives) {
       for (final SamplingWindow samplingWindow : archive.getSamplingWindows()) {
-        newStorages.put(new StorageKey(id, archive, samplingWindow), storageFactory.createOrOpen(id, archive, samplingWindow));
+        newStorages.put(new Pair<Archive, SamplingWindow>(archive, samplingWindow), storageFactory.createOrOpen(id, archive, samplingWindow));
       }
     }
     return newStorages;
@@ -139,7 +111,7 @@ public class TimeSeries implements Closeable {
   }
 
   private Storage getStorage(final Archive archive, final SamplingWindow samplingWindow) throws IOException {
-    return this.storages.get(new StorageKey(this.id, archive, samplingWindow));
+    return this.storages.get(new Pair<Archive, SamplingWindow>(archive, samplingWindow));
   }
 
   private long windowId(final long beginning, final long timestamp, final long duration) {
