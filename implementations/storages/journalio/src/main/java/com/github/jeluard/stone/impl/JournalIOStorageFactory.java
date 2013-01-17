@@ -43,7 +43,7 @@ import journal.io.api.RecoveryErrorHandler;
  */
 public class JournalIOStorageFactory implements StorageFactory {
 
-  private static final String WRITER_THREADS_NAME_FORMAT = "Stone JournalIO-Writer #{0}";
+  private static final String WRITER_THREADS_NAME_FORMAT = "Stone JournalIO-Writer #%d";
   private static final String DISPOSER_THREADS_NAME_FORMAT = "Stone JournalIO-Disposer";
   private static final String CONSOLIDATOR_SUFFIX = "Consolidator";
 
