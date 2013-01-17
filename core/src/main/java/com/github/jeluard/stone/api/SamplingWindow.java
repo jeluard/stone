@@ -20,6 +20,9 @@ import com.google.common.base.Preconditions;
 
 import org.joda.time.Duration;
 
+/**
+ * Encapsulate details about how published data will be kept.
+ */
 public final class SamplingWindow {
 
   private final Duration resolution;
