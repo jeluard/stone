@@ -50,7 +50,7 @@ public final class SamplingWindow {
     }
 
     final SamplingWindow other = (SamplingWindow) object;
-    return this.duration.equals(other.duration) && this.resolution.equals(other.duration);
+    return this.duration.equals(other.duration) && this.resolution.equals(other.resolution);
   }
   
 }
