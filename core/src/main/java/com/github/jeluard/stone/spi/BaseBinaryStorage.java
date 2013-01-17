@@ -61,7 +61,7 @@ public abstract class BaseBinaryStorage extends BaseStorage {
    * @return all {@link int[]} composed of {@code buffer} content 
    */
   protected final int[] getConsolidates(final byte[] buffer) {
-    final int count = buffer.length/4;
+    final int count = buffer.length / bits2Bytes(Integer.SIZE);
     final int[] ints = new int[count];
     final ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
     for (int i = 0; i < count; i++) {
