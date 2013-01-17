@@ -26,6 +26,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import journal.io.api.Journal;
 import journal.io.api.Location;
@@ -48,12 +50,20 @@ import org.joda.time.DateTime;
  */
 public class JournalIOStorage extends BaseBinaryStorage implements Closeable {
 
+  private static final Logger LOGGER = Logger.getLogger("com.github.jeluard.stone.storage.journalio");
+
   private static final WriteCallback LOGGING_WRITE_CALLBACK = new WriteCallback() {
     @Override
-    public void onSync(final Location syncedLocation) {
+    public void onSync(final Location location) {
+      if (JournalIOStorage.LOGGER.isLoggable(Level.FINEST)) {
+        JournalIOStorage.LOGGER.log(Level.FINEST, "Succesfully writen at location <{0}>", location);
+      }
     }
     @Override
-    public void onError(final Location location, final Throwable error) {
+    public void onError(final Location location, final Throwable e) {
+      if (JournalIOStorage.LOGGER.isLoggable(Level.WARNING)) {
+        JournalIOStorage.LOGGER.log(Level.WARNING, "Failed to write at location <"+location+">", e);
+      }
     }
   };
 
