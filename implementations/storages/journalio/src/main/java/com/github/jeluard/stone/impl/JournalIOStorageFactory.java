@@ -61,7 +61,7 @@ public class JournalIOStorageFactory implements StorageFactory {
   }
 
   protected String mainDirectoryPath(final String id, final Archive archive, final SamplingWindow samplingWindow) {
-    return "stone-journal";
+    return "stone-journal/"+id;
   }
 
   /**
