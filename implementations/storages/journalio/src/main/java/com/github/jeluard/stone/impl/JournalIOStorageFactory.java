@@ -88,7 +88,7 @@ public class JournalIOStorageFactory implements StorageFactory {
    */
   protected Optional<String> filePrefix(final String id, final Archive archive, final SamplingWindow samplingWindow) {
     final Collection<String> consolidatorIdentifiers = extractConsolidatorIdentifiers(archive.getConsolidators());
-    return Optional.of(Joiner.on("-").join(consolidatorIdentifiers)+"-"+samplingWindow.getDuration()+"@"+samplingWindow.getResolution());
+    return Optional.of(Joiner.on("-").join(consolidatorIdentifiers)+"-"+samplingWindow.getDuration()+"@"+samplingWindow.getResolution()+"-");
   }
 
   /**
