@@ -25,20 +25,41 @@ import java.nio.ByteBuffer;
  */
 public abstract class BaseBinaryStorage extends BaseStorage {
 
+  /**
+   * Put {@code timestamp} into {@code buffer}.
+   *
+   * @param ints
+   * @param buffer 
+   */
   protected final void put(final long timestamp, final ByteBuffer buffer) {
     buffer.putLong(timestamp);
   }
 
+  /**
+   * @param buffer
+   * @return a {@link Long} composed of {@code buffer} content 
+   */
   protected final long getTimestamp(final byte[] buffer) {
+    assert buffer.length > 8;
     return ByteBuffer.wrap(buffer).getLong();
   }
 
+  /**
+   * Put all {@code ints} into {@code buffer}.
+   *
+   * @param ints
+   * @param buffer 
+   */
   protected final void put(final int[] ints, final ByteBuffer buffer) {
     for (final int i : ints) {
       buffer.putInt(i);
     }
   }
 
+  /**
+   * @param buffer
+   * @return all {@link int[]} composed of {@code buffer} content 
+   */
   protected final int[] getConsolidates(final byte[] buffer) {
     final int count = buffer.length/4;
     final int[] ints = new int[count];
@@ -49,16 +70,24 @@ public abstract class BaseBinaryStorage extends BaseStorage {
     return ints;
   }
 
+  /**
+   * @param bits
+   * @return convert number of bits into number of bytes
+   */
   protected final int bits2Bytes(final int bits) {
     return bits / Byte.SIZE;
   }
 
+  /**
+   * @param capacity
+   * @return a {@link ByteBuffer} with {@code capacity} capacity
+   */
   protected ByteBuffer createByteBuffer(final int capacity) {
     return ByteBuffer.allocate(capacity);
   }
 
   @Override
-  public void append(final long timestamp, final int[] consolidates) throws IOException {
+  public final void append(final long timestamp, final int[] consolidates) throws IOException {
     final int capacity = bits2Bytes(Long.SIZE) + bits2Bytes(Integer.SIZE) * consolidates.length;
     final ByteBuffer buffer = createByteBuffer(capacity);
     put(timestamp, buffer);
@@ -67,6 +96,12 @@ public abstract class BaseBinaryStorage extends BaseStorage {
     append(buffer);
   }
 
+  /**
+   * Append the content of this {@link ByteBuffer} to the {@link Storage}.
+   *
+   * @param buffer
+   * @throws IOException 
+   */
   protected abstract void append(ByteBuffer buffer) throws IOException;
 
 }
