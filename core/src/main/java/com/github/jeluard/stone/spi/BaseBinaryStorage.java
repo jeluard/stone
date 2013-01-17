@@ -49,13 +49,17 @@ public abstract class BaseBinaryStorage extends BaseStorage {
     return ints;
   }
 
+  protected final int bits2Bytes(final int bits) {
+    return bits / Byte.SIZE;
+  }
+
   protected ByteBuffer createByteBuffer(final int capacity) {
     return ByteBuffer.allocate(capacity);
   }
 
   @Override
   public void append(final long timestamp, final int[] consolidates) throws IOException {
-    final int capacity = 8 + 4 * consolidates.length;
+    final int capacity = bits2Bytes(Long.SIZE) + bits2Bytes(Integer.SIZE) * consolidates.length;
     final ByteBuffer buffer = createByteBuffer(capacity);
     put(timestamp, buffer);
     put(consolidates, buffer);
