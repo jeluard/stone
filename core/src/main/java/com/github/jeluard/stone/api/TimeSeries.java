@@ -106,8 +106,8 @@ public class TimeSeries implements Closeable {
     return this.id;
   }
 
-  public Collection<Archive> getArchives() {
-    return Collections.unmodifiableCollection(this.archives);
+  public Map<Pair<Archive, SamplingWindow>, Storage> getStorages() {
+    return Collections.unmodifiableMap(this.storages);
   }
 
   private Storage getStorage(final Archive archive, final SamplingWindow samplingWindow) throws IOException {
