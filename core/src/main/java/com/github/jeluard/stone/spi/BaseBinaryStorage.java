@@ -38,7 +38,7 @@ public abstract class BaseBinaryStorage extends BaseStorage {
 
   /**
    * @param buffer
-   * @return a {@link Long} composed of {@code buffer} content 
+   * @return a {@link Long} composed of first 8 bytes of {@code buffer} content. Next bytes are ignored.
    */
   protected final long getTimestamp(final byte[] buffer) {
     assert buffer.length > 8;
@@ -59,12 +59,13 @@ public abstract class BaseBinaryStorage extends BaseStorage {
 
   /**
    * @param buffer
+   * @param offset number of bytes to skip
    * @return all {@link int[]} composed of {@code buffer} content 
    */
-  protected final int[] getConsolidates(final byte[] buffer) {
+  protected final int[] getConsolidates(final byte[] buffer, final int offset) {
     final int count = buffer.length / bits2Bytes(Integer.SIZE);
     final int[] ints = new int[count];
-    final ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
+    final ByteBuffer byteBuffer = ByteBuffer.wrap(buffer, offset, buffer.length - offset);
     for (int i = 0; i < count; i++) {
       ints[i] = byteBuffer.getInt();
     }

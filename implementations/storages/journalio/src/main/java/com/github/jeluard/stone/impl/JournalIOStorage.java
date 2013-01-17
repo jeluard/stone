@@ -96,8 +96,10 @@ public class JournalIOStorage extends BaseBinaryStorage implements Closeable {
           protected Pair<Long, int[]> computeNext() {
             if (locations.hasNext()) {
               try {
-                final long timestamp = getTimestamp(readNextLocation(locations));
-                final int[] consolidates = getConsolidates(readNextLocation(locations));
+                //Read next location. It will contain the timestamp then all consolidates.
+                final byte[] nextLocation = readNextLocation(locations);
+                final long timestamp = getTimestamp(nextLocation);
+                final int[] consolidates = getConsolidates(nextLocation, bits2Bytes(Long.SIZE));
                 return new Pair<Long, int[]>(timestamp, consolidates);
               } catch (IOException e) {
                 throw new RuntimeException(e);
