@@ -40,7 +40,7 @@ import java.util.logging.Logger;
 
 import org.joda.time.DateTime;
 
-public class TimeSeries implements Closeable {
+public final class TimeSeries implements Closeable {
 
   private static final Logger LOGGER = Logger.getLogger("com.github.jeluard.stone");
 
