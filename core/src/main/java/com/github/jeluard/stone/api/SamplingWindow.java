@@ -50,12 +50,12 @@ public final class SamplingWindow {
     }
 
     final SamplingWindow other = (SamplingWindow) object;
-    return this.duration.equals(other.duration) && this.resolution.equals(other.resolution);
+    return this.resolution.equals(other.resolution) && this.duration.equals(other.duration);
   }
 
   @Override
   public String toString() {
-    return "duration <"+this.duration+"> resolution <"+this.resolution+">";
+    return "resolution <"+this.resolution+"> duration <"+this.duration+">";
   }
 
 }
