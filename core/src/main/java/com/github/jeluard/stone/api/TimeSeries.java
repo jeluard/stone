@@ -24,6 +24,7 @@ import com.github.jeluard.stone.spi.Storage;
 import com.github.jeluard.stone.spi.StorageFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ConcurrentHashMultiset;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -31,7 +32,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,6 +46,8 @@ public class TimeSeries implements Closeable {
 
   private static final Logger LOGGER = Logger.getLogger("com.github.jeluard.stone");
 
+  private static final Set<String> IDS = new CopyOnWriteArraySet<String>();
+
   private final String id;
   private final Collection<Archive> archives;
   private final Dispatcher dispatcher;
@@ -51,6 +57,9 @@ public class TimeSeries implements Closeable {
 
   public TimeSeries(final String id, final Collection<Archive> archives, final Dispatcher dispatcher, final StorageFactory storageFactory) throws IOException {
     this.id = Preconditions.checkNotNull(id, "null id");//TODO id must be unique per-vm
+    if (!TimeSeries.IDS.add(id)) {
+      throw new IllegalArgumentException("ID <"+id+"> is already used");
+    }
     this.archives = new ArrayList<Archive>(Preconditions2.checkNotEmpty(archives, "null archives"));
     this.dispatcher = Preconditions.checkNotNull(dispatcher, "null dispatcher");
     this.storages = new HashMap<Pair<Archive, SamplingWindow>, Storage>(createStorages(storageFactory, id, archives));
@@ -182,6 +191,8 @@ public class TimeSeries implements Closeable {
    */
   @Override
   public void close() throws IOException {
+    TimeSeries.IDS.remove(this.id);
+
     for (final Storage storage : this.storages.values()) {
       try {
         if (storage instanceof Closeable) {

@@ -16,11 +16,15 @@
  */
 package com.github.jeluard.stone.spi;
 
+import com.github.jeluard.stone.api.Archive;
+import com.github.jeluard.stone.api.TimeSeries;
 import com.google.common.base.Optional;
 
 import java.io.IOException;
-import org.joda.time.DateTime;
+import java.util.Collections;
 
+import org.joda.time.DateTime;
+import org.junit.Test;
 import org.mockito.Mockito;
 
 public class TimeSeriesTest {
@@ -29,6 +33,13 @@ public class TimeSeriesTest {
     final Storage mock = Mockito.mock(Storage.class);
     Mockito.when(mock.beginning()).thenReturn(date);
     return mock;
+  }
+
+  @Test(expected=IllegalArgumentException.class)
+  public void shouldDuplicatedTimeSeriesIDBeInvalid() throws IOException {
+    final String id = "id";
+    new TimeSeries(id, Collections.<Archive>emptyList(), Mockito.mock(Dispatcher.class), Mockito.mock(StorageFactory.class));
+    new TimeSeries(id, Collections.<Archive>emptyList(), Mockito.mock(Dispatcher.class), Mockito.mock(StorageFactory.class));
   }
 
   /*@Test(expected=IllegalArgumentException.class)
