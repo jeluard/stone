@@ -16,37 +16,29 @@
  */
 package com.github.jeluard.stone.impl.consolidators;
 
-import java.util.LinkedList;
-import java.util.List;
-
 /**
  * A {@link com.github.jeluard.stone.spi.Consolidator} providing the {@code mean} of accumulated values.
  */
 public class MeanConsolidator extends BaseConsolidator {
 
-  private final List<Integer> values = new LinkedList<Integer>();
-
-  private int sum(final List<Integer> integers) {
-    int sum = 0;
-    for (final Integer integer : integers) {
-      sum += integer;
-    }
-    return sum;
-  }
+  private int sum = 0;
+  private int count = 0;
 
   @Override
   public void accumulate(final long timestamp, final int value) {
-    this.values.add(value);
+    this.sum += value;
+    ++this.count;
   }
 
   @Override
   public int consolidate() {
-    return sum(this.values) / this.values.size();
+    return this.sum / this.count;
   }
 
   @Override
   protected void reset() {
-    this.values.clear();
+    this.sum = 0;
+    this.count = 0;
   }
 
 }
