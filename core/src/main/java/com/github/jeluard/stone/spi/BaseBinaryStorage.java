@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
+ * Base implementation for {@link Storage} storing byte arrays.
  */
 public abstract class BaseBinaryStorage extends BaseStorage {
 
