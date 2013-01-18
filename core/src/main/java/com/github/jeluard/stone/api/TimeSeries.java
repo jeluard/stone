@@ -30,7 +30,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.joda.time.DateTime;
 
@@ -102,32 +101,28 @@ public final class TimeSeries implements Closeable {
   }
 
   private long recordLatest(final long timestamp) {
-    //Atomically set to the new timestamp if value is null (i.e. no value as yet been recorded)
-    final long previousTimestamp = this.latest;//.getAndSet(timestamp);
-    latest = timestamp;
+    //Set to the new timestamp if value is null (i.e. no value as yet been recorded)
+    final long previousTimestamp = this.latest;
+    this.latest = timestamp;
     checkNotBeforeLatestTimestamp(previousTimestamp, timestamp);
     return previousTimestamp;
   }
 
-  private synchronized long inferBeginning(final long timestamp) {
+  private long inferBeginning(final long timestamp) {
     //If beginning is still null (i.e. all storages where empty) sets it's value to timestamp
     //This will be done only once (hence track the first timestamp received)
     if (this.beginning == 0L) {
       this.beginning = timestamp;
     }
-    //this.beginning.compareAndSet(0L, timestamp);
-    return this.beginning;//.get();
+    return this.beginning;
   }
 
-  //https://blogs.oracle.com/dholmes/entry/inside_the_hotspot_vm_clocks
   public void publish(final long timestamp, final int value) throws IOException {
     Preconditions.checkNotNull(timestamp, "null timestamp");
 
-    //TODO check thread-safety
     final long previousTimestamp = recordLatest(timestamp);
     final long beginningTimestamp = inferBeginning(timestamp);
 
-    //TODO // ?
     this.engine.publish(beginningTimestamp, previousTimestamp, timestamp, value);
   }
 
