@@ -41,7 +41,7 @@ public abstract class BaseBinaryStorage extends BaseStorage {
    * @return a {@link Long} composed of first 8 bytes of {@code buffer} content. Next bytes are ignored.
    */
   protected final long getTimestamp(final byte[] buffer) {
-    assert buffer.length > 8;
+    assert buffer.length > bits2Bytes(Long.SIZE);
     return ByteBuffer.wrap(buffer).getLong();
   }
 
