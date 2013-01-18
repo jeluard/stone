@@ -141,7 +141,6 @@ public class JournalIOStorageFactory implements StorageFactory {
     journal.setPhysicalSync(true);
     journal.setMaxFileLength(JournalIOStorageFactory.MAX_FILE_LENGTH);
     journal.setWriter(this.writerExecutor);
-    //journal.setDisposeInterval()
     journal.setDisposer(this.disposerScheduledExecutorService);
     journal.open();
     return journal;
