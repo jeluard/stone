@@ -88,20 +88,25 @@ public class JournalIOStorage extends BaseBinaryStorage implements Closeable {
   private void removeUntil(final long until) throws IOException {
     for (final Location location : this.journal.redo()) {
       final long timestamp = getTimestamp(this.journal.read(location, Journal.ReadType.SYNC));
-      if (timestamp < until) {
-        this.journal.delete(location);
-      } else {
+      if (timestamp >= until) {
+        //This value belongs to the window: stop iterating.
         break;
       }
+
+      //This value does not belong to the window (it's before): delete it.
+      //TODO is it fine to delete during iteration?
+      this.journal.delete(location);
     }
   }
 
   @Override
   protected final void append(final long timestamp, final ByteBuffer buffer) throws IOException {
-    //Calculate current window beginning then make sure 
+    //Calculate current window beginning then deletes all values outside of it.
     final long beginning = timestamp - this.duration;
     removeUntil(beginning);
 
+    System.out.println("===> append");
+    System.out.println();
     this.journal.write(buffer.array(), Journal.WriteType.SYNC, JournalIOStorage.LOGGING_WRITE_CALLBACK);
   }
 
