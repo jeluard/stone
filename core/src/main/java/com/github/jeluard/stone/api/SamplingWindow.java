@@ -41,6 +41,10 @@ public final class SamplingWindow {
     return this.duration;
   }
 
+  public int getSamples() {
+    return (int) (this.duration.getMillis() / this.resolution.getMillis());
+  }
+
   @Override
   public int hashCode() {
     return this.resolution.hashCode() + this.duration.hashCode();
