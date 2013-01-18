@@ -17,7 +17,7 @@
 package com.github.jeluard.stone;
 
 import com.github.jeluard.stone.api.Archive;
-import com.github.jeluard.stone.api.SamplingWindow;
+import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.impl.JournalIOStorageFactory;
 import com.github.jeluard.stone.impl.consolidators.MaxConsolidator;
@@ -31,7 +31,7 @@ import org.joda.time.Duration;
 public class Test {
   public static void main(String[] args) throws Exception {
     final Archive archive1 = new Archive(Arrays.asList(MaxConsolidator.class), 
-            Arrays.asList(new SamplingWindow(Duration.standardMinutes(1), Duration.standardHours(1))));
+            Arrays.asList(new Window(Duration.standardMinutes(1), Duration.standardHours(1))));
     final TimeSeries timeSeries = new TimeSeries("ping-server1", Arrays.asList(archive1), new SequentialDispatcher(), new JournalIOStorageFactory());
 
     try {

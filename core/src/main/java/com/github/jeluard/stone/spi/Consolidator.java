@@ -17,7 +17,7 @@
 package com.github.jeluard.stone.spi;
 
 /**
- * Abstracts logic of consolidating values from a {@link com.github.jeluard.stone.api.SamplingWindow} into a single {@code value}.
+ * Abstracts logic of consolidating values from a {@link com.github.jeluard.stone.api.Window} into a single {@code value}.
  */
 public interface Consolidator {
 

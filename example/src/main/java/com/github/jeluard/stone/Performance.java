@@ -18,7 +18,7 @@ package com.github.jeluard.stone;
 
 import com.github.jeluard.guayaba.base.Pair;
 import com.github.jeluard.stone.api.Archive;
-import com.github.jeluard.stone.api.SamplingWindow;
+import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.impl.JournalIOStorageFactory;
 import com.github.jeluard.stone.impl.consolidators.MaxConsolidator;
@@ -39,9 +39,9 @@ import org.joda.time.Duration;
 public class Performance {
   public static void main(String[] args) throws Exception {
     final Archive archive1 = new Archive(Arrays.asList(MaxConsolidator.class), 
-            Arrays.asList(new SamplingWindow(Duration.standardMinutes(1), Duration.standardHours(1))));
+            Arrays.asList(new Window(Duration.standardMinutes(1), Duration.standardHours(1))));
     final Archive archive2 = new Archive(Arrays.asList(MaxConsolidator.class, MaxConsolidator.class), 
-            Arrays.asList(new SamplingWindow(Duration.standardMinutes(5), Duration.standardHours(2))));
+            Arrays.asList(new Window(Duration.standardMinutes(5), Duration.standardHours(2))));
 
     int nbSeries = 5000;
 
@@ -52,9 +52,9 @@ public class Performance {
     }
 
     /*for (final TimeSeries ts : timeSeries) {
-      final Map<Pair<Archive, SamplingWindow>, Storage> storages = ts.getStorages();
+      final Map<Pair<Archive, Window>, Storage> storages = ts.getStorages();
       System.out.println("TimeSeries "+ts.getId());
-      for (final Map.Entry<Pair<Archive, SamplingWindow>, Storage> entry : storages.entrySet()) {
+      for (final Map.Entry<Pair<Archive, Window>, Storage> entry : storages.entrySet()) {
         System.out.println("\tfor sampling "+entry.getKey().second);
         for (final Pair<Long, int[]> value : entry.getValue().all()) {
           System.out.println("\t\ttimestamp <"+value.first+"> values <"+Arrays.toString(value.second)+">");

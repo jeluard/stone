@@ -20,7 +20,7 @@ import com.github.jeluard.guayaba.base.Preconditions2;
 import com.github.jeluard.guayaba.base.Triple;
 import com.github.jeluard.guayaba.lang.Iterables2;
 import com.github.jeluard.stone.api.Archive;
-import com.github.jeluard.stone.api.SamplingWindow;
+import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.spi.Consolidator;
 import com.github.jeluard.stone.spi.Dispatcher;
 import com.github.jeluard.stone.spi.Storage;
@@ -46,21 +46,21 @@ public class Engine implements Closeable {
 
   private final Archive[] archives;
   private final Dispatcher dispatcher;
-  private final Triple<SamplingWindow, Storage, Consolidator[]>[] fast;
-  private Map<Pair<Archive, SamplingWindow>, Pair<Storage, Consolidator[]>> stuffs = new HashMap<Pair<Archive, SamplingWindow>, Pair<Storage, Consolidator[]>>();
+  private final Triple<Window, Storage, Consolidator[]>[] fast;
+  private Map<Pair<Archive, Window>, Pair<Storage, Consolidator[]>> stuffs = new HashMap<Pair<Archive, Window>, Pair<Storage, Consolidator[]>>();
 
   public Engine(final String id, final Collection<Archive> archives, final Dispatcher dispatcher, final StorageFactory storageFactory) throws IOException {
     this.archives = Preconditions2.checkNotEmpty(archives, "null archives").toArray(new Archive[archives.size()]);
     this.dispatcher = Preconditions.checkNotNull(dispatcher, "null dispatcher");
     this.stuffs.putAll(createStorages(storageFactory, id, archives));
     this.fast = new Triple[this.stuffs.size()];
-    for (Iterables2.Indexed<Map.Entry<Pair<Archive, SamplingWindow>, Pair<Storage, Consolidator[]>>> stuff : Iterables2.withIndex(this.stuffs.entrySet())) {
-      this.fast[stuff.index] = new Triple<SamplingWindow, Storage, Consolidator[]>(stuff.value.getKey().second, stuff.value.getValue().first, stuff.value.getValue().second);
+    for (Iterables2.Indexed<Map.Entry<Pair<Archive, Window>, Pair<Storage, Consolidator[]>>> stuff : Iterables2.withIndex(this.stuffs.entrySet())) {
+      this.fast[stuff.index] = new Triple<Window, Storage, Consolidator[]>(stuff.value.getKey().second, stuff.value.getValue().first, stuff.value.getValue().second);
     }
   }
 
-  private Storage createStorage(final StorageFactory storageFactory, final String id, final Archive archive, final SamplingWindow samplingWindow) throws IOException {
-    return storageFactory.createOrOpen(id, archive, samplingWindow);
+  private Storage createStorage(final StorageFactory storageFactory, final String id, final Archive archive, final Window window) throws IOException {
+    return storageFactory.createOrOpen(id, archive, window);
   }
 
   private Consolidator createConsolidator(final Class<? extends Consolidator> type) {
@@ -80,17 +80,17 @@ public class Engine implements Closeable {
     return consolidators;
   }
 
-  private Map<Pair<Archive, SamplingWindow>, Pair<Storage, Consolidator[]>> createStorages(final StorageFactory storageFactory, final String id, final Collection<Archive> archives) throws IOException {
-    final Map<Pair<Archive, SamplingWindow>, Pair<Storage, Consolidator[]>> newStorages = new HashMap<Pair<Archive, SamplingWindow>, Pair<Storage, Consolidator[]>>();
+  private Map<Pair<Archive, Window>, Pair<Storage, Consolidator[]>> createStorages(final StorageFactory storageFactory, final String id, final Collection<Archive> archives) throws IOException {
+    final Map<Pair<Archive, Window>, Pair<Storage, Consolidator[]>> newStorages = new HashMap<Pair<Archive, Window>, Pair<Storage, Consolidator[]>>();
     for (final Archive archive : archives) {
-      for (final SamplingWindow samplingWindow : archive.getSamplingWindows()) {
-        newStorages.put(new Pair<Archive, SamplingWindow>(archive, samplingWindow), new Pair<Storage, Consolidator[]>(createStorage(storageFactory, id, archive, samplingWindow), createConsolidators(archive)));
+      for (final Window window : archive.getWindows()) {
+        newStorages.put(new Pair<Archive, Window>(archive, window), new Pair<Storage, Consolidator[]>(createStorage(storageFactory, id, archive, window), createConsolidators(archive)));
       }
     }
     return newStorages;
   }
 
-  public Map<Pair<Archive, SamplingWindow>, Storage> getStorages() {
+  public Map<Pair<Archive, Window>, Storage> getStorages() {
     return Maps.transformValues(this.stuffs, new Function<Pair<Storage, Consolidator[]>, Storage>() {
       @Override
       public Storage apply(final Pair<Storage, Consolidator[]> input) {
@@ -112,7 +112,7 @@ public class Engine implements Closeable {
   }
 
   public void publish(final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) throws IOException {
-    for (Triple<SamplingWindow, Storage, Consolidator[]> stuff : this.fast) {
+    for (Triple<Window, Storage, Consolidator[]> stuff : this.fast) {
         accumulate(currentTimestamp, value, stuff.third);
 
         if (previousTimestamp != 0L) {
@@ -127,26 +127,6 @@ public class Engine implements Closeable {
           }
         }
     }
-    /*for (final Archive archive : this.archives) {
-      //TODO sort by window resolution, ts with same frame can be optimized
-      for (final SamplingWindow samplingWindow : archive.getSamplingWindows()) {
-        final Pair<Storage, Consolidator[]> stuff = getStuff(archive, samplingWindow);
-
-        accumulate(currentTimestamp, value, stuff.second);
-
-        if (previousTimestamp != null) {
-          final long duration = samplingWindow.getResolution().getMillis();
-          final long currentWindowId = windowId(beginningTimestamp, currentTimestamp, duration);
-          final long previousWindowId = windowId(beginningTimestamp, previousTimestamp, duration);
-          if (currentWindowId != previousWindowId) {
-            //previousTimestamp will be null on first run with empty archives
-            final long previousWindowBeginning = beginningTimestamp + previousWindowId * duration;
-
-            persist(previousWindowBeginning, stuff.first, stuff.second);
-          }
-        }
-      }
-    }*/
   }
 
   /**

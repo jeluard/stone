@@ -23,12 +23,12 @@ import org.joda.time.Duration;
 /**
  * Encapsulate details about how published data will be kept.
  */
-public final class SamplingWindow {
+public final class Window {
 
   private final Duration resolution;
   private final Duration duration;
 
-  public SamplingWindow(final Duration resolution, final Duration duration) {
+  public Window(final Duration resolution, final Duration duration) {
     this.resolution = Preconditions.checkNotNull(resolution, "null resolution");
     this.duration = Preconditions.checkNotNull(duration, "null duration");
   }
@@ -52,11 +52,11 @@ public final class SamplingWindow {
 
   @Override
   public boolean equals(final Object object) {
-    if (!(object instanceof SamplingWindow)) {
+    if (!(object instanceof Window)) {
       return false;
     }
 
-    final SamplingWindow other = (SamplingWindow) object;
+    final Window other = (Window) object;
     return this.resolution.equals(other.resolution) && this.duration.equals(other.duration);
   }
 

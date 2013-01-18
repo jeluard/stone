@@ -91,7 +91,7 @@ public final class TimeSeries implements Closeable {
     return this.id;
   }
 
-  public Map<Pair<Archive, SamplingWindow>, Storage> getStorages() {
+  public Map<Pair<Archive, Window>, Storage> getStorages() {
     return this.engine.getStorages();
   }
 

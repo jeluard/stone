@@ -17,7 +17,7 @@
 package com.github.jeluard.stone.impl;
 
 import com.github.jeluard.stone.api.Archive;
-import com.github.jeluard.stone.api.SamplingWindow;
+import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.spi.Consolidator;
 import com.github.jeluard.stone.spi.Storage;
 import com.github.jeluard.stone.spi.StorageFactory;
@@ -62,7 +62,7 @@ public class JournalIOStorageFactory implements StorageFactory {
     this.disposerScheduledExecutorService = Preconditions.checkNotNull(disposerScheduledExecutorService, "null disposerScheduledExecutorService");
   }
 
-  protected String mainDirectoryPath(final String id, final Archive archive, final SamplingWindow samplingWindow) {
+  protected String mainDirectoryPath(final String id, final Archive archive, final Window window) {
     return "stone-journal/"+id;
   }
 
@@ -88,9 +88,9 @@ public class JournalIOStorageFactory implements StorageFactory {
    * @param archive
    * @return an optional prefix used when creating file names
    */
-  protected Optional<String> filePrefix(final String id, final Archive archive, final SamplingWindow samplingWindow) {
+  protected Optional<String> filePrefix(final String id, final Archive archive, final Window window) {
     final Collection<String> consolidatorIdentifiers = extractConsolidatorIdentifiers(archive.getConsolidators());
-    return Optional.of(Joiner.on("-").join(consolidatorIdentifiers)+"-"+samplingWindow.getDuration()+"@"+samplingWindow.getResolution()+"-");
+    return Optional.of(Joiner.on("-").join(consolidatorIdentifiers)+"-"+window.getDuration()+"@"+window.getResolution()+"-");
   }
 
   /**
@@ -98,20 +98,20 @@ public class JournalIOStorageFactory implements StorageFactory {
    * @param archive
    * @return an optional suffix used when creating file names
    */
-  protected Optional<String> fileSuffix(final String id, final Archive archive, final SamplingWindow samplingWindow) {
+  protected Optional<String> fileSuffix(final String id, final Archive archive, final Window window) {
     return Optional.absent();
   }
 
   /**
    * @param id
    * @param archive
-   * @param samplingWindow 
-   * @return an initialized {@link Journal} dedicated to this {@code id} / {@code archive} / {@code samplingWindow} tuple
+   * @param window 
+   * @return an initialized {@link Journal} dedicated to this {@code id} / {@code archive} / {@code window} tuple
    * @throws IOException 
    */
-  protected Journal createJournal(final String id, final Archive archive, final SamplingWindow samplingWindow) throws IOException {
+  protected Journal createJournal(final String id, final Archive archive, final Window window) throws IOException {
     final Journal journal = new Journal();
-    final String mainDirectory = mainDirectoryPath(id, archive, samplingWindow);
+    final String mainDirectory = mainDirectoryPath(id, archive, window);
     final File file = new File(mainDirectory);
     //If main directory path exists check its a directory
     //If it does not exists create it
@@ -126,11 +126,11 @@ public class JournalIOStorageFactory implements StorageFactory {
       throw new IllegalArgumentException("Cannot write to main directory <"+mainDirectory+">");
     }
     journal.setDirectory(file);
-    final Optional<String> filePrefix = filePrefix(id, archive, samplingWindow);
+    final Optional<String> filePrefix = filePrefix(id, archive, window);
     if (filePrefix.isPresent()) {
       journal.setFilePrefix(filePrefix.get());
     }
-    final Optional<String> fileSuffix = fileSuffix(id, archive, samplingWindow);
+    final Optional<String> fileSuffix = fileSuffix(id, archive, window);
     if (fileSuffix.isPresent()) {
       journal.setFileSuffix(fileSuffix.get());
     }
@@ -148,12 +148,12 @@ public class JournalIOStorageFactory implements StorageFactory {
   }
 
   @Override
-  public final Storage createOrOpen(final String id, final Archive archive, final SamplingWindow samplingWindow) throws IOException {
+  public final Storage createOrOpen(final String id, final Archive archive, final Window window) throws IOException {
     Preconditions.checkNotNull(id, "null id");
     Preconditions.checkNotNull(archive, "null archive");
-    Preconditions.checkNotNull(samplingWindow, "null samplingWindow");
+    Preconditions.checkNotNull(window, "null window");
 
-    return new JournalIOStorage(createJournal(id, archive, samplingWindow));
+    return new JournalIOStorage(createJournal(id, archive, window));
   }
 
 }

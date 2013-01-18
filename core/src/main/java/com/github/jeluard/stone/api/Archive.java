@@ -30,19 +30,19 @@ import java.util.List;
 public final class Archive {
 
   private final Collection<Class<? extends Consolidator>> consolidators;
-  private final List<SamplingWindow> samplingWindows;
+  private final List<Window> windows;
 
-  public Archive(final Collection<? extends Class<? extends Consolidator>> consolidators, final List<SamplingWindow> samplingWindows) {
+  public Archive(final Collection<? extends Class<? extends Consolidator>> consolidators, final List<Window> windows) {
     this.consolidators = Collections.unmodifiableCollection(new ArrayList<Class<? extends Consolidator>>(Preconditions.checkNotNull(consolidators, "null consolidators")));
-    this.samplingWindows = Collections.unmodifiableList(new ArrayList<SamplingWindow>(Preconditions.checkNotNull(samplingWindows, "null samplingWindows")));
+    this.windows = Collections.unmodifiableList(new ArrayList<Window>(Preconditions.checkNotNull(windows, "null windows")));
   }
 
   public Collection<Class<? extends Consolidator>> getConsolidators() {
     return this.consolidators;
   }
 
-  public List<SamplingWindow> getSamplingWindows() {
-    return this.samplingWindows;
+  public List<Window> getWindows() {
+    return this.windows;
   }
 
 }
