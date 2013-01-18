@@ -105,8 +105,6 @@ public class JournalIOStorage extends BaseBinaryStorage implements Closeable {
     final long beginning = timestamp - this.duration;
     removeUntil(beginning);
 
-    System.out.println("===> append");
-    System.out.println();
     this.journal.write(buffer.array(), Journal.WriteType.SYNC, JournalIOStorage.LOGGING_WRITE_CALLBACK);
   }
 
