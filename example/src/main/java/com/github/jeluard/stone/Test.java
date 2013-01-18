@@ -16,33 +16,41 @@
  */
 package com.github.jeluard.stone;
 
+import com.github.jeluard.guayaba.base.Pair;
 import com.github.jeluard.stone.api.Archive;
-import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.api.TimeSeries;
+import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.impl.JournalIOStorageFactory;
-import com.github.jeluard.stone.impl.consolidators.MaxConsolidator;
 import com.github.jeluard.stone.impl.SequentialDispatcher;
+import com.github.jeluard.stone.impl.consolidators.MaxConsolidator;
+import com.github.jeluard.stone.spi.Storage;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Random;
 
 import org.joda.time.Duration;
 
 public class Test {
   public static void main(String[] args) throws Exception {
-    final Archive archive1 = new Archive(Arrays.asList(MaxConsolidator.class), 
-            Arrays.asList(new Window(Duration.standardMinutes(1), Duration.standardHours(1))));
-    final TimeSeries timeSeries = new TimeSeries("ping-server1", Arrays.asList(archive1), new SequentialDispatcher(), new JournalIOStorageFactory());
+    final Archive archive = new Archive(Arrays.asList(MaxConsolidator.class), 
+            Arrays.asList(new Window(Duration.standardSeconds(10), Duration.standardMinutes(1))));
+    final TimeSeries timeSeries = new TimeSeries("timeseries", Arrays.asList(archive), new SequentialDispatcher(), new JournalIOStorageFactory());
+
+    final Map<Pair<Archive, Window>, Storage> storages = timeSeries.getStorages();
+    System.out.println("TimeSeries "+timeSeries.getId());
+    for (final Map.Entry<Pair<Archive, Window>, Storage> entry : storages.entrySet()) {
+      System.out.println("\tfor sampling "+entry.getKey().second);
+      for (final Pair<Long, int[]> value : entry.getValue().all()) {
+        System.out.println("\t\ttimestamp <"+value.first+"> values <"+Arrays.toString(value.second)+">");
+      }
+    }
 
     try {
       final Random random = new Random();
-      for (int i = 0; i < 1000; i++) {
-        final long before = System.currentTimeMillis();
-        for (int j = 0; j < 1000; j++) {
-          Thread.sleep(1);
-          timeSeries.publish(System.currentTimeMillis(), 100+random.nextInt(25));
-        }
-        System.out.println(System.currentTimeMillis()-before);
+      for (int i = 0; i < 5*60*1000; i++) {
+        Thread.sleep(1);//Make sure there's at least 1ms in between publication
+        timeSeries.publish(System.currentTimeMillis(), 100+random.nextInt(25));
       }
     } finally {
       timeSeries.close();
