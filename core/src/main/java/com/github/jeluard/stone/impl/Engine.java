@@ -45,16 +45,16 @@ public class Engine implements Closeable {
   private static final Logger LOGGER = Logger.getLogger("com.github.jeluard.stone");
 
   private final Dispatcher dispatcher;
-  private final Triple<Window, Storage, Consolidator[]>[] fast;
+  private final Triple<Window, Storage, Consolidator[]>[] triples;
   private Map<Pair<Archive, Window>, Pair<Storage, Consolidator[]>> stuffs = new HashMap<Pair<Archive, Window>, Pair<Storage, Consolidator[]>>();
 
   public Engine(final String id, final Collection<Archive> archives, final Dispatcher dispatcher, final StorageFactory storageFactory) throws IOException {
     Preconditions2.checkNotEmpty(archives, "null archives").toArray(new Archive[archives.size()]);
     this.dispatcher = Preconditions.checkNotNull(dispatcher, "null dispatcher");
     this.stuffs.putAll(createStorages(storageFactory, id, archives));
-    this.fast = new Triple[this.stuffs.size()];
+    this.triples = new Triple[this.stuffs.size()];
     for (Iterables2.Indexed<Map.Entry<Pair<Archive, Window>, Pair<Storage, Consolidator[]>>> stuff : Iterables2.withIndex(this.stuffs.entrySet())) {
-      this.fast[stuff.index] = new Triple<Window, Storage, Consolidator[]>(stuff.value.getKey().second, stuff.value.getValue().first, stuff.value.getValue().second);
+      this.triples[stuff.index] = new Triple<Window, Storage, Consolidator[]>(stuff.value.getKey().second, stuff.value.getValue().first, stuff.value.getValue().second);
     }
   }
 
@@ -111,20 +111,20 @@ public class Engine implements Closeable {
   }
 
   public void publish(final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) throws IOException {
-    for (Triple<Window, Storage, Consolidator[]> stuff : this.fast) {
-        accumulate(currentTimestamp, value, stuff.third);
+    for (final Triple<Window, Storage, Consolidator[]> triple : this.triples) {
+      accumulate(currentTimestamp, value, triple.third);
 
-        if (previousTimestamp != 0L) {
-          final long duration = stuff.first.getResolution().getMillis();
-          final long currentWindowId = windowId(beginningTimestamp, currentTimestamp, duration);
-          final long previousWindowId = windowId(beginningTimestamp, previousTimestamp, duration);
-          if (currentWindowId != previousWindowId) {
-            //previousTimestamp will be null on first run with empty archives
-            final long previousWindowBeginning = beginningTimestamp + previousWindowId * duration;
+      //previousTimestamp == 0 if this is the first publish call and associated storage was empty (or new)
+      if (previousTimestamp != 0L) {
+        final long duration = triple.first.getResolution().getMillis();
+        final long currentWindowId = windowId(beginningTimestamp, currentTimestamp, duration);
+        final long previousWindowId = windowId(beginningTimestamp, previousTimestamp, duration);
+        if (currentWindowId != previousWindowId) {
+          final long previousWindowBeginning = beginningTimestamp + previousWindowId * duration;
 
-            persist(previousWindowBeginning, stuff.second, stuff.third);
-          }
+          persist(previousWindowBeginning, triple.second, triple.third);
         }
+      }
     }
   }
 
