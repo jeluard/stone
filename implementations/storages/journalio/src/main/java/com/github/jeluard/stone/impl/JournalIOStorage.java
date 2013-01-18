@@ -48,6 +48,8 @@ import org.joda.time.DateTime;
  * <br>
  * Estimated size on disk is 8 (timestamp) + 4 * n (n being number of consolidates) + 30 (Journal.IO overhead per location).
  * <br>
+ * Journal.IO has an overhead of 21 bytes per written batch plus 9 bytes per element contained in the batch.
+ * <br>
  * <br>
  * This format is both easy to implement and fast to parse but waste significant space.
  */

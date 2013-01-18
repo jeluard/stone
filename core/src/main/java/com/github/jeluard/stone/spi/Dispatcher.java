@@ -16,12 +16,8 @@
  */
 package com.github.jeluard.stone.spi;
 
-import java.util.Collection;
-
 /**
- * Dispatches {@link DataPoint}s to currently configured {@link Consolidator}.
- * <br>
- * Adding/removing {@link Consolidator}s during accumulation phasis might lead to incoherent results.
+ * Dispatches timestamp/value to currently configured {@link Consolidator}.
  */
 public interface Dispatcher {
 
@@ -32,8 +28,8 @@ public interface Dispatcher {
    * @param timestamp
    * @param value 
    */
-  void accumulate(long timestamp, int value, Collection<Consolidator> consolidators);
+  void accumulate(long timestamp, int value, Consolidator[] consolidators);
 
-  int[] reduce(Collection<Consolidator> consolidators);
+  int[] reduce(Consolidator[] consolidators);
 
 }

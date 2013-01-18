@@ -68,11 +68,11 @@ public class JournalIOStorageFactory implements StorageFactory {
    * @param consolidators
    * @return all consolidators identifiers (MaxConsolidator => max)
    */
-  protected final Collection<String> extractConsolidatorIdentifiers(final Collection<Consolidator> consolidators) {
-    return Collections2.transform(consolidators, new Function<Consolidator, String>() {
+  protected final Collection<String> extractConsolidatorIdentifiers(final Collection<Class<? extends Consolidator>> consolidators) {
+    return Collections2.transform(consolidators, new Function<Class<? extends Consolidator>, String>() {
       @Override
-      public String apply(final Consolidator input) {
-        final String simpleName = input.getClass().getSimpleName();
+      public String apply(final Class<? extends Consolidator> input) {
+        final String simpleName = input.getSimpleName();
         if (simpleName.endsWith(JournalIOStorageFactory.CONSOLIDATOR_SUFFIX)) {
           return simpleName.substring(0, simpleName.length()-JournalIOStorageFactory.CONSOLIDATOR_SUFFIX.length()).toLowerCase();
         }

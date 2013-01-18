@@ -29,16 +29,16 @@ import java.util.List;
  */
 public final class Archive {
 
-  private final Collection<? extends Consolidator> consolidators;
+  private final Collection<Class<? extends Consolidator>> consolidators;
   private final List<SamplingWindow> samplingWindows;
 
-  public Archive(final Collection<? extends Consolidator> consolidators, final List<SamplingWindow> samplingWindows) {
-    this.consolidators = new ArrayList<Consolidator>(Preconditions.checkNotNull(consolidators, "null consolidators"));
-    this.samplingWindows = new ArrayList<SamplingWindow>(Preconditions.checkNotNull(samplingWindows, "null samplingWindows"));
+  public Archive(final Collection<? extends Class<? extends Consolidator>> consolidators, final List<SamplingWindow> samplingWindows) {
+    this.consolidators = Collections.unmodifiableCollection(new ArrayList<Class<? extends Consolidator>>(Preconditions.checkNotNull(consolidators, "null consolidators")));
+    this.samplingWindows = Collections.unmodifiableList(new ArrayList<SamplingWindow>(Preconditions.checkNotNull(samplingWindows, "null samplingWindows")));
   }
 
-  public Collection<Consolidator> getConsolidators() {
-    return Collections.unmodifiableCollection(this.consolidators);
+  public Collection<Class<? extends Consolidator>> getConsolidators() {
+    return this.consolidators;
   }
 
   public List<SamplingWindow> getSamplingWindows() {
