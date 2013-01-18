@@ -44,13 +44,12 @@ public class Engine implements Closeable {
 
   private static final Logger LOGGER = Logger.getLogger("com.github.jeluard.stone");
 
-  private final Archive[] archives;
   private final Dispatcher dispatcher;
   private final Triple<Window, Storage, Consolidator[]>[] fast;
   private Map<Pair<Archive, Window>, Pair<Storage, Consolidator[]>> stuffs = new HashMap<Pair<Archive, Window>, Pair<Storage, Consolidator[]>>();
 
   public Engine(final String id, final Collection<Archive> archives, final Dispatcher dispatcher, final StorageFactory storageFactory) throws IOException {
-    this.archives = Preconditions2.checkNotEmpty(archives, "null archives").toArray(new Archive[archives.size()]);
+    Preconditions2.checkNotEmpty(archives, "null archives").toArray(new Archive[archives.size()]);
     this.dispatcher = Preconditions.checkNotNull(dispatcher, "null dispatcher");
     this.stuffs.putAll(createStorages(storageFactory, id, archives));
     this.fast = new Triple[this.stuffs.size()];
