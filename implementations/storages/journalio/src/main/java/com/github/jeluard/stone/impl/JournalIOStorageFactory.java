@@ -47,6 +47,8 @@ public class JournalIOStorageFactory implements StorageFactory {
   private static final String DISPOSER_THREADS_NAME_FORMAT = "Stone JournalIO-Disposer";
   private static final String CONSOLIDATOR_SUFFIX = "Consolidator";
 
+  private static final int MAX_FILE_LENGTH = 1024 * 1024;//1MB
+
   private final ScheduledExecutorService disposerScheduledExecutorService;
   private final Executor writerExecutor;
 
@@ -137,8 +139,7 @@ public class JournalIOStorageFactory implements StorageFactory {
     journal.setChecksum(true);
     journal.setRecoveryErrorHandler(RecoveryErrorHandler.ABORT);
     journal.setPhysicalSync(true);
-    //journal.setMaxFileLength(maxFileLength);
-    //journal.setMaxWriteBatchSize(maxWriteBatchSize);
+    journal.setMaxFileLength(JournalIOStorageFactory.MAX_FILE_LENGTH);
     journal.setWriter(this.writerExecutor);
     //journal.setDisposeInterval()
     journal.setDisposer(this.disposerScheduledExecutorService);

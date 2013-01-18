@@ -75,9 +75,7 @@ public class JournalIOStorage extends BaseBinaryStorage implements Closeable {
   private final Journal journal;
 
   /**
-   * 
-   * @param journal life-cycle won't be handled here, manually initialize/clean
-   * @param compressor 
+   * @param journal life-cycle is not handled here, expect a fully {@link Journal#open()} {@code journal}
    */
   public JournalIOStorage(final Journal journal) throws IOException {
     this.journal = Preconditions.checkNotNull(journal, "null journal");
