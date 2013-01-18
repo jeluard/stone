@@ -56,7 +56,7 @@ import org.joda.time.Duration;
  */
 public class JournalIOStorage extends BaseBinaryStorage implements Closeable {
 
-  private static final Logger LOGGER = Logger.getLogger("com.github.jeluard.stone.storage.journalio");
+  static final Logger LOGGER = Logger.getLogger("com.github.jeluard.stone.storage.journalio");
 
   private static final WriteCallback LOGGING_WRITE_CALLBACK = new WriteCallback() {
     @Override
