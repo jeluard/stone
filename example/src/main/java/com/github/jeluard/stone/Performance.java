@@ -52,8 +52,10 @@ public class Performance {
       final Random random = new Random();
       for (int i = 0; i < 100000; i++) {
         final long before = System.currentTimeMillis();
-        for (final TimeSeries ts : timeSeries) {
-          ts.publish(System.currentTimeMillis(), 100+random.nextInt(25));
+        for (int j = 0; j < 100000; j++) {
+          for (final TimeSeries ts : timeSeries) {
+            ts.publish(System.currentTimeMillis(), 100+random.nextInt(25));
+          }
         }
         System.out.println(System.currentTimeMillis()-before);
       }
