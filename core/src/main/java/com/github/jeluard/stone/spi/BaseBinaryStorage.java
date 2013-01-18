@@ -96,15 +96,16 @@ public abstract class BaseBinaryStorage extends BaseStorage {
     put(timestamp, buffer);
     put(consolidates, buffer);
 
-    append(buffer);
+    append(timestamp, buffer);
   }
 
   /**
    * Append the content of this {@link ByteBuffer} to the {@link Storage}.
    *
+   * @param timestamp
    * @param buffer
    * @throws IOException 
    */
-  protected abstract void append(ByteBuffer buffer) throws IOException;
+  protected abstract void append(long timestamp, ByteBuffer buffer) throws IOException;
 
 }

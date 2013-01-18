@@ -134,6 +134,7 @@ public final class TimeSeries implements Closeable {
   @Override
   public void close() throws IOException {
     TimeSeries.IDS.remove(this.id);
+    //TODO should force persist call if needed.
 
     this.engine.close();
   }

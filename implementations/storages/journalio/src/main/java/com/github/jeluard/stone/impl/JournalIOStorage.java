@@ -34,6 +34,7 @@ import journal.io.api.Location;
 import journal.io.api.WriteCallback;
 
 import org.joda.time.DateTime;
+import org.joda.time.Duration;
 
 /**
  * A {@link Storage} implementation relying on <a href="https://github.com/sbtourist/Journal.IO">Journal.IO</a>.
@@ -73,16 +74,34 @@ public class JournalIOStorage extends BaseBinaryStorage implements Closeable {
   };
 
   private final Journal journal;
+  private final long duration;
 
   /**
    * @param journal life-cycle is not handled here, expect a fully {@link Journal#open()} {@code journal}
+   * @param duration
    */
-  public JournalIOStorage(final Journal journal) throws IOException {
+  public JournalIOStorage(final Journal journal, final Duration duration) throws IOException {
     this.journal = Preconditions.checkNotNull(journal, "null journal");
+    this.duration = Preconditions.checkNotNull(duration, "null duration").getMillis();
+  }
+
+  private void removeUntil(final long until) throws IOException {
+    for (final Location location : this.journal.redo()) {
+      final long timestamp = getTimestamp(this.journal.read(location, Journal.ReadType.SYNC));
+      if (timestamp < until) {
+        this.journal.delete(location);
+      } else {
+        break;
+      }
+    }
   }
 
   @Override
-  protected final void append(final ByteBuffer buffer) throws IOException {
+  protected final void append(final long timestamp, final ByteBuffer buffer) throws IOException {
+    //Calculate current window beginning then make sure 
+    final long beginning = timestamp - this.duration;
+    removeUntil(beginning);
+
     this.journal.write(buffer.array(), Journal.WriteType.SYNC, JournalIOStorage.LOGGING_WRITE_CALLBACK);
   }
 

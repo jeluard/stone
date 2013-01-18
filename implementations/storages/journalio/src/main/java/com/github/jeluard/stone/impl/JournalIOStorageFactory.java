@@ -152,7 +152,7 @@ public class JournalIOStorageFactory implements StorageFactory {
     Preconditions.checkNotNull(archive, "null archive");
     Preconditions.checkNotNull(window, "null window");
 
-    return new JournalIOStorage(createJournal(id, archive, window));
+    return new JournalIOStorage(createJournal(id, archive, window), window.getDuration());
   }
 
 }
