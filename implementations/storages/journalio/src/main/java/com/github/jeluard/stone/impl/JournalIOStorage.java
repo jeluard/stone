@@ -164,6 +164,12 @@ public class JournalIOStorage extends BaseBinaryStorage implements Closeable {
     };
   }
 
+  /**
+   * Triggers {@link Journal#compact()}.
+   * Note that compaction does not apply to file currently written to but older ones.
+   *
+   * @throws IOException 
+   */
   protected void compact() throws IOException {
     this.journal.compact();
   }
