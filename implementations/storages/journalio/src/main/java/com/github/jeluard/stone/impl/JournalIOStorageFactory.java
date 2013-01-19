@@ -67,8 +67,8 @@ public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage
     @Override
     public void run() {
       try {
-        if (JournalIOStorageFactory.LOGGER.isLoggable(Level.INFO)) {
-          JournalIOStorageFactory.LOGGER.info("About to compact");
+        if (JournalIOStorageFactory.LOGGER.isLoggable(Level.FINEST)) {
+          JournalIOStorageFactory.LOGGER.finest("About to compact");
         }
 
         for (final JournalIOStorage storage : getStorages()) {
