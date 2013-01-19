@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.joda.time.DateTime;
+import org.joda.time.Interval;
 
 public final class TimeSeries implements Closeable {
 
@@ -48,50 +49,13 @@ public final class TimeSeries implements Closeable {
       throw new IllegalArgumentException("ID <"+id+"> is already used");
     }
     this.engine = new Engine(id, archives, dispatcher, storageFactory);
-    this.beginning = extractBeginning(getStorages().values().iterator().next());
-    this.latest = extractLatest(getStorages().values());
-  }
-
-  /**
-   * @param storage
-   * @return beginning of {@link Storage#beginning()} if any; null otherwise
-   * @throws IOException 
-   */
-  private long extractBeginning(final Storage storage) throws IOException {
-    final Optional<DateTime> interval = storage.beginning();
-    if (interval.isPresent()) {
-      return interval.get().getMillis();
-    }
-    return 0L;
-  }
-
-  /**
-   * @param storages
-   * @return latest (more recent) timestamp stored in specified {@link archives}; null if all archive are empty
-   * @throws IOException 
-   */
-  private long extractLatest(final Collection<Storage> storages) throws IOException {
-    long storageLatest = 0L;
-    for (final Storage storage : storages) {
-      final Optional<DateTime> optionalInterval = storage.end(); 
-      if (optionalInterval.isPresent()) {
-        final long endInterval = optionalInterval.get().getMillis();
-        if (storageLatest == 0L) {
-          storageLatest = endInterval;
-        } else if (endInterval > storageLatest) {
-          storageLatest = endInterval;
-        }
-      }
-    }
-    return storageLatest;
+    final Interval span = engine.span();
+    this.beginning = span.getStartMillis(); //extractBeginning(getStorages().values().iterator().next());
+    this.latest = span.getEndMillis(); //extractLatest(getStorages().values());
   }
 
   public String getId() {
     return this.id;
-  }
-
-  public Map<Pair<Archive, Window>, Storage> getStorages() {
-    return this.engine.getStorages();
   }
 
   private void checkNotBeforeLatestTimestamp(final long previousTimestamp, final long currentTimestamp) {
@@ -134,7 +98,6 @@ public final class TimeSeries implements Closeable {
   @Override
   public void close() throws IOException {
     TimeSeries.IDS.remove(this.id);
-    //TODO should force persist call if needed.
 
     this.engine.close();
   }

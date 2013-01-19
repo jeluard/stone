@@ -16,10 +16,11 @@
  */
 package com.github.jeluard.stone.impl;
 
+import com.github.jeluard.guayaba.util.concurrent.ExecutorServices;
 import com.github.jeluard.stone.api.Archive;
 import com.github.jeluard.stone.api.Window;
+import com.github.jeluard.stone.spi.BaseStorageFactory;
 import com.github.jeluard.stone.spi.Consolidator;
-import com.github.jeluard.stone.spi.Storage;
 import com.github.jeluard.stone.spi.StorageFactory;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -28,38 +29,77 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import journal.io.api.Journal;
 import journal.io.api.RecoveryErrorHandler;
 
+import org.joda.time.Duration;
+
 /**
  * {@link StorageFactory} implementation creating {@link JournalIOStorage}.
  */
-public class JournalIOStorageFactory implements StorageFactory {
+public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage> {
+
+  static final Logger LOGGER = Logger.getLogger("com.github.jeluard.stone.storage.journalio");
 
   private static final String WRITER_THREADS_NAME_FORMAT = "Stone JournalIO-Writer #%d";
   private static final String DISPOSER_THREADS_NAME_FORMAT = "Stone JournalIO-Disposer";
+  private static final Duration DEFAULT_COMPACTION_INTERVAL = Duration.standardMinutes(10);
+  private static final String COMPACTOR_THREAD = "Stone JournalIO-Compactor";
   private static final String CONSOLIDATOR_SUFFIX = "Consolidator";
 
   private static final int MAX_FILE_LENGTH = 1024 * 1024;//1MB
 
+  private final long compactionInterval;
   private final ScheduledExecutorService disposerScheduledExecutorService;
   private final Executor writerExecutor;
+  private final Runnable compactor = new Runnable() {
+    @Override
+    public void run() {
+      try {
+        if (JournalIOStorageFactory.LOGGER.isLoggable(Level.INFO)) {
+          JournalIOStorageFactory.LOGGER.info("About to compact");
+        }
+
+        for (final JournalIOStorage storage : getStorages()) {
+          storage.compact();
+        }
+      } catch (IOException e) {
+        if (JournalIOStorageFactory.LOGGER.isLoggable(Level.WARNING)) {
+          JournalIOStorageFactory.LOGGER.log(Level.WARNING, "Got exception while compacting", e);
+        }
+      }
+    }
+  };
+  private final ScheduledExecutorService compactionScheduler = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setDaemon(true).setNameFormat(JournalIOStorageFactory.COMPACTOR_THREAD).build());
 
   public JournalIOStorageFactory() {
-    this(Executors.newFixedThreadPool(2*Runtime.getRuntime().availableProcessors(), new ThreadFactoryBuilder().setDaemon(true).setNameFormat(JournalIOStorageFactory.WRITER_THREADS_NAME_FORMAT).build()),
-         Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setDaemon(true).setNameFormat(JournalIOStorageFactory.DISPOSER_THREADS_NAME_FORMAT).build()));
+    this(JournalIOStorageFactory.DEFAULT_COMPACTION_INTERVAL, JournalIOStorageFactory.defaultWriteExecutor(), JournalIOStorageFactory.defaultDisposerScheduledExecutor());
   }
 
-  public JournalIOStorageFactory(final Executor writerExecutor, final ScheduledExecutorService disposerScheduledExecutorService) {
+  public JournalIOStorageFactory(final Duration compactionInterval, final Executor writerExecutor, final ScheduledExecutorService disposerScheduledExecutorService) {
+    this.compactionInterval = compactionInterval.getMillis();
     this.writerExecutor = Preconditions.checkNotNull(writerExecutor, "null writerExecutor");
     this.disposerScheduledExecutorService = Preconditions.checkNotNull(disposerScheduledExecutorService, "null disposerScheduledExecutorService");
+    this.compactionScheduler.scheduleWithFixedDelay(this.compactor, this.compactionInterval, this.compactionInterval, TimeUnit.MILLISECONDS);
+  }
+
+  public static Executor defaultWriteExecutor() {
+    return Executors.newFixedThreadPool(2*Runtime.getRuntime().availableProcessors(), new ThreadFactoryBuilder().setDaemon(true).setNameFormat(JournalIOStorageFactory.WRITER_THREADS_NAME_FORMAT).build());
+  }
+
+  public static ScheduledExecutorService defaultDisposerScheduledExecutor() {
+    return Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setDaemon(true).setNameFormat(JournalIOStorageFactory.DISPOSER_THREADS_NAME_FORMAT).build());
   }
 
   protected String mainDirectoryPath(final String id, final Archive archive, final Window window) {
@@ -148,12 +188,22 @@ public class JournalIOStorageFactory implements StorageFactory {
   }
 
   @Override
-  public final Storage createOrOpen(final String id, final Archive archive, final Window window) throws IOException {
+  public final JournalIOStorage create(final String id, final Archive archive, final Window window) throws IOException {
     Preconditions.checkNotNull(id, "null id");
     Preconditions.checkNotNull(archive, "null archive");
     Preconditions.checkNotNull(window, "null window");
 
     return new JournalIOStorage(createJournal(id, archive, window), window.getDuration());
+  }
+
+  @Override
+  protected void cleanup(final JournalIOStorage storage) throws IOException {
+    storage.close();
+  }
+
+  @Override
+  protected void cleanup() {
+    ExecutorServices.shutdownAndAwaitTermination(this.compactionScheduler, this.compactionInterval, TimeUnit.MILLISECONDS, JournalIOStorageFactory.LOGGER);
   }
 
 }

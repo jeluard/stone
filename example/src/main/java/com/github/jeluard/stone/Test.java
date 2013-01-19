@@ -37,14 +37,14 @@ public class Test {
             Arrays.asList(new Window(Duration.standardSeconds(10), Duration.standardMinutes(1))));
     final TimeSeries timeSeries = new TimeSeries("timeseries", Arrays.asList(archive), new SequentialDispatcher(), new JournalIOStorageFactory());
 
-    final Map<Pair<Archive, Window>, Storage> storages = timeSeries.getStorages();
+    /*final Map<Pair<Archive, Window>, Storage> storages = timeSeries.getStorages();
     System.out.println("TimeSeries "+timeSeries.getId());
     for (final Map.Entry<Pair<Archive, Window>, Storage> entry : storages.entrySet()) {
       System.out.println("\tfor sampling "+entry.getKey().second);
       for (final Pair<Long, int[]> value : entry.getValue().all()) {
         System.out.println("\t\ttimestamp <"+value.first+"> values <"+Arrays.toString(value.second)+">");
       }
-    }
+    }*/
 
     try {
       final Random random = new Random();

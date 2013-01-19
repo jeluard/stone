@@ -19,6 +19,7 @@ package com.github.jeluard.stone.spi;
 import com.github.jeluard.stone.api.Archive;
 import com.github.jeluard.stone.api.Window;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 /**
@@ -26,7 +27,7 @@ import java.io.IOException;
  * <br />
  * Common structure can then be shared accross {@link Storage}.
  */
-public interface StorageFactory {
+public interface StorageFactory<T extends Storage> extends Closeable {
 
   /**
    * Create or open a {@link Storage} specific to provided {@code id}, {@link Archive} and {@link Window}.
@@ -43,6 +44,6 @@ public interface StorageFactory {
    * @return a fully initialized {@link Storage}
    * @throws IOException 
    */
-  Storage createOrOpen(String id, Archive archive, Window window) throws IOException;
+  T createOrGet(String id, Archive archive, Window window) throws IOException;
 
 }
