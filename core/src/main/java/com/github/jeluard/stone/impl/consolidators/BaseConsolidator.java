@@ -16,7 +16,7 @@
  */
 package com.github.jeluard.stone.impl.consolidators;
 
-import com.github.jeluard.stone.spi.Consolidator;
+import com.github.jeluard.stone.api.Consolidator;
 
 /**
  * Base implementation for {@link Consolidator}.

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.jeluard.stone.spi;
+package com.github.jeluard.stone.api;
 
 /**
  * Abstracts logic of consolidating values from a {@link com.github.jeluard.stone.api.Window} into a single {@code value}.

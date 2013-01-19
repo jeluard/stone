@@ -21,7 +21,7 @@ import com.github.jeluard.guayaba.base.Triple;
 import com.github.jeluard.guayaba.lang.Iterables2;
 import com.github.jeluard.stone.api.Archive;
 import com.github.jeluard.stone.api.Window;
-import com.github.jeluard.stone.spi.Consolidator;
+import com.github.jeluard.stone.api.Consolidator;
 import com.github.jeluard.stone.spi.Dispatcher;
 import com.github.jeluard.stone.spi.Storage;
 import com.github.jeluard.stone.spi.StorageFactory;

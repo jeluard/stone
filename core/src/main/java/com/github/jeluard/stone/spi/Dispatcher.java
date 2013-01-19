@@ -16,6 +16,8 @@
  */
 package com.github.jeluard.stone.spi;
 
+import com.github.jeluard.stone.api.Consolidator;
+
 /**
  * Dispatches timestamp/value to currently configured {@link Consolidator}.
  */

@@ -16,7 +16,6 @@
  */
 package com.github.jeluard.stone.api;
 
-import com.github.jeluard.stone.spi.Consolidator;
 import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;

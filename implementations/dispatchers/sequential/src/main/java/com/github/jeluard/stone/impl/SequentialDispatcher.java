@@ -16,7 +16,7 @@
  */
 package com.github.jeluard.stone.impl;
 
-import com.github.jeluard.stone.spi.Consolidator;
+import com.github.jeluard.stone.api.Consolidator;
 import com.github.jeluard.stone.spi.Dispatcher;
 
 /**

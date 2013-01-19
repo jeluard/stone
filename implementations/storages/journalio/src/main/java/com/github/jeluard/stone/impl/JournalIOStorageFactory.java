@@ -20,7 +20,7 @@ import com.github.jeluard.guayaba.util.concurrent.ExecutorServices;
 import com.github.jeluard.stone.api.Archive;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.spi.BaseStorageFactory;
-import com.github.jeluard.stone.spi.Consolidator;
+import com.github.jeluard.stone.api.Consolidator;
 import com.github.jeluard.stone.spi.StorageFactory;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
