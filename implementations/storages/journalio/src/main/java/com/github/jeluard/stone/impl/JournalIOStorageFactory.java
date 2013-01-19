@@ -47,6 +47,8 @@ import org.joda.time.Duration;
 
 /**
  * {@link StorageFactory} implementation creating {@link JournalIOStorage}.
+ * <br>
+ * When {@code maxFileLength} is kept low (no more than couple hundreds values) new files will be created and older ones (only containing deleted values) will be physically deleted.
  */
 public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage> {
 
@@ -58,7 +60,7 @@ public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage
   private static final String COMPACTOR_THREAD = "Stone JournalIO-Compactor";
   private static final String CONSOLIDATOR_SUFFIX = "Consolidator";
 
-  private static final int MAX_FILE_LENGTH = 1024 * 1024;//1MB
+  private static final int MAX_FILE_LENGTH = 42*512;//42 bytes (size of timestamp/value with 1 consolidate)
 
   private final long compactionInterval;
   private final ScheduledExecutorService disposerScheduledExecutorService;
