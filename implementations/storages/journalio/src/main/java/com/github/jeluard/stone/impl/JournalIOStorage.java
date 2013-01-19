@@ -53,7 +53,7 @@ import org.joda.time.Duration;
  * <br>
  * This format is both easy to implement and fast to parse but waste significant space.
  */
-public class JournalIOStorage extends BaseBinaryStorage implements Closeable {
+public final class JournalIOStorage extends BaseBinaryStorage implements Closeable {
 
   private static final WriteCallback LOGGING_WRITE_CALLBACK = new WriteCallback() {
     @Override
@@ -91,13 +91,12 @@ public class JournalIOStorage extends BaseBinaryStorage implements Closeable {
       }
 
       //This value does not belong to the window (it's before): delete it.
-      //TODO is it fine to delete during iteration?
-      this.journal.delete(location);
+      this.journal.delete(location);//Deletion during iteration is safe
     }
   }
 
   @Override
-  protected final void append(final long timestamp, final ByteBuffer buffer) throws IOException {
+  protected void append(final long timestamp, final ByteBuffer buffer) throws IOException {
     //Calculate current window beginning then deletes all values outside of it.
     final long beginning = timestamp - this.duration;
     removeUntil(beginning);
@@ -110,7 +109,7 @@ public class JournalIOStorage extends BaseBinaryStorage implements Closeable {
    * @return the content as {@link byte[]} of the next {@link Location} from {@code locations}
    * @throws IOException 
    */
-  protected final byte[] readNextLocation(final Iterator<Location> locations) throws IOException {
+  private byte[] readNextLocation(final Iterator<Location> locations) throws IOException {
     return this.journal.read(locations.next(), Journal.ReadType.SYNC);
   }
 
@@ -119,7 +118,7 @@ public class JournalIOStorage extends BaseBinaryStorage implements Closeable {
    * @return the next timestamp among {@link locations} if any
    * @throws IOException 
    */
-  protected final Optional<DateTime> nextTimestampIfAny(final Iterator<Location> locations) throws IOException {
+  private Optional<DateTime> nextTimestampIfAny(final Iterator<Location> locations) throws IOException {
     if (!locations.hasNext()) {
       return Optional.absent();
     }
@@ -128,12 +127,12 @@ public class JournalIOStorage extends BaseBinaryStorage implements Closeable {
   }
 
   @Override
-  public final Optional<DateTime> beginning() throws IOException {
+  public Optional<DateTime> beginning() throws IOException {
     return nextTimestampIfAny(this.journal.redo().iterator());
   }
 
   @Override
-  public final Optional<DateTime> end() throws IOException {
+  public Optional<DateTime> end() throws IOException {
     return nextTimestampIfAny(this.journal.undo().iterator());
   }
 
@@ -170,7 +169,7 @@ public class JournalIOStorage extends BaseBinaryStorage implements Closeable {
    *
    * @throws IOException 
    */
-  protected void compact() throws IOException {
+  void compact() throws IOException {
     this.journal.compact();
   }
 
