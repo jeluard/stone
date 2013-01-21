@@ -37,6 +37,14 @@ import java.util.logging.Level;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 
+/**
+ * Main abstraction allowing to publish {@code timestamp}/{@code value} pair.
+ * Each published value is passed to all associated {@link Consolidator} (defined in {@link Archive#getConsolidators()}) first for accumulation (see {@link Consolidator#accumulate(long, int)})
+ * then each time a {@link Window#getResolution()} threshold is crossed for consolidation (see {@link Consolidator#consolidateAndReset()}).
+ * Final consolidated results are persisted in a {@link TimeSeries}/{@link Window} specific {@link Storage}.
+ *
+ * @see DataBase
+ */
 public final class TimeSeries {
 
   private final String id;
@@ -63,6 +71,14 @@ public final class TimeSeries {
     this.latest = initialSpan.getEndMillis();
   }
 
+  /**
+   * Instantiate a {@link Consolidator} from specified {@code type}.
+   * First look for a constructor accepting an int as unique argument then fallback to the default constructor.
+   *
+   * @param type
+   * @param window
+   * @return a {@link Consolidator} from specified {@code type}
+   */
   private Consolidator createConsolidator(final Class<? extends Consolidator> type, final Window window) {
     try {
       //First look for a constructor accepting int as argument
@@ -89,6 +105,7 @@ public final class TimeSeries {
 
   /**
    * @param archive
+   * @param window
    * @return all {@link Consolidator} mapping to {@link Archive#getConsolidators()}
    * @see #createConsolidator(java.lang.Class)
    */
@@ -101,20 +118,40 @@ public final class TimeSeries {
     return consolidators;
   }
 
+  /**
+   * @param storageFactory
+   * @param id
+   * @param archive
+   * @param window
+   * @return the {@link Storage} instance for this {@link Window}
+   * @throws IOException 
+   */
   private Storage createStorage(final StorageFactory storageFactory, final String id, final Archive archive, final Window window) throws IOException {
     return storageFactory.createOrGet(id, archive, window);
   }
 
+  /**
+   * @param storageFactory
+   * @param id
+   * @param archives
+   * @return all triplet of {@link Window}, {@link Storage} and {@link Consolidator[]}. Both {@link Storage} and {@link Consolidator[]} are specific to associated {@link Window} 
+   * @throws IOException 
+   */
   private Collection<Triple<Window, Storage, Consolidator[]>> createFlatten(final StorageFactory storageFactory, final String id, final Collection<Archive> archives) throws IOException {
-    final Collection<Triple<Window, Storage, Consolidator[]>> newStorages = new LinkedList<Triple<Window, Storage, Consolidator[]>>();
+    final Collection<Triple<Window, Storage, Consolidator[]>> windowTriples = new LinkedList<Triple<Window, Storage, Consolidator[]>>();
     for (final Archive archive : archives) {
       for (final Window window : archive.getWindows()) {
-        newStorages.add(new Triple<Window, Storage, Consolidator[]>(window, createStorage(storageFactory, id, archive, window), createConsolidators(archive, window)));
+        windowTriples.add(new Triple<Window, Storage, Consolidator[]>(window, createStorage(storageFactory, id, archive, window), createConsolidators(archive, window)));
       }
     }
-    return newStorages;
+    return windowTriples;
   }
 
+  /**
+   * @param storages
+   * @return maximum {@link Interval} covered by all {@link Window}s
+   * @throws IOException 
+   */
   private Interval extractInterval(final Collection<Storage> storages) throws IOException {
     return new Interval(extractBeginning(storages.iterator().next()), extractLatest(storages));
   }
@@ -134,10 +171,11 @@ public final class TimeSeries {
 
   /**
    * @param storages
-   * @return latest (more recent) timestamp stored in specified {@link archives}; 0L if all archive are empty
+   * @return latest (more recent) timestamp stored in specified {@code storages}; 0L if all {@code storages} are empty
    * @throws IOException 
    */
   private long extractLatest(final Collection<Storage> storages) throws IOException {
+    //TODO asscoiated window#getDuration sjhould be added
     long storageLatest = 0L;
     for (final Storage storage : storages) {
       final Optional<DateTime> optionalInterval = storage.end(); 
@@ -153,6 +191,9 @@ public final class TimeSeries {
     return storageLatest;
   }
 
+  /**
+   * @return a unique id identifying this {@link TimeSeries} in associated {@link DataBase}
+   */
   public String getId() {
     return this.id;
   }
@@ -163,6 +204,10 @@ public final class TimeSeries {
     }
   }
 
+  /**
+   * @param timestamp
+   * @return latest {@code timestamp} published
+   */
   private long recordLatest(final long timestamp) {
     //Set to the new timestamp if value is null (i.e. no value as yet been recorded)
     final long previousTimestamp = this.latest;
@@ -171,6 +216,10 @@ public final class TimeSeries {
     return previousTimestamp;
   }
 
+  /**
+   * @param timestamp
+   * @return beginning {@code timestamp} for this {@link TimeSeries}. Either last value stored in {@link Storage} if any or first published in this run.
+   */
   private long inferBeginning(final long timestamp) {
     //If beginning is still null (i.e. all storages where empty) sets it's value to timestamp
     //This will be done only once (hence track the first timestamp received)
@@ -180,6 +229,17 @@ public final class TimeSeries {
     return this.beginning;
   }
 
+  /**
+   * Publish a {@code timestamp}/{@code value} pair triggering accumulation/persistency process.
+   * <br>
+   * {@code timestamp}s must be monotonic (i.e. each timestamp must be strictly greate than the previous one).
+   * <br>
+   * {@code timestamp}s are assumed to be in milliseconds. No timezone information is considered so {@code timestamp} values must be normalized before being published.
+   *
+   * @param timestamp
+   * @param value
+   * @throws IOException 
+   */
   public void publish(final long timestamp, final int value) throws IOException {
     Preconditions.checkNotNull(timestamp, "null timestamp");
 
