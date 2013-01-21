@@ -18,12 +18,11 @@ package com.github.jeluard.stone;
 
 import com.github.jeluard.stone.api.Archive;
 import com.github.jeluard.stone.api.ConsolidationListener;
-import com.github.jeluard.stone.api.DataBase;
+import com.github.jeluard.stone.api.Database;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.api.Window;
-import com.github.jeluard.stone.storage.journalio.JournalIOStorageFactory;
 import com.github.jeluard.stone.impl.consolidators.MaxConsolidator;
-import com.github.jeluard.stone.spi.StorageFactory;
+import com.github.jeluard.stone.storage.journalio.JournalIOStorageFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,7 +33,7 @@ import org.joda.time.Duration;
 
 public class Performance {
   public static void main(String[] args) throws Exception {
-    final DataBase dataBase = new DataBase(new JournalIOStorageFactory());
+    final Database dataBase = new Database(new JournalIOStorageFactory());
     final Archive archive1 = new Archive(Arrays.asList(MaxConsolidator.class), 
             Arrays.asList(new Window(Duration.standardMinutes(5), Duration.standardDays(1))));
     final Archive archive2 = new Archive(Arrays.asList(MaxConsolidator.class, MaxConsolidator.class), 
