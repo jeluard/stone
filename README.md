@@ -2,9 +2,9 @@ Stone is a timeseries database library focused on simplicity/evolutivity, effici
 
 ## Inspiration
 
-Stone is inspired by RRD and OLAP databases.
+Stone is inspired by [RRD](http://oss.oetiker.ch/rrdtool/) and [OLAP](http://en.wikipedia.org/wiki/Online_Analytical_Processing) databases.
 
-Stone does not try to compete with stream oriented soution (CEP à la esper or storm/s4), metrics genertion (à la yammer metrics).
+Stone does not try to compete with stream oriented soution (CEP à la [esper](http://esper.codehaus.org/) or [storm](http://storm-project.net/)/[s4](http://incubator.apache.org/s4/)) and does not provide any metrics tracking facility (à la [metrics](http://metrics.codahale.com/)).
 It also does not provide any facility to generate graphs.
 
 ## Features
@@ -14,27 +14,21 @@ It also does not provide any facility to generate graphs.
 
 ## Usage
 
-```
+```java
+final Database database = new Database(new JournalIOStorageFactory());
 //Define how published values will be consolidated: every minute using *max* algorithm and kept up to 1 hour.
 final Archive archive = new Archive(Arrays.asList(MaxConsolidator.class),
   Arrays.asList(new Window(Duration.standardMinutes(1), Duration.standardHours(1))));
 
 //Create the TimeSeries. A new storage will be created if needed.
-final TimeSeries timeSeries = new TimeSeries("pinger", Arrays.asList(archive), new SequentialDispatcher(), new JournalIOStorageFactory());
+final TimeSeries timeSeries = database.create("pinger", Arrays.asList(archive));
 
 //Publish some values to the TimeSeries.
 timeSeries.publish(System.currentTimeMillis(), 123);
 ...
 
 //Cleanup resources.
-timeSeries.close();
-
-//Read persisted data
-final Journal journal = ... //Get a ref to the right journal. You might want to use JournalIOStorageFactory for this.
-final Storage storage = new JournalIOStorage(journal);
-for (final Pair<Long, int[]> pair : storage.all().values()) {
-  System.out.println("Got values <"+Arrays.toString(pair.second)+"> at <"+pair.first+">");
-}
+database.close();
 ```
 
 ## Performance
