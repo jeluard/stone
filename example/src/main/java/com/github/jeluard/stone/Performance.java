@@ -18,6 +18,7 @@ package com.github.jeluard.stone;
 
 import com.github.jeluard.stone.api.Archive;
 import com.github.jeluard.stone.api.ConsolidationListener;
+import com.github.jeluard.stone.api.DataBase;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.impl.JournalIOStorageFactory;
@@ -33,6 +34,7 @@ import org.joda.time.Duration;
 
 public class Performance {
   public static void main(String[] args) throws Exception {
+    final DataBase dataBase = new DataBase(new JournalIOStorageFactory());
     final Archive archive1 = new Archive(Arrays.asList(MaxConsolidator.class), 
             Arrays.asList(new Window(Duration.standardMinutes(5), Duration.standardDays(1))));
     final Archive archive2 = new Archive(Arrays.asList(MaxConsolidator.class, MaxConsolidator.class), 
@@ -43,9 +45,8 @@ public class Performance {
     final int nbSeries = 10000;
 
     final List<TimeSeries> timeSeries = new ArrayList<TimeSeries>(nbSeries);
-    final StorageFactory factory = new JournalIOStorageFactory();
     for (int i = 0; i < nbSeries; i++) {
-      timeSeries.add(new TimeSeries("ping-server-"+i, Arrays.asList(archive1, archive2, archive3), Collections.<ConsolidationListener>emptyList(), factory));
+      timeSeries.add(dataBase.create("ping-server-"+i, Arrays.asList(archive1, archive2, archive3), Collections.<ConsolidationListener>emptyList()));
     }
 
     try {
@@ -60,7 +61,7 @@ public class Performance {
       }
     } finally {
       for (final TimeSeries ts : timeSeries) {
-        ts.close();
+        dataBase.close(ts.getId());
       }
     }
   }

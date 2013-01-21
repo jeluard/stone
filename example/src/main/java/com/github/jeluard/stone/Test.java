@@ -18,6 +18,7 @@ package com.github.jeluard.stone;
 
 import com.github.jeluard.stone.api.Archive;
 import com.github.jeluard.stone.api.ConsolidationListener;
+import com.github.jeluard.stone.api.DataBase;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.impl.JournalIOStorageFactory;
@@ -30,6 +31,7 @@ import org.joda.time.Duration;
 
 public class Test {
   public static void main(String[] args) throws Exception {
+    final DataBase dataBase = new DataBase(new JournalIOStorageFactory());
     final Archive archive = new Archive(Arrays.asList(MaxConsolidator.class), 
             Arrays.asList(new Window(Duration.standardSeconds(10), Duration.standardMinutes(1))));
     final ConsolidationListener consolidationListener = new ConsolidationListener() {
@@ -38,7 +40,7 @@ public class Test {
         System.out.println("Got "+Arrays.toString(consolidates));
       }
     };
-    final TimeSeries timeSeries = new TimeSeries("timeseries", Arrays.asList(archive), Arrays.asList(consolidationListener), new JournalIOStorageFactory());
+    final TimeSeries timeSeries = dataBase.create("timeseries", Arrays.asList(archive), Arrays.asList(consolidationListener));
 
     /*final Map<Pair<Archive, Window>, Storage> storages = timeSeries.getStorages();
     System.out.println("TimeSeries "+timeSeries.getId());
@@ -56,7 +58,7 @@ public class Test {
         timeSeries.publish(System.currentTimeMillis(), 100+random.nextInt(25));
       }
     } finally {
-      timeSeries.close();
+      dataBase.close(timeSeries.getId());
     }
   }
 }

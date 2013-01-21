@@ -16,37 +16,124 @@
  */
 package com.github.jeluard.stone.api;
 
+import com.github.jeluard.guayaba.base.Pair;
+import com.github.jeluard.guayaba.base.Triple;
+import com.github.jeluard.guayaba.lang.Iterables2;
 import com.github.jeluard.stone.impl.Engine;
 import com.github.jeluard.stone.spi.Storage;
 import com.github.jeluard.stone.spi.StorageFactory;
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Collections2;
 
-import java.io.Closeable;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.joda.time.DateTime;
 import org.joda.time.Interval;
 
-public final class TimeSeries implements Closeable {
-
-  private static final Set<String> IDS = new CopyOnWriteArraySet<String>();
+public final class TimeSeries {
 
   private final String id;
+  private final ConsolidationListener[] consolidationListeners;
   private final Engine engine;
+  private final Triple<Window, Storage, Consolidator[]>[] triples;
   private long beginning;
   private long latest;
 
-  public TimeSeries(final String id, final Collection<Archive> archives, final Collection<ConsolidationListener> consolidationListeners, final StorageFactory storageFactory) throws IOException {
+  TimeSeries(final String id, final Collection<Archive> archives, final Collection<ConsolidationListener> consolidationListeners, final Engine engine) throws IOException {
     this.id = Preconditions.checkNotNull(id, "null id");
-    if (!TimeSeries.IDS.add(id)) {
-      throw new IllegalArgumentException("ID <"+id+"> is already used");
+    this.consolidationListeners = Preconditions.checkNotNull(consolidationListeners, "null consolidationListeners").toArray(new ConsolidationListener[consolidationListeners.size()]);
+    this.engine = Preconditions.checkNotNull(engine, "null engine");
+    final Map<Pair<Archive, Window>, Pair<Storage, Consolidator[]>> stuffs = new HashMap<Pair<Archive, Window>, Pair<Storage, Consolidator[]>>();
+    stuffs.putAll(createStorages(engine.getStorageFactory(), id, archives));
+    this.triples = new Triple[stuffs.size()];
+    for (final Iterables2.Indexed<Map.Entry<Pair<Archive, Window>, Pair<Storage, Consolidator[]>>> stuff : Iterables2.withIndex(stuffs.entrySet())) {
+      this.triples[stuff.index] = new Triple<Window, Storage, Consolidator[]>(stuff.value.getKey().second, stuff.value.getValue().first, stuff.value.getValue().second);
     }
-    this.engine = new Engine(id, archives, consolidationListeners, storageFactory);
-    final Interval span = engine.span();
-    this.beginning = span.getStartMillis();
-    this.latest = span.getEndMillis();
+
+    final Interval initialSpan = extractInterval(Collections2.transform(Arrays.asList(this.triples), new Function<Triple<Window, Storage, Consolidator[]>, Storage>() {
+      @Override
+      public Storage apply(Triple<Window, Storage, Consolidator[]> input) {
+        return input.second;
+      }
+    }));
+    this.beginning = initialSpan.getStartMillis();
+    this.latest = initialSpan.getEndMillis();
+  }
+
+  private Consolidator[] createConsolidators(final Archive archive) {
+    final Collection<Class<? extends Consolidator>> types = archive.getConsolidators();
+    final Consolidator[] consolidators = new Consolidator[types.size()];
+    for (final Iterables2.Indexed<Class<? extends Consolidator>> indexedType : Iterables2.withIndex(types)) {
+      consolidators[indexedType.index] = createConsolidator(indexedType.value);
+    }
+    return consolidators;
+  }
+
+  private Map<Pair<Archive, Window>, Pair<Storage, Consolidator[]>> createStorages(final StorageFactory storageFactory, final String id, final Collection<Archive> archives) throws IOException {
+    final Map<Pair<Archive, Window>, Pair<Storage, Consolidator[]>> newStorages = new HashMap<Pair<Archive, Window>, Pair<Storage, Consolidator[]>>();
+    for (final Archive archive : archives) {
+      for (final Window window : archive.getWindows()) {
+        newStorages.put(new Pair<Archive, Window>(archive, window), new Pair<Storage, Consolidator[]>(createStorage(storageFactory, id, archive, window), createConsolidators(archive)));
+      }
+    }
+    return newStorages;
+  }
+
+  private Storage createStorage(final StorageFactory storageFactory, final String id, final Archive archive, final Window window) throws IOException {
+    return storageFactory.createOrGet(id, archive, window);
+  }
+
+  private Consolidator createConsolidator(final Class<? extends Consolidator> type) {
+    try {
+      //TODO better error checking, add support for Consolidator(int maxSamples)
+      return type.newInstance();
+    } catch (ReflectiveOperationException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private Interval extractInterval(final Collection<Storage> storages) throws IOException {
+    return new Interval(extractBeginning(storages.iterator().next()), extractLatest(storages));
+  }
+
+  /**
+   * @param storage
+   * @return beginning of {@link Storage#beginning()} if any; 0L otherwise
+   * @throws IOException 
+   */
+  private long extractBeginning(final Storage storage) throws IOException {
+    final Optional<DateTime> interval = storage.beginning();
+    if (interval.isPresent()) {
+      return interval.get().getMillis();
+    }
+    return 0L;
+  }
+
+  /**
+   * @param storages
+   * @return latest (more recent) timestamp stored in specified {@link archives}; null if all archive are empty
+   * @throws IOException 
+   */
+  private long extractLatest(final Collection<Storage> storages) throws IOException {
+    long storageLatest = 0L;
+    for (final Storage storage : storages) {
+      final Optional<DateTime> optionalInterval = storage.end(); 
+      if (optionalInterval.isPresent()) {
+        final long endInterval = optionalInterval.get().getMillis();
+        if (storageLatest == 0L) {
+          storageLatest = endInterval;
+        } else if (endInterval > storageLatest) {
+          storageLatest = endInterval;
+        }
+      }
+    }
+    return storageLatest;
   }
 
   public String getId() {
@@ -82,19 +169,7 @@ public final class TimeSeries implements Closeable {
     final long previousTimestamp = recordLatest(timestamp);
     final long beginningTimestamp = inferBeginning(timestamp);
 
-    this.engine.publish(beginningTimestamp, previousTimestamp, timestamp, value);
-  }
-
-  /**
-   * Calls {@link Closeable#close()} on all {@link Storage} implementing {@link Closeable}.
-   *
-   * @throws IOException 
-   */
-  @Override
-  public void close() throws IOException {
-    TimeSeries.IDS.remove(this.id);
-
-    this.engine.close();
+    this.engine.publish(this.triples, this.consolidationListeners, beginningTimestamp, previousTimestamp, timestamp, value);
   }
 
 }
