@@ -16,22 +16,17 @@
  */
 package com.github.jeluard.stone.api;
 
-import com.github.jeluard.guayaba.base.Pair;
 import com.github.jeluard.stone.impl.Engine;
-import com.github.jeluard.stone.spi.Dispatcher;
 import com.github.jeluard.stone.spi.Storage;
 import com.github.jeluard.stone.spi.StorageFactory;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.joda.time.DateTime;
 import org.joda.time.Interval;
 
 public final class TimeSeries implements Closeable {
