@@ -23,8 +23,6 @@ public interface Consolidator {
 
   /**
    * Accumulate a new value that will be considered for the consolidation process.
-   * <br />
-   * At this point both parameters have been validated and are not null.
    *
    * @param timestamp
    * @param value 
