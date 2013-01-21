@@ -16,7 +16,6 @@
  */
 package com.github.jeluard.stone.api;
 
-import com.github.jeluard.guayaba.base.Pair;
 import com.github.jeluard.guayaba.base.Triple;
 import com.github.jeluard.guayaba.lang.Iterables2;
 import com.github.jeluard.stone.impl.Engine;
@@ -31,9 +30,7 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Map;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
