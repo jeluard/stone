@@ -29,7 +29,9 @@ import java.io.IOException;
 import java.util.logging.Level;
 
 /**
- *
+ * Encapsulate the logic that triggers call to {@link Consolidator#accumulate(long, int)}, {@link Consolidator#consolidateAndReset()} and {@link Storage#append(long, int[])}.
+ * <br>
+ * A single {@link Engine} is available per {@link com.github.jeluard.stone.api.DataBase} thus shared among all associated {@link com.github.jeluard.stone.api.TimeSeries}.
  */
 public final class Engine {
 
@@ -43,17 +45,43 @@ public final class Engine {
     return this.storageFactory;
   }
 
+  /**
+   * @param beginning
+   * @param timestamp
+   * @param duration
+   * @return id of the {@link Window} containing {@code timestamp}
+   */
   private long windowId(final long beginning, final long timestamp, final long duration) {
     return (timestamp - beginning) / duration;
   }
 
+  /**
+   * Propagates {@code timestamp}/{@code value} to all {@code consolidators} {@link Consolidator#accumulate(long, int)}.
+   *
+   * @param consolidators
+   * @param timestamp
+   * @param value 
+   */
   private void accumulate(final Consolidator[] consolidators, final long timestamp, final int value) {
     for (final Consolidator consolidator : consolidators) {
       consolidator.accumulate(timestamp, value);
     }
   }
 
-  private void persist(final Window window, final Consolidator[] consolidators, final long timestamp, final Storage storage, final ConsolidationListener[] consolidationListeners) throws IOException {
+  /**
+   * Generate all consolidates then propagates them to {@link Storage#append(long, int[])}.
+   * <br>
+   * If any, {@link ConsolidationListener#onConsolidation(com.github.jeluard.stone.api.Window, long, int[])} are then called.
+   * Failure of one of {@link ConsolidationListener#onConsolidation(com.github.jeluard.stone.api.Window, long, int[])} does not prevent others to be called.
+   *
+   * @param timestamp
+   * @param consolidators
+   * @param storage
+   * @param consolidationListeners
+   * @param window passed to {@link ConsolidationListener#onConsolidation(com.github.jeluard.stone.api.Window, long, int[])}
+   * @throws IOException 
+   */
+  private void persist(final long timestamp, final Consolidator[] consolidators, final Storage storage, final ConsolidationListener[] consolidationListeners, final Window window) throws IOException {
     //TODO Do not create arrays each time?
     final int[] consolidates = new int[consolidators.length];
     for (int i = 0; i < consolidators.length; i++) {
@@ -72,6 +100,22 @@ public final class Engine {
     }
   }
 
+  /**
+   * Perform {@link Consolidator#accumulate(long, int)} and {@link Consolidator#consolidateAndReset()} for all {@link Window} depending on {@code timestamp}.
+   * <br>
+   * Result of {@link Consolidator#consolidateAndReset()} is then persisted (via {@link Storage#append(long, int[])}) through the right {@link Storage}.
+   * <br>
+   * <br>
+   * When provided {@link ConsolidationListener}s are called <strong>after</strong> a successful {@link Storage#append(long, int[])}.
+   *
+   * @param triples
+   * @param consolidationListeners
+   * @param beginningTimestamp
+   * @param previousTimestamp
+   * @param currentTimestamp
+   * @param value
+   * @throws IOException 
+   */
   public void publish(final Triple<Window, Storage, Consolidator[]>[] triples, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) throws IOException {
     for (final Triple<Window, Storage, Consolidator[]> triple : triples) {
       accumulate(triple.third, currentTimestamp, value);
@@ -82,7 +126,7 @@ public final class Engine {
       if (currentWindowId != previousWindowId) {
         final long previousWindowBeginning = beginningTimestamp + previousWindowId * duration;
 
-        persist(triple.first, triple.third, previousWindowBeginning, triple.second, consolidationListeners);
+        persist(previousWindowBeginning, triple.third, triple.second, consolidationListeners, triple.first);
       }
     }
   }
