@@ -43,15 +43,15 @@ public final class TimeSeries implements Closeable {
   private long beginning;
   private long latest;
 
-  public TimeSeries(final String id, final Collection<Archive> archives, final Dispatcher dispatcher, final StorageFactory storageFactory) throws IOException {
+  public TimeSeries(final String id, final Collection<Archive> archives, final StorageFactory storageFactory) throws IOException {
     this.id = Preconditions.checkNotNull(id, "null id");
     if (!TimeSeries.IDS.add(id)) {
       throw new IllegalArgumentException("ID <"+id+"> is already used");
     }
-    this.engine = new Engine(id, archives, dispatcher, storageFactory);
+    this.engine = new Engine(id, archives, storageFactory);
     final Interval span = engine.span();
-    this.beginning = span.getStartMillis(); //extractBeginning(getStorages().values().iterator().next());
-    this.latest = span.getEndMillis(); //extractLatest(getStorages().values());
+    this.beginning = span.getStartMillis();
+    this.latest = span.getEndMillis();
   }
 
   public String getId() {

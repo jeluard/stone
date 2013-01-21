@@ -20,9 +20,8 @@ import com.github.jeluard.guayaba.base.Preconditions2;
 import com.github.jeluard.guayaba.base.Triple;
 import com.github.jeluard.guayaba.lang.Iterables2;
 import com.github.jeluard.stone.api.Archive;
-import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.api.Consolidator;
-import com.github.jeluard.stone.spi.Dispatcher;
+import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.spi.Storage;
 import com.github.jeluard.stone.spi.StorageFactory;
 import com.google.common.base.Optional;
@@ -42,15 +41,13 @@ import org.joda.time.Interval;
  */
 public final class Engine implements Closeable {
 
-  private final Dispatcher dispatcher;
   private final StorageFactory<?> storageFactory;
   private final Triple<Window, Storage, Consolidator[]>[] triples;
   private Map<Pair<Archive, Window>, Pair<Storage, Consolidator[]>> stuffs = new HashMap<Pair<Archive, Window>, Pair<Storage, Consolidator[]>>();
   private final Interval span;
 
-  public Engine(final String id, final Collection<Archive> archives, final Dispatcher dispatcher, final StorageFactory storageFactory) throws IOException {
-    Preconditions2.checkNotEmpty(archives, "null archives").toArray(new Archive[archives.size()]);
-    this.dispatcher = Preconditions.checkNotNull(dispatcher, "null dispatcher");
+  public Engine(final String id, final Collection<Archive> archives, final StorageFactory storageFactory) throws IOException {
+    Preconditions2.checkNotEmpty(archives, "null archives");
     this.storageFactory = Preconditions.checkNotNull(storageFactory, "null storageFactory");
     this.stuffs.putAll(createStorages(storageFactory, id, archives));
     this.triples = new Triple[this.stuffs.size()];
@@ -133,17 +130,24 @@ public final class Engine implements Closeable {
     return (timestamp - beginning) / duration;
   }
 
-  private void accumulate(final long timestamp, final int value, final Consolidator[] consolidators) {
-    this.dispatcher.accumulate(timestamp, value, consolidators);
+  private void accumulate(final Consolidator[] consolidators, final long timestamp, final int value) {
+    for (final Consolidator consolidator : consolidators) {
+      consolidator.accumulate(timestamp, value);
+    }
   }
 
-  private void persist(final long timestamp, final Storage storage, final Consolidator[] consolidators) throws IOException {
-    storage.append(timestamp, this.dispatcher.reduce(consolidators));
+  private void persist(final Consolidator[] consolidators, final long timestamp, final Storage storage) throws IOException {
+    //TODO Do not create arrays each time?
+    final int[] integers = new int[consolidators.length];
+    for (int i = 0; i < consolidators.length; i++) {
+      integers[i] = consolidators[i].consolidateAndReset();
+    }
+    storage.append(timestamp, integers);
   }
 
   public void publish(final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) throws IOException {
     for (final Triple<Window, Storage, Consolidator[]> triple : this.triples) {
-      accumulate(currentTimestamp, value, triple.third);
+      accumulate(triple.third, currentTimestamp, value);
 
       //previousTimestamp == 0 if this is the first publish call and associated storage was empty (or new)
       if (previousTimestamp != 0L) {
@@ -153,7 +157,7 @@ public final class Engine implements Closeable {
         if (currentWindowId != previousWindowId) {
           final long previousWindowBeginning = beginningTimestamp + previousWindowId * duration;
 
-          persist(previousWindowBeginning, triple.second, triple.third);
+          persist(triple.third, previousWindowBeginning, triple.second);
         }
       }
     }

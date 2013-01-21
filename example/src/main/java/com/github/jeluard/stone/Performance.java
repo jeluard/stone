@@ -17,11 +17,10 @@
 package com.github.jeluard.stone;
 
 import com.github.jeluard.stone.api.Archive;
-import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.api.TimeSeries;
+import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.impl.JournalIOStorageFactory;
 import com.github.jeluard.stone.impl.consolidators.MaxConsolidator;
-import com.github.jeluard.stone.impl.SequentialDispatcher;
 import com.github.jeluard.stone.spi.StorageFactory;
 
 import java.util.ArrayList;
@@ -40,21 +39,21 @@ public class Performance {
     final Archive archive3 = new Archive(Arrays.asList(MaxConsolidator.class, MaxConsolidator.class), 
             Arrays.asList(new Window(Duration.standardDays(1), Duration.standardDays(365))));
 
-    final int nbSeries = 15000;
+    final int nbSeries = 10000;
 
     final List<TimeSeries> timeSeries = new ArrayList<TimeSeries>(nbSeries);
     final StorageFactory factory = new JournalIOStorageFactory();
     for (int i = 0; i < nbSeries; i++) {
-      timeSeries.add(new TimeSeries("ping-server-"+i, Arrays.asList(archive1, archive2, archive3), new SequentialDispatcher(), factory));
+      timeSeries.add(new TimeSeries("ping-server-"+i, Arrays.asList(archive1, archive2, archive3), factory));
     }
 
     try {
       final Random random = new Random();
       for (int i = 0; i < 100000; i++) {
         final long before = System.currentTimeMillis();
-        for (int j = 0; j < 100000; j++) {
+        for (int j = 0; j < 45*100; j++) {
           for (final TimeSeries ts : timeSeries) {
-            ts.publish(System.currentTimeMillis(), 100+random.nextInt(25));
+            ts.publish(System.currentTimeMillis(), 100);
           }
         }
         System.out.println(System.currentTimeMillis()-before);
