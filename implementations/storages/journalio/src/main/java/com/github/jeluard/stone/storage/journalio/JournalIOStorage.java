@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.jeluard.stone.impl;
+package com.github.jeluard.stone.storage.journalio;
 
 import com.github.jeluard.guayaba.base.Pair;
 import com.github.jeluard.stone.spi.BaseBinaryStorage;

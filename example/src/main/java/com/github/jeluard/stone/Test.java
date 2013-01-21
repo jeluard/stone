@@ -21,7 +21,7 @@ import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.DataBase;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.api.Window;
-import com.github.jeluard.stone.impl.JournalIOStorageFactory;
+import com.github.jeluard.stone.storage.journalio.JournalIOStorageFactory;
 import com.github.jeluard.stone.impl.consolidators.MaxConsolidator;
 
 import java.util.Arrays;
