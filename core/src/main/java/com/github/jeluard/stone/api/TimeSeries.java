@@ -18,6 +18,7 @@ package com.github.jeluard.stone.api;
 
 import com.github.jeluard.guayaba.base.Triple;
 import com.github.jeluard.guayaba.lang.Iterables2;
+import com.github.jeluard.stone.helper.Loggers;
 import com.github.jeluard.stone.impl.Engine;
 import com.github.jeluard.stone.spi.Storage;
 import com.github.jeluard.stone.spi.StorageFactory;
@@ -31,6 +32,7 @@ import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.logging.Level;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
@@ -68,7 +70,9 @@ public final class TimeSeries {
         final Constructor<? extends Consolidator> samplesConstructor = type.getConstructor(int.class);
         return samplesConstructor.newInstance(window.getSamples());
       } catch (NoSuchMethodException e) {
-        //TODO add logging
+        if (Loggers.BASE_LOGGER.isLoggable(Level.FINEST)) {
+          Loggers.BASE_LOGGER.log(Level.FINEST, "{0} does not define a constructor accepting int", type.getCanonicalName());
+        }
       }
 
       //If we can't find such fallback to defaut constructor

@@ -19,6 +19,7 @@ import com.github.jeluard.guayaba.base.Triple;
 import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.Consolidator;
 import com.github.jeluard.stone.api.Window;
+import com.github.jeluard.stone.helper.Loggers;
 import com.github.jeluard.stone.spi.Storage;
 import com.github.jeluard.stone.spi.StorageFactory;
 import com.google.common.base.Preconditions;
@@ -26,14 +27,11 @@ import com.google.common.base.Preconditions;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
  */
 public final class Engine {
-
-  private static final Logger LOGGER = Logger.getLogger("com.github.jeluard.stone");
 
   private final StorageFactory<?> storageFactory;
 
@@ -67,8 +65,8 @@ public final class Engine {
       try {
         consolidationListener.onConsolidation(window, timestamp, consolidates);
       } catch (Exception e) {
-        if (Engine.LOGGER.isLoggable(Level.WARNING)) {
-          Engine.LOGGER.log(Level.WARNING, "Got exception while executing <"+consolidationListener+">", e);
+        if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
+          Loggers.BASE_LOGGER.log(Level.WARNING, "Got exception while executing <"+consolidationListener+">", e);
         }
       }
     }
