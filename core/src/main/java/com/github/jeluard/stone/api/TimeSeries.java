@@ -43,7 +43,7 @@ import org.joda.time.Interval;
  * then each time a {@link Window#getResolution()} threshold is crossed for consolidation (see {@link Consolidator#consolidateAndReset()}).
  * Final consolidated results are persisted in a {@link TimeSeries}/{@link Window} specific {@link Storage}.
  *
- * @see DataBase
+ * @see Database
  */
 public final class TimeSeries {
 
@@ -192,7 +192,7 @@ public final class TimeSeries {
   }
 
   /**
-   * @return a unique id identifying this {@link TimeSeries} in associated {@link DataBase}
+   * @return a unique id identifying this {@link TimeSeries} in associated {@link Database}
    */
   public String getId() {
     return this.id;

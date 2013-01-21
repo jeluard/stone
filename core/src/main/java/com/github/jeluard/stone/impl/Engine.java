@@ -31,7 +31,7 @@ import java.util.logging.Level;
 /**
  * Encapsulate the logic that triggers call to {@link Consolidator#accumulate(long, int)}, {@link Consolidator#consolidateAndReset()} and {@link Storage#append(long, int[])}.
  * <br>
- * A single {@link Engine} is available per {@link com.github.jeluard.stone.api.DataBase} thus shared among all associated {@link com.github.jeluard.stone.api.TimeSeries}.
+ * A single {@link Engine} is available per {@link com.github.jeluard.stone.api.Database} thus shared among all associated {@link com.github.jeluard.stone.api.TimeSeries}.
  */
 public final class Engine {
 
