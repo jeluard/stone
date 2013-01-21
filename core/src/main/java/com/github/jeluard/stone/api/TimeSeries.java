@@ -200,7 +200,7 @@ public final class TimeSeries {
 
   private void checkNotBeforeLatestTimestamp(final long previousTimestamp, final long currentTimestamp) {
     if (!(currentTimestamp > previousTimestamp)) {
-      throw new IllegalArgumentException("Provided timestamp from <"+currentTimestamp+"> must be more recent than <"+previousTimestamp+">");
+      throw new IllegalArgumentException("Provided timestamp <"+currentTimestamp+"> must be greater than <"+previousTimestamp+">");
     }
   }
 
