@@ -38,8 +38,8 @@ public class TimeSeriesTest {
   @Test(expected=IllegalArgumentException.class)
   public void shouldDuplicatedTimeSeriesIDBeInvalid() throws IOException {
     final String id = "id";
-    new TimeSeries(id, Collections.<Archive>emptyList(), Mockito.mock(StorageFactory.class));
-    new TimeSeries(id, Collections.<Archive>emptyList(), Mockito.mock(StorageFactory.class));
+    new TimeSeries(id, Collections.<Archive>emptyList(), Collections.<ConsolidationListener>emptyList(), Mockito.mock(StorageFactory.class));
+    new TimeSeries(id, Collections.<Archive>emptyList(), Collections.<ConsolidationListener>emptyList(), Mockito.mock(StorageFactory.class));
   }
 
   /*@Test(expected=IllegalArgumentException.class)

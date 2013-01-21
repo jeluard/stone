@@ -20,6 +20,7 @@ import com.github.jeluard.guayaba.base.Preconditions2;
 import com.github.jeluard.guayaba.base.Triple;
 import com.github.jeluard.guayaba.lang.Iterables2;
 import com.github.jeluard.stone.api.Archive;
+import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.Consolidator;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.spi.Storage;
@@ -32,6 +33,8 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
@@ -41,13 +44,17 @@ import org.joda.time.Interval;
  */
 public final class Engine implements Closeable {
 
+  private static final Logger LOGGER = Logger.getLogger("com.github.jeluard.stone");
+
+  private final ConsolidationListener[] consolidationListeners;
   private final StorageFactory<?> storageFactory;
   private final Triple<Window, Storage, Consolidator[]>[] triples;
   private Map<Pair<Archive, Window>, Pair<Storage, Consolidator[]>> stuffs = new HashMap<Pair<Archive, Window>, Pair<Storage, Consolidator[]>>();
   private final Interval span;
 
-  public Engine(final String id, final Collection<Archive> archives, final StorageFactory storageFactory) throws IOException {
+  public Engine(final String id, final Collection<Archive> archives, final Collection<ConsolidationListener> consolidationListeners, final StorageFactory storageFactory) throws IOException {
     Preconditions2.checkNotEmpty(archives, "null archives");
+    this.consolidationListeners = Preconditions.checkNotNull(consolidationListeners, "null consolidationListeners").toArray(new ConsolidationListener[consolidationListeners.size()]);
     this.storageFactory = Preconditions.checkNotNull(storageFactory, "null storageFactory");
     this.stuffs.putAll(createStorages(storageFactory, id, archives));
     this.triples = new Triple[this.stuffs.size()];
@@ -136,13 +143,23 @@ public final class Engine implements Closeable {
     }
   }
 
-  private void persist(final Consolidator[] consolidators, final long timestamp, final Storage storage) throws IOException {
+  private void persist(final Window window, final Consolidator[] consolidators, final long timestamp, final Storage storage) throws IOException {
     //TODO Do not create arrays each time?
-    final int[] integers = new int[consolidators.length];
+    final int[] consolidates = new int[consolidators.length];
     for (int i = 0; i < consolidators.length; i++) {
-      integers[i] = consolidators[i].consolidateAndReset();
+      consolidates[i] = consolidators[i].consolidateAndReset();
     }
-    storage.append(timestamp, integers);
+    storage.append(timestamp, consolidates);
+
+    for (final ConsolidationListener consolidationListener : this.consolidationListeners) {
+      try {
+        consolidationListener.onConsolidation(window, timestamp, consolidates);
+      } catch (Exception e) {
+        if (Engine.LOGGER.isLoggable(Level.WARNING)) {
+          Engine.LOGGER.warning("Got exception while executing <"+consolidationListener+">");
+        }
+      }
+    }
   }
 
   public void publish(final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) throws IOException {
@@ -157,7 +174,7 @@ public final class Engine implements Closeable {
         if (currentWindowId != previousWindowId) {
           final long previousWindowBeginning = beginningTimestamp + previousWindowId * duration;
 
-          persist(triple.third, previousWindowBeginning, triple.second);
+          persist(triple.first, triple.third, previousWindowBeginning, triple.second);
         }
       }
     }

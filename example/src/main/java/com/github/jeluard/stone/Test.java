@@ -17,6 +17,7 @@
 package com.github.jeluard.stone;
 
 import com.github.jeluard.stone.api.Archive;
+import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.impl.JournalIOStorageFactory;
@@ -31,12 +32,13 @@ public class Test {
   public static void main(String[] args) throws Exception {
     final Archive archive = new Archive(Arrays.asList(MaxConsolidator.class), 
             Arrays.asList(new Window(Duration.standardSeconds(10), Duration.standardMinutes(1))));
-    final TimeSeries timeSeries = new TimeSeries("timeseries", Arrays.asList(archive), new JournalIOStorageFactory());
-    /*timeSeries.addListener(new Listener() {
-      void onNewConsolidate(final Window window, final long timestamp, final int[] consolidates) {
-        System.out.println("Got "+consolidates);
+    final ConsolidationListener consolidationListener = new ConsolidationListener() {
+      @Override
+      public void onConsolidation(final Window window, final long timestamp, final int[] consolidates) {
+        System.out.println("Got "+Arrays.toString(consolidates));
       }
-    });*/
+    };
+    final TimeSeries timeSeries = new TimeSeries("timeseries", Arrays.asList(archive), Arrays.asList(consolidationListener), new JournalIOStorageFactory());
 
     /*final Map<Pair<Archive, Window>, Storage> storages = timeSeries.getStorages();
     System.out.println("TimeSeries "+timeSeries.getId());
