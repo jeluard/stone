@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.jeluard.stone.spi;
+package com.github.jeluard.stone.api;
 
-import com.github.jeluard.stone.api.Archive;
-import com.github.jeluard.stone.api.TimeSeries;
+import com.github.jeluard.stone.spi.Storage;
+import com.github.jeluard.stone.spi.StorageFactory;
 import com.google.common.base.Optional;
 
 import java.io.IOException;
