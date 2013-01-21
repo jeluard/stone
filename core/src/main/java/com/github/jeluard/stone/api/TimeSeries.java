@@ -32,6 +32,7 @@ import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 import org.joda.time.DateTime;
@@ -50,12 +51,8 @@ public final class TimeSeries {
     this.id = Preconditions.checkNotNull(id, "null id");
     this.consolidationListeners = Preconditions.checkNotNull(consolidationListeners, "null consolidationListeners").toArray(new ConsolidationListener[consolidationListeners.size()]);
     this.engine = Preconditions.checkNotNull(engine, "null engine");
-    final Map<Pair<Archive, Window>, Pair<Storage, Consolidator[]>> stuffs = new HashMap<Pair<Archive, Window>, Pair<Storage, Consolidator[]>>();
-    stuffs.putAll(createFlatten(engine.getStorageFactory(), id, archives));
-    this.flattened = new Triple[stuffs.size()];
-    for (final Iterables2.Indexed<Map.Entry<Pair<Archive, Window>, Pair<Storage, Consolidator[]>>> stuff : Iterables2.withIndex(stuffs.entrySet())) {
-      this.flattened[stuff.index] = new Triple<Window, Storage, Consolidator[]>(stuff.value.getKey().second, stuff.value.getValue().first, stuff.value.getValue().second);
-    }
+    final Collection<Triple<Window, Storage, Consolidator[]>> flattenedList = createFlatten(engine.getStorageFactory(), id, archives);
+    this.flattened = flattenedList.toArray(new Triple[flattenedList.size()]);
 
     final Interval initialSpan = extractInterval(Collections2.transform(Arrays.asList(this.flattened), new Function<Triple<Window, Storage, Consolidator[]>, Storage>() {
       @Override
@@ -107,11 +104,11 @@ public final class TimeSeries {
     return storageFactory.createOrGet(id, archive, window);
   }
 
-  private Map<Pair<Archive, Window>, Pair<Storage, Consolidator[]>> createFlatten(final StorageFactory storageFactory, final String id, final Collection<Archive> archives) throws IOException {
-    final Map<Pair<Archive, Window>, Pair<Storage, Consolidator[]>> newStorages = new HashMap<Pair<Archive, Window>, Pair<Storage, Consolidator[]>>();
+  private Collection<Triple<Window, Storage, Consolidator[]>> createFlatten(final StorageFactory storageFactory, final String id, final Collection<Archive> archives) throws IOException {
+    final Collection<Triple<Window, Storage, Consolidator[]>> newStorages = new LinkedList<Triple<Window, Storage, Consolidator[]>>();
     for (final Archive archive : archives) {
       for (final Window window : archive.getWindows()) {
-        newStorages.put(new Pair<Archive, Window>(archive, window), new Pair<Storage, Consolidator[]>(createStorage(storageFactory, id, archive, window), createConsolidators(archive, window)));
+        newStorages.add(new Triple<Window, Storage, Consolidator[]>(window, createStorage(storageFactory, id, archive, window), createConsolidators(archive, window)));
       }
     }
     return newStorages;
