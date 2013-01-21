@@ -28,6 +28,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -66,6 +67,25 @@ public final class TimeSeries {
     this.latest = initialSpan.getEndMillis();
   }
 
+  private Consolidator createConsolidator(final Class<? extends Consolidator> type) {
+    try {
+      //TODO add support for Consolidator(int maxSamples)
+      try {
+        final Constructor<? extends Consolidator> defaultConstructor = type.getConstructor();
+        return defaultConstructor.newInstance();
+      } catch (NoSuchMethodException e) {
+        throw new IllegalArgumentException("Failed to find default constructor for "+type.getCanonicalName());
+      }
+    } catch (ReflectiveOperationException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * @param archive
+   * @return all {@link Consolidator} mapping to {@link Archive#getConsolidators()}
+   * @see #createConsolidator(java.lang.Class)
+   */
   private Consolidator[] createConsolidators(final Archive archive) {
     final Collection<Class<? extends Consolidator>> types = archive.getConsolidators();
     final Consolidator[] consolidators = new Consolidator[types.size()];
@@ -89,15 +109,6 @@ public final class TimeSeries {
     return storageFactory.createOrGet(id, archive, window);
   }
 
-  private Consolidator createConsolidator(final Class<? extends Consolidator> type) {
-    try {
-      //TODO better error checking, add support for Consolidator(int maxSamples)
-      return type.newInstance();
-    } catch (ReflectiveOperationException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
   private Interval extractInterval(final Collection<Storage> storages) throws IOException {
     return new Interval(extractBeginning(storages.iterator().next()), extractLatest(storages));
   }
@@ -117,7 +128,7 @@ public final class TimeSeries {
 
   /**
    * @param storages
-   * @return latest (more recent) timestamp stored in specified {@link archives}; null if all archive are empty
+   * @return latest (more recent) timestamp stored in specified {@link archives}; 0L if all archive are empty
    * @throws IOException 
    */
   private long extractLatest(final Collection<Storage> storages) throws IOException {
