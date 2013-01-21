@@ -117,6 +117,8 @@ public final class Engine {
    * @throws IOException 
    */
   public void publish(final Triple<Window, Storage, Consolidator[]>[] triples, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) throws IOException {
+    //Note: triples could be factored by Windo#getResolution() to limit window threshold crossing checks.
+    //Given the low probability several Window have same resolution but different duration this optimisation is not considered to keep implmentation simple.
     for (final Triple<Window, Storage, Consolidator[]> triple : triples) {
       accumulate(triple.third, currentTimestamp, value);
 
