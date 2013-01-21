@@ -76,16 +76,13 @@ public final class Engine {
     for (final Triple<Window, Storage, Consolidator[]> triple : triples) {
       accumulate(triple.third, currentTimestamp, value);
 
-      //previousTimestamp == 0 if this is the first publish call and associated storage was empty (or new)
-      if (previousTimestamp != 0L) {
-        final long duration = triple.first.getResolution().getMillis();
-        final long currentWindowId = windowId(beginningTimestamp, currentTimestamp, duration);
-        final long previousWindowId = windowId(beginningTimestamp, previousTimestamp, duration);
-        if (currentWindowId != previousWindowId) {
-          final long previousWindowBeginning = beginningTimestamp + previousWindowId * duration;
+      final long duration = triple.first.getResolution().getMillis();
+      final long currentWindowId = windowId(beginningTimestamp, currentTimestamp, duration);
+      final long previousWindowId = windowId(beginningTimestamp, previousTimestamp, duration);
+      if (currentWindowId != previousWindowId) {
+        final long previousWindowBeginning = beginningTimestamp + previousWindowId * duration;
 
-          persist(triple.first, triple.third, previousWindowBeginning, triple.second, consolidationListeners);
-        }
+        persist(triple.first, triple.third, previousWindowBeginning, triple.second, consolidationListeners);
       }
     }
   }

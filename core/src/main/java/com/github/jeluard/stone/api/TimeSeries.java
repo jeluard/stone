@@ -246,7 +246,10 @@ public final class TimeSeries {
     final long previousTimestamp = recordLatest(timestamp);
     final long beginningTimestamp = inferBeginning(timestamp);
 
-    this.engine.publish(this.flattened, this.consolidationListeners, beginningTimestamp, previousTimestamp, timestamp, value);
+    //previousTimestamp == 0 if this is the first publish call and associated storage was empty (or new)
+    if (previousTimestamp != 0L) {
+      this.engine.publish(this.flattened, this.consolidationListeners, beginningTimestamp, previousTimestamp, timestamp, value);
+    }
   }
 
 }
