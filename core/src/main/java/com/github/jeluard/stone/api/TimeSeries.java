@@ -42,7 +42,7 @@ public final class TimeSeries {
   private final String id;
   private final ConsolidationListener[] consolidationListeners;
   private final Engine engine;
-  private final Triple<Window, Storage, Consolidator[]>[] triples;
+  private final Triple<Window, Storage, Consolidator[]>[] flattened;
   private long beginning;
   private long latest;
 
@@ -51,13 +51,13 @@ public final class TimeSeries {
     this.consolidationListeners = Preconditions.checkNotNull(consolidationListeners, "null consolidationListeners").toArray(new ConsolidationListener[consolidationListeners.size()]);
     this.engine = Preconditions.checkNotNull(engine, "null engine");
     final Map<Pair<Archive, Window>, Pair<Storage, Consolidator[]>> stuffs = new HashMap<Pair<Archive, Window>, Pair<Storage, Consolidator[]>>();
-    stuffs.putAll(createStorages(engine.getStorageFactory(), id, archives));
-    this.triples = new Triple[stuffs.size()];
+    stuffs.putAll(createFlatten(engine.getStorageFactory(), id, archives));
+    this.flattened = new Triple[stuffs.size()];
     for (final Iterables2.Indexed<Map.Entry<Pair<Archive, Window>, Pair<Storage, Consolidator[]>>> stuff : Iterables2.withIndex(stuffs.entrySet())) {
-      this.triples[stuff.index] = new Triple<Window, Storage, Consolidator[]>(stuff.value.getKey().second, stuff.value.getValue().first, stuff.value.getValue().second);
+      this.flattened[stuff.index] = new Triple<Window, Storage, Consolidator[]>(stuff.value.getKey().second, stuff.value.getValue().first, stuff.value.getValue().second);
     }
 
-    final Interval initialSpan = extractInterval(Collections2.transform(Arrays.asList(this.triples), new Function<Triple<Window, Storage, Consolidator[]>, Storage>() {
+    final Interval initialSpan = extractInterval(Collections2.transform(Arrays.asList(this.flattened), new Function<Triple<Window, Storage, Consolidator[]>, Storage>() {
       @Override
       public Storage apply(Triple<Window, Storage, Consolidator[]> input) {
         return input.second;
@@ -67,14 +67,22 @@ public final class TimeSeries {
     this.latest = initialSpan.getEndMillis();
   }
 
-  private Consolidator createConsolidator(final Class<? extends Consolidator> type) {
+  private Consolidator createConsolidator(final Class<? extends Consolidator> type, final Window window) {
     try {
-      //TODO add support for Consolidator(int maxSamples)
+      //First look for a constructor accepting int as argument
+      try {
+        final Constructor<? extends Consolidator> samplesConstructor = type.getConstructor(int.class);
+        return samplesConstructor.newInstance(window.getSamples());
+      } catch (NoSuchMethodException e) {
+        //TODO add logging
+      }
+
+      //If we can't find such fallback to defaut constructor
       try {
         final Constructor<? extends Consolidator> defaultConstructor = type.getConstructor();
         return defaultConstructor.newInstance();
       } catch (NoSuchMethodException e) {
-        throw new IllegalArgumentException("Failed to find default constructor for "+type.getCanonicalName());
+        throw new IllegalArgumentException("Failed to find int or default constructor for "+type.getCanonicalName());
       }
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
@@ -86,27 +94,27 @@ public final class TimeSeries {
    * @return all {@link Consolidator} mapping to {@link Archive#getConsolidators()}
    * @see #createConsolidator(java.lang.Class)
    */
-  private Consolidator[] createConsolidators(final Archive archive) {
+  private Consolidator[] createConsolidators(final Archive archive, final Window window) {
     final Collection<Class<? extends Consolidator>> types = archive.getConsolidators();
     final Consolidator[] consolidators = new Consolidator[types.size()];
     for (final Iterables2.Indexed<Class<? extends Consolidator>> indexedType : Iterables2.withIndex(types)) {
-      consolidators[indexedType.index] = createConsolidator(indexedType.value);
+      consolidators[indexedType.index] = createConsolidator(indexedType.value, window);
     }
     return consolidators;
   }
 
-  private Map<Pair<Archive, Window>, Pair<Storage, Consolidator[]>> createStorages(final StorageFactory storageFactory, final String id, final Collection<Archive> archives) throws IOException {
+  private Storage createStorage(final StorageFactory storageFactory, final String id, final Archive archive, final Window window) throws IOException {
+    return storageFactory.createOrGet(id, archive, window);
+  }
+
+  private Map<Pair<Archive, Window>, Pair<Storage, Consolidator[]>> createFlatten(final StorageFactory storageFactory, final String id, final Collection<Archive> archives) throws IOException {
     final Map<Pair<Archive, Window>, Pair<Storage, Consolidator[]>> newStorages = new HashMap<Pair<Archive, Window>, Pair<Storage, Consolidator[]>>();
     for (final Archive archive : archives) {
       for (final Window window : archive.getWindows()) {
-        newStorages.put(new Pair<Archive, Window>(archive, window), new Pair<Storage, Consolidator[]>(createStorage(storageFactory, id, archive, window), createConsolidators(archive)));
+        newStorages.put(new Pair<Archive, Window>(archive, window), new Pair<Storage, Consolidator[]>(createStorage(storageFactory, id, archive, window), createConsolidators(archive, window)));
       }
     }
     return newStorages;
-  }
-
-  private Storage createStorage(final StorageFactory storageFactory, final String id, final Archive archive, final Window window) throws IOException {
-    return storageFactory.createOrGet(id, archive, window);
   }
 
   private Interval extractInterval(final Collection<Storage> storages) throws IOException {
@@ -180,7 +188,7 @@ public final class TimeSeries {
     final long previousTimestamp = recordLatest(timestamp);
     final long beginningTimestamp = inferBeginning(timestamp);
 
-    this.engine.publish(this.triples, this.consolidationListeners, beginningTimestamp, previousTimestamp, timestamp, value);
+    this.engine.publish(this.flattened, this.consolidationListeners, beginningTimestamp, previousTimestamp, timestamp, value);
   }
 
 }
