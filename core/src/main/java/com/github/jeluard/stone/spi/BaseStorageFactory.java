@@ -19,6 +19,7 @@ import com.github.jeluard.guayaba.base.Triple;
 import com.github.jeluard.guayaba.util.concurrent.ConcurrentMaps;
 import com.github.jeluard.stone.api.Archive;
 import com.github.jeluard.stone.api.Window;
+import com.github.jeluard.stone.helper.Loggers;
 import com.google.common.base.Supplier;
 
 import java.io.IOException;
@@ -32,7 +33,7 @@ import java.util.logging.Logger;
  */
 public abstract class BaseStorageFactory<T extends Storage> implements StorageFactory<T> {
 
-  private static final Logger LOGGER = Logger.getLogger("com.github.jeluard.stone");
+  private static final Logger LOGGER = Loggers.BASE_LOGGER;
 
   private final ConcurrentMap<Triple<String, Archive, Window>, T> cache = new ConcurrentHashMap<Triple<String, Archive, Window>, T>();
 
