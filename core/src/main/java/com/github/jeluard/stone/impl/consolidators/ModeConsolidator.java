@@ -28,7 +28,7 @@ import java.util.List;
  */
 public class ModeConsolidator extends BaseConsolidator {
 
-  private final Multiset<Integer> values = HashMultiset.create();
+  private final Multiset<Integer> values;
   //Inspired from guava internals
   private static final Ordering<Multiset.Entry<?>> DECREASING_COUNT_ORDERING = new Ordering<Multiset.Entry<?>>() {
     @Override
@@ -36,6 +36,10 @@ public class ModeConsolidator extends BaseConsolidator {
       return Ints.compare(entry2.getCount(), entry1.getCount());
     }
   };
+
+  public ModeConsolidator(final int maxSamples) {
+    this.values = HashMultiset.create(maxSamples);
+  }
 
   @Override
   public void accumulate(final long timestamp, final int value) {
