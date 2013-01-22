@@ -27,13 +27,11 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.Maps;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -204,14 +202,14 @@ public final class TimeSeries {
   }
 
   /**
-   * @return all underlying {@link Storage} mapped by {@link Window}
+   * @return all underlying {@link Reader} mapped by {@link Window}
    */
-  public Map<Window, Storage> getStorages() {
-    final Map<Window, Storage> storages = new HashMap<Window, Storage>();
+  public Map<Window, Reader> getReaders() {
+    final Map<Window, Reader> readers = new HashMap<Window, Reader>();
     for (final Triple<Window, Storage, Consolidator[]> triple : this.flattened) {
-      storages.put(triple.first, triple.second);
+      readers.put(triple.first, triple.second);
     }
-    return storages;
+    return readers;
   }
 
   private void checkNotBeforeLatestTimestamp(final long previousTimestamp, final long currentTimestamp) {

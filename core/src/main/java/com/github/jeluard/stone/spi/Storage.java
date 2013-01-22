@@ -16,20 +16,16 @@
  */
 package com.github.jeluard.stone.spi;
 
-import com.github.jeluard.guayaba.base.Pair;
-import com.google.common.base.Optional;
+import com.github.jeluard.stone.api.Reader;
 
 import java.io.IOException;
-
-import org.joda.time.DateTime;
-import org.joda.time.Interval;
 
 /**
  * Abstraction dealing with {@link TimeSeries} persistency.
  * <br>
  * A {@link Storage} is specific to a single {@link Window} of a {@link TimeSeries}.
  */
-public interface Storage {
+public interface Storage extends Reader {
 
   /**
    * Append a {@code timestamp}/{@code consolidates} pair.
@@ -41,30 +37,5 @@ public interface Storage {
    * @throws IOException 
    */
   void append(long timestamp, int[] consolidates) throws IOException;
-
-  /**
-   * @return beginning of values stored, if any
-   * @throws IOException 
-   */
-  Optional<DateTime> beginning() throws IOException;
-
-  /**
-   * @return end of values stored, if any
-   * @throws IOException 
-   */
-  Optional<DateTime> end() throws IOException;
-
-  /**
-   * @return all data stored
-   * @throws IOException 
-   */
-  Iterable<Pair<Long, int[]>> all() throws IOException;
-
-  /**
-   * @param interval
-   * @return all data stored during {@code interval}
-   * @throws IOException 
-   */
-  Iterable<Pair<Long, int[]>> during(Interval interval) throws IOException;
 
 }

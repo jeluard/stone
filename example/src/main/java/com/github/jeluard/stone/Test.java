@@ -20,10 +20,10 @@ import com.github.jeluard.guayaba.base.Pair;
 import com.github.jeluard.stone.api.Archive;
 import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.Database;
+import com.github.jeluard.stone.api.Reader;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.impl.consolidators.MaxConsolidator;
-import com.github.jeluard.stone.spi.Storage;
 import com.github.jeluard.stone.storage.journalio.JournalIOStorageFactory;
 
 import java.util.Arrays;
@@ -44,9 +44,9 @@ public class Test {
       }
     };
     final TimeSeries timeSeries = dataBase.create("timeseries", Arrays.asList(archive), Arrays.asList(consolidationListener));
-    final Map<Window, Storage> storages = timeSeries.getStorages();
+    final Map<Window, Reader> storages = timeSeries.getReaders();
     System.out.println("TimeSeries "+timeSeries.getId());
-    for (final Map.Entry<Window, Storage> entry : storages.entrySet()) {
+    for (final Map.Entry<Window, Reader> entry : storages.entrySet()) {
       System.out.println("\tfor window "+entry.getKey());
       for (final Pair<Long, int[]> value : entry.getValue().all()) {
         System.out.println("\t\ttimestamp <"+value.first+"> values <"+Arrays.toString(value.second)+">");
