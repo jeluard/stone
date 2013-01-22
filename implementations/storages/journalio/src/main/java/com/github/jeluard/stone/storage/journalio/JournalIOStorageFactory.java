@@ -20,6 +20,7 @@ import com.github.jeluard.guayaba.util.concurrent.ExecutorServices;
 import com.github.jeluard.stone.api.Archive;
 import com.github.jeluard.stone.api.Consolidator;
 import com.github.jeluard.stone.api.Window;
+import com.github.jeluard.stone.helper.Loggers;
 import com.github.jeluard.stone.spi.BaseStorageFactory;
 import com.github.jeluard.stone.spi.StorageFactory;
 import com.google.common.base.Function;
@@ -51,7 +52,7 @@ import org.joda.time.Duration;
  */
 public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage> {
 
-  static final Logger LOGGER = Logger.getLogger("com.github.jeluard.stone.storage.journalio");
+  static final Logger LOGGER = Loggers.create("storage.journalio");
 
   private static final String WRITER_THREADS_NAME_FORMAT = "Stone JournalIO-Writer #%d";
   private static final String DISPOSER_THREADS_NAME_FORMAT = "Stone JournalIO-Disposer";
