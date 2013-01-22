@@ -43,14 +43,14 @@ final ConsolidationListener consolidationListener = new ConsolidationListener() 
 final TimeSeries monitoredTimeSeries = database.create("pinger-monitored", Arrays.asList(archive), Arrays.asList(consolidationListener));
 
 //Access underlying persisted data
-final Map<Window, Storage> storages = timeSeries.getStorages();
-final Storage storage = storages.get(window);
+final Map<Window, Reader> readers = timeSeries.getReaders();
+final Reader reader = readers.get(window);
 
 //Browse everything
-Iterable<Pair<Long, int[]>> all = storage.all();
+Iterable<Pair<Long, int[]>> all = reader.all();
 
 //Or what happened during last day (for simplicity timezone concerns are ignored).
-Iterable<Pair<Long, int[]>> lastDay = storage.during(new Interval(DateTime.now().minusDays(1), DateTime.now()));
+Iterable<Pair<Long, int[]>> lastDay = reader.during(new Interval(DateTime.now().minusDays(1), DateTime.now()));
 
 //Cleanup resources.
 database.close();
