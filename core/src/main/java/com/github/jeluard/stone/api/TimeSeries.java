@@ -67,10 +67,10 @@ public final class TimeSeries {
     final Collection<Triple<Window, Storage, Consolidator[]>> flattenedList = createFlatten(engine.getStorageFactory(), id, archives);
     this.flattened = flattenedList.toArray(new Triple[flattenedList.size()]);
 
-    final Interval initialSpan = extractInterval(Collections2.transform(Arrays.asList(this.flattened), new Function<Triple<Window, Storage, Consolidator[]>, Storage>() {
+    final Interval initialSpan = extractInterval(Collections2.transform(Arrays.asList(this.flattened), new Function<Triple<Window, Storage, Consolidator[]>, Pair<Window, Storage>>() {
       @Override
-      public Storage apply(Triple<Window, Storage, Consolidator[]> input) {
-        return input.second;
+      public Pair<Window, Storage> apply(final Triple<Window, Storage, Consolidator[]> input) {
+        return new Pair<Window, Storage>(input.first, input.second);
       }
     }));
     this.beginning = initialSpan.getStartMillis();
@@ -155,12 +155,12 @@ public final class TimeSeries {
   }
 
   /**
-   * @param storages
+   * @param pairs
    * @return maximum {@link Interval} covered by all {@link Window}s
    * @throws IOException 
    */
-  private Interval extractInterval(final Collection<Storage> storages) throws IOException {
-    return new Interval(extractBeginning(storages.iterator().next()), extractLatest(storages));
+  private Interval extractInterval(final Collection<Pair<Window, Storage>> pairs) throws IOException {
+    return new Interval(extractBeginning(pairs.iterator().next().second), extractLatest(pairs));
   }
 
   /**
@@ -177,21 +177,19 @@ public final class TimeSeries {
   }
 
   /**
-   * @param storages
+   * @param pairs
    * @return latest (more recent) timestamp stored in specified {@code storages}; 0L if all {@code storages} are empty
    * @throws IOException 
    */
-  private long extractLatest(final Collection<Storage> storages) throws IOException {
-    //TODO asscoiated window#getDuration should be added
+  private long extractLatest(final Collection<Pair<Window, Storage>> pairs) throws IOException {
     long storageLatest = 0L;
-    for (final Storage storage : storages) {
+    for (final Pair<Window, Storage> pair : pairs) {
+      final Storage storage = pair.second;
       final Optional<DateTime> optionalInterval = storage.end(); 
       if (optionalInterval.isPresent()) {
         final long endInterval = optionalInterval.get().getMillis();
-        if (storageLatest == 0L) {
-          storageLatest = endInterval;
-        } else if (endInterval > storageLatest) {
-          storageLatest = endInterval;
+        if ((storageLatest == 0L) || (endInterval > storageLatest)) {
+          storageLatest = endInterval + pair.first.getResolution().getMillis();
         }
       }
     }
