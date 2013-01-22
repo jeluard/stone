@@ -15,10 +15,14 @@ It also does not provide any facility to generate graphs.
 ## Usage
 
 ```java
+
+//Create our main database. JournalIO will be used as storage.
 final Database database = new Database(new JournalIOStorageFactory());
+
 //Define how published values will be consolidated: every minute using *max* algorithm and kept up to 1 hour.
+final Window window = new Window(Duration.standardMinutes(1), Duration.standardHours(1));
 final Archive archive = new Archive(Arrays.asList(MaxConsolidator.class),
-  Arrays.asList(new Window(Duration.standardMinutes(1), Duration.standardHours(1))));
+  Arrays.asList(window));
 
 //Create the TimeSeries. A new storage will be created if needed.
 final TimeSeries timeSeries = database.create("pinger", Arrays.asList(archive));
@@ -26,6 +30,27 @@ final TimeSeries timeSeries = database.create("pinger", Arrays.asList(archive));
 //Publish some values to the TimeSeries.
 timeSeries.publish(System.currentTimeMillis(), 123);
 ...
+
+//You can also hook some logic at consolidation time
+final ConsolidationListener consolidationListener = new ConsolidationListener() {
+  @Override
+  public void onConsolidation(final Window window, final long timestamp, final int[] consolidates) {
+    System.out.println("Got "+Arrays.toString(consolidates));
+  }
+};
+
+//That will be triggered for a specific TimeSeries
+final TimeSeries monitoredTimeSeries = database.create("pinger-monitored", Arrays.asList(archive), Arrays.asList(consolidationListener));
+
+//Access underlying persisted data
+final Map<Window, Storage> storages = timeSeries.getStorages();
+final Storage storage = storages.get(window);
+
+//Browse everything
+Iterable<Pair<Long, int[]>> all = storage.all();
+
+//Or what happened during last day (for simplicity timezone concerns are ignored).
+Iterable<Pair<Long, int[]>> lastDay = storage.during(new Interval(DateTime.now().minusDays(1), DateTime.now()));
 
 //Cleanup resources.
 database.close();
