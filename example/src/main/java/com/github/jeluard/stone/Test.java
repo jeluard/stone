@@ -24,6 +24,7 @@ import com.github.jeluard.stone.api.Reader;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.impl.consolidators.MaxConsolidator;
+import com.github.jeluard.stone.impl.consolidators.Percentile99Consolidator;
 import com.github.jeluard.stone.storage.journalio.JournalIOStorageFactory;
 
 import java.util.Arrays;
@@ -35,7 +36,7 @@ import org.joda.time.Duration;
 public class Test {
   public static void main(String[] args) throws Exception {
     final Database dataBase = new Database(new JournalIOStorageFactory());
-    final Archive archive = new Archive(Arrays.asList(MaxConsolidator.class), 
+    final Archive archive = new Archive(Arrays.asList(Percentile99Consolidator.class), 
             Arrays.asList(new Window(Duration.standardSeconds(10), Duration.standardMinutes(1))));
     final ConsolidationListener consolidationListener = new ConsolidationListener() {
       @Override
@@ -43,7 +44,7 @@ public class Test {
         System.out.println("Got "+Arrays.toString(consolidates));
       }
     };
-    final TimeSeries timeSeries = dataBase.create("timeseries", Arrays.asList(archive), Arrays.asList(consolidationListener));
+    final TimeSeries timeSeries = dataBase.create("timeseries", Duration.millis(10), Arrays.asList(archive), Arrays.asList(consolidationListener));
     final Map<Window, Reader> storages = timeSeries.getReaders();
     System.out.println("TimeSeries "+timeSeries.getId());
     for (final Map.Entry<Window, Reader> entry : storages.entrySet()) {

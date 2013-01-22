@@ -27,7 +27,14 @@ import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.joda.time.Duration;
+
+/**
+ * Main entry point to manage {@link TimeSeries} life cycle.
+ */
 public final class Database {
+
+  private static final Duration DEFAULT_GRANULARITY = Duration.millis(1L);
 
   //TODO separate create/open/createOrOpen/close/delete
   private final Engine engine;
@@ -41,21 +48,26 @@ public final class Database {
     return create(id, archives, Collections.<ConsolidationListener>emptyList());
   }
 
+  public TimeSeries create(final String id, final Collection<Archive> archives, final Collection<ConsolidationListener> consolidationListeners) throws IOException {
+    return create(id, Database.DEFAULT_GRANULARITY, archives, consolidationListeners);
+  }
+
   /**
    * 
    *
    * @param id
+   * @param granularity
    * @param archives
    * @param consolidationListeners
    * @return
    * @throws IOException 
    */
-  public TimeSeries create(final String id, final Collection<Archive> archives, final Collection<ConsolidationListener> consolidationListeners) throws IOException {
+  public TimeSeries create(final String id, final Duration granularity, final Collection<Archive> archives, final Collection<ConsolidationListener> consolidationListeners) throws IOException {
     Preconditions.checkNotNull(id, "null id");
     Preconditions.checkNotNull(archives, "null archives");
     Preconditions.checkNotNull(consolidationListeners, "null consolidationListeners");
 
-    final TimeSeries timeSeries = new TimeSeries(id, archives, consolidationListeners, this.engine);
+    final TimeSeries timeSeries = new TimeSeries(id, granularity, archives, consolidationListeners, this.engine);
     if (this.timeSeriess.putIfAbsent(id, timeSeries) != null) {
       throw new IllegalArgumentException("A "+TimeSeries.class.getSimpleName()+" with id <"+id+"> already exists");
     }
@@ -71,6 +83,10 @@ public final class Database {
       
     }
 //    timeSeries.close();
+  }
+
+  @Idempotent
+  public void close() {
   }
 
 }

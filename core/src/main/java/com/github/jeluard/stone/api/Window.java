@@ -41,13 +41,6 @@ public final class Window {
     return this.duration;
   }
 
-  /**
-   * @return maximum number of samples that can be received during {@link #getResolution()}
-   */
-  public int getMaxSamples() {
-    return (int) this.resolution.getMillis();
-  }
-
   @Override
   public int hashCode() {
     return this.resolution.hashCode() + this.duration.hashCode();

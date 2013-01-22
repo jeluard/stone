@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.logging.Level;
 
 import org.joda.time.DateTime;
+import org.joda.time.Duration;
 import org.joda.time.Interval;
 
 /**
@@ -51,14 +52,16 @@ import org.joda.time.Interval;
 public final class TimeSeries {
 
   private final String id;
+  private final int granularity;
   private final ConsolidationListener[] consolidationListeners;
   private final Engine engine;
   private final Triple<Window, Storage, Consolidator[]>[] flattened;
   private long beginning;
   private long latest;
 
-  TimeSeries(final String id, final Collection<Archive> archives, final Collection<ConsolidationListener> consolidationListeners, final Engine engine) throws IOException {
+  TimeSeries(final String id, final Duration granularity, final Collection<Archive> archives, final Collection<ConsolidationListener> consolidationListeners, final Engine engine) throws IOException {
     this.id = Preconditions.checkNotNull(id, "null id");
+    this.granularity = (int) Preconditions.checkNotNull(granularity, "null granularity").getMillis();
     this.consolidationListeners = Preconditions.checkNotNull(consolidationListeners, "null consolidationListeners").toArray(new ConsolidationListener[consolidationListeners.size()]);
     this.engine = Preconditions.checkNotNull(engine, "null engine");
     final Collection<Triple<Window, Storage, Consolidator[]>> flattenedList = createFlatten(engine.getStorageFactory(), id, archives);
@@ -87,7 +90,8 @@ public final class TimeSeries {
       //First look for a constructor accepting int as argument
       try {
         final Constructor<? extends Consolidator> samplesConstructor = type.getConstructor(int.class);
-        return samplesConstructor.newInstance(window.getMaxSamples());
+        final int maxSamples = (int) window.getDuration().getMillis() / this.granularity;
+        return samplesConstructor.newInstance(maxSamples);
       } catch (NoSuchMethodException e) {
         if (Loggers.BASE_LOGGER.isLoggable(Level.FINEST)) {
           Loggers.BASE_LOGGER.log(Level.FINEST, "{0} does not define a constructor accepting int", type.getCanonicalName());
@@ -213,8 +217,8 @@ public final class TimeSeries {
   }
 
   private void checkNotBeforeLatestTimestamp(final long previousTimestamp, final long currentTimestamp) {
-    if (!(currentTimestamp > previousTimestamp)) {
-      throw new IllegalArgumentException("Provided timestamp <"+currentTimestamp+"> must be greater than <"+previousTimestamp+">");
+    if (!((currentTimestamp - previousTimestamp) >= this.granularity)) {
+      throw new IllegalArgumentException("Provided timestamp <"+currentTimestamp+"> must be greater than <"+(previousTimestamp + this.granularity)+"> (granularity <"+this.granularity+"> ms)");
     }
   }
 

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.Collections;
 
 import org.joda.time.DateTime;
+import org.joda.time.Duration;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -38,8 +39,8 @@ public class TimeSeriesTest {
   @Test(expected=IllegalArgumentException.class)
   public void shouldDuplicatedTimeSeriesIDBeInvalid() throws IOException {
     final String id = "id";
-    new TimeSeries(id, Collections.<Archive>emptyList(), Collections.<ConsolidationListener>emptyList(), Mockito.mock(Engine.class));
-    new TimeSeries(id, Collections.<Archive>emptyList(), Collections.<ConsolidationListener>emptyList(), Mockito.mock(Engine.class));
+    new TimeSeries(id, Duration.millis(1), Collections.<Archive>emptyList(), Collections.<ConsolidationListener>emptyList(), Mockito.mock(Engine.class));
+    new TimeSeries(id, Duration.millis(1), Collections.<Archive>emptyList(), Collections.<ConsolidationListener>emptyList(), Mockito.mock(Engine.class));
   }
 
   /*@Test(expected=IllegalArgumentException.class)
