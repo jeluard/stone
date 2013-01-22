@@ -25,8 +25,8 @@ import com.google.common.collect.Iterators;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import org.joda.time.DateTime;
 
+import org.joda.time.DateTime;
 import org.joda.time.Interval;
 
 /**
