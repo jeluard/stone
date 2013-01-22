@@ -16,6 +16,7 @@
  */
 package com.github.jeluard.stone.api;
 
+import com.github.jeluard.guayaba.base.Pair;
 import com.github.jeluard.guayaba.base.Triple;
 import com.github.jeluard.guayaba.lang.Iterables2;
 import com.github.jeluard.stone.helper.Loggers;
@@ -26,12 +27,16 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Maps;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.logging.Level;
 
 import org.joda.time.DateTime;
@@ -175,7 +180,7 @@ public final class TimeSeries {
    * @throws IOException 
    */
   private long extractLatest(final Collection<Storage> storages) throws IOException {
-    //TODO asscoiated window#getDuration sjhould be added
+    //TODO asscoiated window#getDuration should be added
     long storageLatest = 0L;
     for (final Storage storage : storages) {
       final Optional<DateTime> optionalInterval = storage.end(); 
@@ -196,6 +201,17 @@ public final class TimeSeries {
    */
   public String getId() {
     return this.id;
+  }
+
+  /**
+   * @return all underlying {@link Storage} mapped by {@link Window}
+   */
+  public Map<Window, Storage> getStorages() {
+    final Map<Window, Storage> storages = new HashMap<Window, Storage>();
+    for (final Triple<Window, Storage, Consolidator[]> triple : this.flattened) {
+      storages.put(triple.first, triple.second);
+    }
+    return storages;
   }
 
   private void checkNotBeforeLatestTimestamp(final long previousTimestamp, final long currentTimestamp) {
