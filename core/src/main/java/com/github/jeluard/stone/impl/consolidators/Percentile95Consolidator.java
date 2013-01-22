@@ -23,8 +23,8 @@ package com.github.jeluard.stone.impl.consolidators;
  */
 public class Percentile95Consolidator extends PercentileConsolidator {
 
-  public Percentile95Consolidator() {
-    super(95);
+  public Percentile95Consolidator(final int maxSamples) {
+    super(maxSamples, 95);
   }
 
 }
