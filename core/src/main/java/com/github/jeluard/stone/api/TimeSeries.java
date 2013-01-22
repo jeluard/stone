@@ -87,7 +87,7 @@ public final class TimeSeries {
       //First look for a constructor accepting int as argument
       try {
         final Constructor<? extends Consolidator> samplesConstructor = type.getConstructor(int.class);
-        return samplesConstructor.newInstance(window.getSamples());
+        return samplesConstructor.newInstance(window.getMaxSamples());
       } catch (NoSuchMethodException e) {
         if (Loggers.BASE_LOGGER.isLoggable(Level.FINEST)) {
           Loggers.BASE_LOGGER.log(Level.FINEST, "{0} does not define a constructor accepting int", type.getCanonicalName());
