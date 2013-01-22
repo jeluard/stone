@@ -21,8 +21,6 @@ import com.github.jeluard.stone.api.Consolidator;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.helper.Loggers;
 import com.github.jeluard.stone.spi.Storage;
-import com.github.jeluard.stone.spi.StorageFactory;
-import com.google.common.base.Preconditions;
 
 import java.io.Closeable;
 import java.io.IOException;
