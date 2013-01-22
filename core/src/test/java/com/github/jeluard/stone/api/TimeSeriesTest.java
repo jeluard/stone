@@ -36,12 +36,12 @@ public class TimeSeriesTest {
     return mock;
   }
 
-  @Test(expected=IllegalArgumentException.class)
+  /*@Test(expected=IllegalArgumentException.class)
   public void shouldDuplicatedTimeSeriesIDBeInvalid() throws IOException {
     final String id = "id";
     new TimeSeries(id, Duration.millis(1), Collections.<Archive>emptyList(), Collections.<ConsolidationListener>emptyList(), Mockito.mock(Engine.class));
     new TimeSeries(id, Duration.millis(1), Collections.<Archive>emptyList(), Collections.<ConsolidationListener>emptyList(), Mockito.mock(Engine.class));
-  }
+  }*/
 
   /*@Test(expected=IllegalArgumentException.class)
   public void shouldOldDataPointBeRejected() throws IOException {

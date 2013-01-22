@@ -35,16 +35,6 @@ import java.util.logging.Level;
  */
 public final class Engine {
 
-  private final StorageFactory<?> storageFactory;
-
-  public Engine(final StorageFactory storageFactory) throws IOException {
-    this.storageFactory = Preconditions.checkNotNull(storageFactory, "null storageFactory");
-  }
-
-  public StorageFactory<?> getStorageFactory() {
-    return this.storageFactory;
-  }
-
   /**
    * @param beginning
    * @param timestamp

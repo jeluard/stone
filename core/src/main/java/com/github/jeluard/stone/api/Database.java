@@ -37,11 +37,13 @@ public final class Database {
   private static final Duration DEFAULT_GRANULARITY = Duration.millis(1L);
 
   //TODO separate create/open/createOrOpen/close/delete
+  private final StorageFactory<?> storageFactory;
   private final Engine engine;
   private final ConcurrentMap<String, TimeSeries> timeSeriess = new ConcurrentHashMap<String, TimeSeries>();
 
   public Database(final StorageFactory<?> storageFactory) throws IOException {
-    this.engine = new Engine(Preconditions.checkNotNull(storageFactory, "null storageFactory"));
+    this.storageFactory = Preconditions.checkNotNull(storageFactory, "null storageFactory");
+    this.engine = new Engine();
   }
 
   public TimeSeries create(final String id, final Collection<Archive> archives) throws IOException {
@@ -67,7 +69,7 @@ public final class Database {
     Preconditions.checkNotNull(archives, "null archives");
     Preconditions.checkNotNull(consolidationListeners, "null consolidationListeners");
 
-    final TimeSeries timeSeries = new TimeSeries(id, granularity, archives, consolidationListeners, this.engine);
+    final TimeSeries timeSeries = new TimeSeries(id, granularity, archives, consolidationListeners, this.engine, this.storageFactory);
     if (this.timeSeriess.putIfAbsent(id, timeSeries) != null) {
       throw new IllegalArgumentException("A "+TimeSeries.class.getSimpleName()+" with id <"+id+"> already exists");
     }

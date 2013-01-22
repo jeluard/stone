@@ -59,12 +59,12 @@ public final class TimeSeries {
   private long beginning;
   private long latest;
 
-  TimeSeries(final String id, final Duration granularity, final Collection<Archive> archives, final Collection<ConsolidationListener> consolidationListeners, final Engine engine) throws IOException {
+  TimeSeries(final String id, final Duration granularity, final Collection<Archive> archives, final Collection<ConsolidationListener> consolidationListeners, final Engine engine, final StorageFactory<?> storageFactory) throws IOException {
     this.id = Preconditions.checkNotNull(id, "null id");
     this.granularity = (int) Preconditions.checkNotNull(granularity, "null granularity").getMillis();
     this.consolidationListeners = Preconditions.checkNotNull(consolidationListeners, "null consolidationListeners").toArray(new ConsolidationListener[consolidationListeners.size()]);
     this.engine = Preconditions.checkNotNull(engine, "null engine");
-    final Collection<Triple<Window, Storage, Consolidator[]>> flattenedList = createFlatten(engine.getStorageFactory(), id, archives);
+    final Collection<Triple<Window, Storage, Consolidator[]>> flattenedList = createFlatten(storageFactory, id, archives);
     this.flattened = flattenedList.toArray(new Triple[flattenedList.size()]);
 
     final Interval initialSpan = extractInterval(Collections2.transform(Arrays.asList(this.flattened), new Function<Triple<Window, Storage, Consolidator[]>, Pair<Window, Storage>>() {
