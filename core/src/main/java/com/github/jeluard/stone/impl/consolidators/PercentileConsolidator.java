@@ -41,18 +41,18 @@ public abstract class PercentileConsolidator extends BaseConsolidator {
     this.values = new int[maxSamples];
   }
 
-  private int rank(final float p, final int[] integers) {
-    return Ints.saturatedCast(Math.round(p / 100 * integers.length +.5));
+  private int rank(final float p, final int size) {
+    return Ints.saturatedCast(Math.round(p / 100 * size +.5));
   }
 
   @Override
   public void accumulate(final long timestamp, final int value) {
-    this.values[this.index++] = value;
+    this.values[++this.index] = value;
   }
 
   @Override
   public int consolidate() {
-    final int rank = Math.max(0, Math.min(rank(this.pth, this.values) - 1, this.values.length));
+    final int rank = Math.max(0, Math.min(rank(this.pth, this.index) - 1, this.index));
     return this.values[rank];
   }
 
