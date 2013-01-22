@@ -16,7 +16,6 @@
  */
 package com.github.jeluard.stone.api;
 
-import com.github.jeluard.stone.spi.*;
 import com.github.jeluard.guayaba.base.Pair;
 import com.google.common.base.Optional;
 
