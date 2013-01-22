@@ -20,18 +20,21 @@ import com.github.jeluard.guayaba.base.Pair;
 import com.google.common.base.Optional;
 
 import java.io.IOException;
-import org.joda.time.DateTime;
 
+import org.joda.time.DateTime;
 import org.joda.time.Interval;
 
 /**
  * Abstraction dealing with {@link TimeSeries} persistency.
+ * <br>
+ * A {@link Storage} is specific to a single {@link Window} of a {@link TimeSeries}.
  */
 public interface Storage {
 
   /**
-   *
-   * At this point parameter has been validated and is not null.
+   * Append a {@code timestamp}/{@code consolidates} pair.
+   * <br>
+   * At this point {@code consolidates} has been validated and is not null.
    *
    * @param timestamp the beginning of the associated window
    * @param consolidates
@@ -51,8 +54,17 @@ public interface Storage {
    */
   Optional<DateTime> end() throws IOException;
 
+  /**
+   * @return all data stored
+   * @throws IOException 
+   */
   Iterable<Pair<Long, int[]>> all() throws IOException;
 
+  /**
+   * @param interval
+   * @return all data stored during {@code interval}
+   * @throws IOException 
+   */
   Iterable<Pair<Long, int[]>> during(Interval interval) throws IOException;
 
 }
