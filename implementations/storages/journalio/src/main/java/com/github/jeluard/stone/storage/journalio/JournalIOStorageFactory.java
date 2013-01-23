@@ -54,6 +54,7 @@ public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage
 
   static final Logger LOGGER = Loggers.create("storage.journalio");
 
+  private static final String DEFAULT_ROOT_DIRECTORY = "stone-journal";
   private static final String WRITER_THREADS_NAME_FORMAT = "Stone JournalIO-Writer #%d";
   private static final String DISPOSER_THREADS_NAME_FORMAT = "Stone JournalIO-Disposer";
   private static final Duration DEFAULT_COMPACTION_INTERVAL = Duration.standardMinutes(10);
@@ -104,8 +105,12 @@ public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage
     return Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setDaemon(true).setNameFormat(JournalIOStorageFactory.DISPOSER_THREADS_NAME_FORMAT).build());
   }
 
-  protected String mainDirectoryPath(final String id, final Archive archive, final Window window) {
-    return "stone-journal/"+id;
+  /**
+   * @param id
+   * @return root directory used to store data for timeseries identified by {@code id}
+   */
+  protected String rootDirectoryPath(final String id) {
+    return JournalIOStorageFactory.DEFAULT_ROOT_DIRECTORY+"/"+id;
   }
 
   /**
@@ -153,7 +158,7 @@ public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage
    */
   protected Journal createJournal(final String id, final Archive archive, final Window window) throws IOException {
     final Journal journal = new Journal();
-    final String mainDirectory = mainDirectoryPath(id, archive, window);
+    final String mainDirectory = rootDirectoryPath(id);
     final File file = new File(mainDirectory);
     //If main directory path exists check its a directory
     //If it does not exists create it
@@ -201,6 +206,38 @@ public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage
   @Override
   protected void close(final JournalIOStorage storage) throws IOException {
     storage.getJournal().close();
+  }
+
+  private void delete(final File directory) {
+    final File[] files = directory.listFiles();
+    if (files!=null) {
+      for (final File file: files) {
+        if(file.isDirectory()) {
+          delete(file);
+        } else {
+          file.delete();
+        }
+      }
+    }
+    directory.delete();
+  }
+
+  /**
+   * Note that this implementation does not assume any layout for {@link #rootDirectoryPath(java.lang.String)} as this might be dangerous.
+   * Thus only {@link #rootDirectoryPath(java.lang.String)} will be deleted (and no other parent directory).
+   *
+   * @param id
+   * @throws IOException 
+   */
+  @Override
+  public void delete(final String id) throws IOException {
+    Preconditions.checkNotNull(id, "null id");
+
+    final String mainDirectory = rootDirectoryPath(id);
+    final File directory = new File(mainDirectory);
+    if (directory.isDirectory()) {
+      delete(directory);
+    }
   }
 
   @Override

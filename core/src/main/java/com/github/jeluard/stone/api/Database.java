@@ -17,6 +17,7 @@
 package com.github.jeluard.stone.api;
 
 import com.github.jeluard.guayaba.annotation.Idempotent;
+import com.github.jeluard.stone.helper.Loggers;
 import com.github.jeluard.stone.impl.Engine;
 import com.github.jeluard.stone.spi.StorageFactory;
 import com.google.common.base.Optional;
@@ -28,6 +29,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.logging.Level;
 
 import org.joda.time.Duration;
 
@@ -79,8 +81,22 @@ public final class Database implements Closeable {
     return timeSeries;
   }
 
-  Optional<TimeSeries> remove(final TimeSeries timeSeries) {
-    return Optional.fromNullable(this.timeSeriess.remove(timeSeries.getId()));
+  @Idempotent
+  public void delete(final String id)throws IOException  {
+    final Optional<TimeSeries> optionalTimeseries = remove(id);
+    if (!optionalTimeseries.isPresent()) {
+      if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
+        Loggers.BASE_LOGGER.log(Level.WARNING, "Cannot delete non-existing {0} <{1}>", new Object[]{TimeSeries.class.getSimpleName(), id});
+      }
+      return;
+    }
+
+    final TimeSeries timeSeries = optionalTimeseries.get();
+    this.storageFactory.delete(timeSeries.getId());
+  }
+
+  Optional<TimeSeries> remove(final String id) {
+    return Optional.fromNullable(this.timeSeriess.remove(id));
   }
 
   @Idempotent

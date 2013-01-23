@@ -270,7 +270,7 @@ public final class TimeSeries {
 
   @Idempotent
   public void close() {
-    this.database.remove(this);
+    this.database.remove(this.id);
     for (final Archive archive : this.archives) {
       for (final Window window : archive.getWindows()) {
         try {

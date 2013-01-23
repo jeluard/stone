@@ -55,6 +55,7 @@ public interface StorageFactory<T extends Storage> extends Closeable {
    * @param window
    * @throws IOException 
    */
+  @Idempotent
   void close(String id, Archive archive, Window window) throws IOException;
 
   /**
@@ -63,5 +64,8 @@ public interface StorageFactory<T extends Storage> extends Closeable {
   @Idempotent
   @Override
   void close() throws IOException;
+
+  @Idempotent
+  void delete(String id) throws IOException;
 
 }
