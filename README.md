@@ -80,3 +80,5 @@ A number of SPI are defined allowing
 * https://github.com/dustin/seriesly
 * http://tempo-db.com/
 * http://luca.ntop.org/tsdb.pdf (see https://svn.ntop.org/svn/ntop/trunk/tsdb/)
+
+Released under [Apache 2 license](http://www.apache.org/licenses/LICENSE-2.0.html).
