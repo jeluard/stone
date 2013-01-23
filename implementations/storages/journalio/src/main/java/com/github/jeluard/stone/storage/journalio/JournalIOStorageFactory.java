@@ -61,9 +61,10 @@ public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage
   private static final String COMPACTOR_THREAD = "Stone JournalIO-Compactor";
   private static final String CONSOLIDATOR_SUFFIX = "Consolidator";
 
-  private static final int MAX_FILE_LENGTH = 42*512;//42 bytes (size of timestamp/value with 1 consolidate)
+  private static final int DEFAULT_MAX_FILE_LENGTH = 42*512;//42 bytes (size of timestamp/value with 1 consolidate)
 
   private final long compactionInterval;
+  private final int maxFileLength;
   private final ScheduledExecutorService disposerScheduledExecutorService;
   private final Executor writerExecutor;
   private final Runnable compactor = new Runnable() {
@@ -82,16 +83,21 @@ public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage
           }
         }
       }
+
+      if (JournalIOStorageFactory.LOGGER.isLoggable(Level.FINEST)) {
+        JournalIOStorageFactory.LOGGER.finest("Compaction done");
+      }
     }
   };
   private final ScheduledExecutorService compactionScheduler = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setDaemon(true).setNameFormat(JournalIOStorageFactory.COMPACTOR_THREAD).build());
 
   public JournalIOStorageFactory() {
-    this(JournalIOStorageFactory.DEFAULT_COMPACTION_INTERVAL, JournalIOStorageFactory.defaultWriteExecutor(), JournalIOStorageFactory.defaultDisposerScheduledExecutor());
+    this(JournalIOStorageFactory.DEFAULT_COMPACTION_INTERVAL, JournalIOStorageFactory.DEFAULT_MAX_FILE_LENGTH, JournalIOStorageFactory.defaultWriteExecutor(), JournalIOStorageFactory.defaultDisposerScheduledExecutor());
   }
 
-  public JournalIOStorageFactory(final Duration compactionInterval, final Executor writerExecutor, final ScheduledExecutorService disposerScheduledExecutorService) {
+  public JournalIOStorageFactory(final Duration compactionInterval, final int maxFileLength, final Executor writerExecutor, final ScheduledExecutorService disposerScheduledExecutorService) {
     this.compactionInterval = Preconditions.checkNotNull(compactionInterval, "null compactionInterval").getMillis();
+    this.maxFileLength = maxFileLength;
     this.writerExecutor = Preconditions.checkNotNull(writerExecutor, "null writerExecutor");
     this.disposerScheduledExecutorService = Preconditions.checkNotNull(disposerScheduledExecutorService, "null disposerScheduledExecutorService");
     this.compactionScheduler.scheduleWithFixedDelay(this.compactor, this.compactionInterval, this.compactionInterval, TimeUnit.MILLISECONDS);
@@ -186,8 +192,8 @@ public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage
     journal.setChecksum(true);
     journal.setRecoveryErrorHandler(RecoveryErrorHandler.ABORT);
     journal.setPhysicalSync(true);
-    journal.setMaxFileLength(JournalIOStorageFactory.MAX_FILE_LENGTH);
-    journal.setMaxWriteBatchSize(JournalIOStorageFactory.MAX_FILE_LENGTH);
+    journal.setMaxFileLength(this.maxFileLength);
+    journal.setMaxWriteBatchSize(this.maxFileLength);
     journal.setWriter(this.writerExecutor);
     journal.setDisposer(this.disposerScheduledExecutorService);
     journal.open();
