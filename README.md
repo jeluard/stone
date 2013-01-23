@@ -25,7 +25,7 @@ final Archive archive = new Archive(Arrays.asList(MaxConsolidator.class),
   Arrays.asList(window));
 
 //Create the TimeSeries. A new storage will be created if needed.
-final TimeSeries timeSeries = database.create("pinger", Arrays.asList(archive));
+final TimeSeries timeSeries = database.createOrOpen("pinger", Arrays.asList(archive));
 
 //Publish some values to the TimeSeries.
 timeSeries.publish(System.currentTimeMillis(), 123);
@@ -40,7 +40,7 @@ final ConsolidationListener consolidationListener = new ConsolidationListener() 
 };
 
 //That will be triggered for a specific TimeSeries
-final TimeSeries monitoredTimeSeries = database.create("pinger-monitored", Arrays.asList(archive), Arrays.asList(consolidationListener));
+final TimeSeries monitoredTimeSeries = database.createOrOpen("pinger-monitored", Arrays.asList(archive), Arrays.asList(consolidationListener));
 
 //Access underlying persisted data
 final Map<Window, Reader> readers = timeSeries.getReaders();
