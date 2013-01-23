@@ -65,6 +65,12 @@ public interface StorageFactory<T extends Storage> extends Closeable {
   @Override
   void close() throws IOException;
 
+  /**
+   * Delete all {@link Storage} generated data associated to timeseries {@code id}.
+   *
+   * @param id
+   * @throws IOException 
+   */
   @Idempotent
   void delete(String id) throws IOException;
 
