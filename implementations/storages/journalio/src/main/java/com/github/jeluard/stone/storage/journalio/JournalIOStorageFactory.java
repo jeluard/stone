@@ -97,6 +97,7 @@ public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage
 
   public JournalIOStorageFactory(final Duration compactionInterval, final int maxFileLength, final Executor writerExecutor, final ScheduledExecutorService disposerScheduledExecutorService) {
     this.compactionInterval = Preconditions.checkNotNull(compactionInterval, "null compactionInterval").getMillis();
+    Preconditions.checkArgument(maxFileLength > 0, "maxFileLength must be > 0");
     this.maxFileLength = maxFileLength;
     this.writerExecutor = Preconditions.checkNotNull(writerExecutor, "null writerExecutor");
     this.disposerScheduledExecutorService = Preconditions.checkNotNull(disposerScheduledExecutorService, "null disposerScheduledExecutorService");
