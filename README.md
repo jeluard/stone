@@ -1,3 +1,5 @@
+![CI status](https://secure.travis-ci.org/jeluard/stone.png)
+
 Stone is a timeseries database library focused on simplicity/evolutivity, efficiency and robustness. It does only one thing but well: storing consolidates of values changing over time (TimeSeries).
 
 ## Inspiration
