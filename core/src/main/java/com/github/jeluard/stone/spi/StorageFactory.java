@@ -16,6 +16,7 @@
  */
 package com.github.jeluard.stone.spi;
 
+import com.github.jeluard.guayaba.annotation.Idempotent;
 import com.github.jeluard.stone.api.Archive;
 import com.github.jeluard.stone.api.Window;
 
@@ -45,5 +46,22 @@ public interface StorageFactory<T extends Storage> extends Closeable {
    * @throws IOException 
    */
   T createOrGet(String id, Archive archive, Window window) throws IOException;
+
+  /**
+   * Close the {@link Storage} created for this triple.
+   *
+   * @param id
+   * @param archive
+   * @param window
+   * @throws IOException 
+   */
+  void close(String id, Archive archive, Window window) throws IOException;
+
+  /**
+   * {@inheritDoc}
+   */
+  @Idempotent
+  @Override
+  void close() throws IOException;
 
 }

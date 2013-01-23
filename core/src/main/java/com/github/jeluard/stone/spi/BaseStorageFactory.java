@@ -26,14 +26,11 @@ import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Base implementation for {@link StorageFactory}.
  */
 public abstract class BaseStorageFactory<T extends Storage> implements StorageFactory<T> {
-
-  private static final Logger LOGGER = Loggers.BASE_LOGGER;
 
   private final ConcurrentMap<Triple<String, Archive, Window>, T> cache = new ConcurrentHashMap<Triple<String, Archive, Window>, T>();
 
@@ -51,13 +48,43 @@ public abstract class BaseStorageFactory<T extends Storage> implements StorageFa
     });
   }
 
+  /**
+   * @param id
+   * @param archive
+   * @param window
+   * @return an initialized {@link Storage} dedicated to {@code id}/{@code archive}/{@code window}
+   * @throws IOException 
+   */
   protected abstract T create(String id, Archive archive, Window window) throws IOException;
 
-  protected Iterable<T> getStorages() {
+  /**
+   * @return all currently created {@link Storage}s
+   */
+  protected final Iterable<T> getStorages() {
     return this.cache.values();
   }
 
-  protected abstract void cleanup(T storage) throws IOException;
+  /**
+   * Optionally close a {@link Storage}.
+   *
+   * @param storage
+   * @throws IOException 
+   */
+  protected void close(T storage) throws IOException {
+  }
+
+  @Override
+  public void close(final String id, final Archive archive, final Window window) throws IOException {
+    final T storage = this.cache.remove(new Triple<String, Archive, Window>(id, archive, window));
+    if (storage == null) {
+      if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
+        Loggers.BASE_LOGGER.log(Level.WARNING, "{0} for <{1}, {2}, {3}> does not exist", new Object[]{Storage.class.getSimpleName(), id, storage, window});
+      }
+      return;
+    }
+
+    close(storage);
+  }
 
   /**
    * Call {@link #cleanup()} on all {@link Storage}.
@@ -70,16 +97,23 @@ public abstract class BaseStorageFactory<T extends Storage> implements StorageFa
 
     for (final T storage : this.cache.values()) {
       try {
-        cleanup(storage);
+        close(storage);
       } catch (IOException e) {
-        if (BaseStorageFactory.LOGGER.isLoggable(Level.WARNING)) {
-          BaseStorageFactory.LOGGER.log(Level.WARNING, "Got an exception while cleaning <"+storage+">", e);
+        if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
+          Loggers.BASE_LOGGER.log(Level.WARNING, "Got an exception while cleaning <"+storage+">", e);
         }
       }
     }
     this.cache.clear();
   }
 
-  protected abstract void cleanup();
+  /**
+   * Optionnally perform extra cleanup.
+   *
+   * @throws IOException 
+   * @see #close()
+   */
+  protected void cleanup() throws IOException {
+  }
   
 }

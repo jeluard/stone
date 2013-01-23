@@ -16,11 +16,11 @@
  */
 package com.github.jeluard.stone.api;
 
+import com.github.jeluard.guayaba.annotation.Idempotent;
 import com.github.jeluard.guayaba.base.Pair;
 import com.github.jeluard.guayaba.base.Triple;
 import com.github.jeluard.guayaba.lang.Iterables2;
 import com.github.jeluard.stone.helper.Loggers;
-import com.github.jeluard.stone.impl.Engine;
 import com.github.jeluard.stone.spi.Storage;
 import com.github.jeluard.stone.spi.StorageFactory;
 import com.google.common.base.Function;
@@ -53,18 +53,20 @@ public final class TimeSeries {
 
   private final String id;
   private final int granularity;
+  private final Collection<Archive> archives;
   private final ConsolidationListener[] consolidationListeners;
-  private final Engine engine;
+  private final Database database;
   private final Triple<Window, Storage, Consolidator[]>[] flattened;
   private long beginning;
   private long latest;
 
-  TimeSeries(final String id, final Duration granularity, final Collection<Archive> archives, final Collection<ConsolidationListener> consolidationListeners, final Engine engine, final StorageFactory<?> storageFactory) throws IOException {
+  TimeSeries(final String id, final Duration granularity, final Collection<Archive> archives, final Collection<ConsolidationListener> consolidationListeners, final Database database) throws IOException {
     this.id = Preconditions.checkNotNull(id, "null id");
     this.granularity = (int) Preconditions.checkNotNull(granularity, "null granularity").getMillis();
+    this.archives = Preconditions.checkNotNull(archives, "null archives");
     this.consolidationListeners = Preconditions.checkNotNull(consolidationListeners, "null consolidationListeners").toArray(new ConsolidationListener[consolidationListeners.size()]);
-    this.engine = Preconditions.checkNotNull(engine, "null engine");
-    final Collection<Triple<Window, Storage, Consolidator[]>> flattenedList = createFlatten(storageFactory, id, archives);
+    this.database = Preconditions.checkNotNull(database, "null database");
+    final Collection<Triple<Window, Storage, Consolidator[]>> flattenedList = createFlatten(database.storageFactory, id, archives);
     this.flattened = flattenedList.toArray(new Triple[flattenedList.size()]);
 
     final Interval initialSpan = extractInterval(Collections2.transform(Arrays.asList(this.flattened), new Function<Triple<Window, Storage, Consolidator[]>, Pair<Window, Storage>>() {
@@ -257,14 +259,28 @@ public final class TimeSeries {
    * @throws IOException 
    */
   public void publish(final long timestamp, final int value) throws IOException {
-    Preconditions.checkNotNull(timestamp, "null timestamp");
-
     final long previousTimestamp = recordLatest(timestamp);
     final long beginningTimestamp = inferBeginning(timestamp);
 
     //previousTimestamp == 0 if this is the first publish call and associated storage was empty (or new)
     if (previousTimestamp != 0L) {
-      this.engine.publish(this.flattened, this.consolidationListeners, beginningTimestamp, previousTimestamp, timestamp, value);
+      this.database.engine.publish(this.flattened, this.consolidationListeners, beginningTimestamp, previousTimestamp, timestamp, value);
+    }
+  }
+
+  @Idempotent
+  public void close() {
+    this.database.remove(this);
+    for (final Archive archive : this.archives) {
+      for (final Window window : archive.getWindows()) {
+        try {
+          this.database.storageFactory.close(this.id, archive, window);
+        } catch (IOException e) {
+          if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
+            Loggers.BASE_LOGGER.log(Level.WARNING, "Got exception while closing "+Storage.class.getSimpleName()+" for <"+this.id+"> <"+archive+"> <"+window+">", e);
+          }
+        }
+      }
     }
   }
 

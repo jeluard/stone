@@ -19,8 +19,10 @@ package com.github.jeluard.stone.api;
 import com.github.jeluard.guayaba.annotation.Idempotent;
 import com.github.jeluard.stone.impl.Engine;
 import com.github.jeluard.stone.spi.StorageFactory;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,30 +34,30 @@ import org.joda.time.Duration;
 /**
  * Main entry point to manage {@link TimeSeries} life cycle.
  */
-public final class Database {
+public final class Database implements Closeable {
 
   private static final Duration DEFAULT_GRANULARITY = Duration.millis(1L);
 
-  //TODO separate create/open/createOrOpen/close/delete
-  private final StorageFactory<?> storageFactory;
-  private final Engine engine;
+  final StorageFactory<?> storageFactory;
+  final Engine engine = new Engine();
   private final ConcurrentMap<String, TimeSeries> timeSeriess = new ConcurrentHashMap<String, TimeSeries>();
 
   public Database(final StorageFactory<?> storageFactory) throws IOException {
     this.storageFactory = Preconditions.checkNotNull(storageFactory, "null storageFactory");
-    this.engine = new Engine();
   }
 
-  public TimeSeries create(final String id, final Collection<Archive> archives) throws IOException {
-    return create(id, archives, Collections.<ConsolidationListener>emptyList());
+  public TimeSeries createOrOpen(final String id, final Collection<Archive> archives) throws IOException {
+    return createOrOpen(id, archives, Collections.<ConsolidationListener>emptyList());
   }
 
-  public TimeSeries create(final String id, final Collection<Archive> archives, final Collection<ConsolidationListener> consolidationListeners) throws IOException {
-    return create(id, Database.DEFAULT_GRANULARITY, archives, consolidationListeners);
+  public TimeSeries createOrOpen(final String id, final Collection<Archive> archives, final Collection<ConsolidationListener> consolidationListeners) throws IOException {
+    return createOrOpen(id, Database.DEFAULT_GRANULARITY, archives, consolidationListeners);
   }
 
   /**
    * 
+   * During the life cycle of this {@link Database} a uniquely identified {@link TimeSeries} can be opened only once.
+   * Calling this method twice with a same value for {@code id} will fail.
    *
    * @param id
    * @param granularity
@@ -64,31 +66,28 @@ public final class Database {
    * @return
    * @throws IOException 
    */
-  public TimeSeries create(final String id, final Duration granularity, final Collection<Archive> archives, final Collection<ConsolidationListener> consolidationListeners) throws IOException {
+  public TimeSeries createOrOpen(final String id, final Duration granularity, final Collection<Archive> archives, final Collection<ConsolidationListener> consolidationListeners) throws IOException {
     Preconditions.checkNotNull(id, "null id");
+    Preconditions.checkNotNull(granularity, "null granularity");
     Preconditions.checkNotNull(archives, "null archives");
     Preconditions.checkNotNull(consolidationListeners, "null consolidationListeners");
 
-    final TimeSeries timeSeries = new TimeSeries(id, granularity, archives, consolidationListeners, this.engine, this.storageFactory);
+    final TimeSeries timeSeries = new TimeSeries(id, granularity, archives, consolidationListeners, this);
     if (this.timeSeriess.putIfAbsent(id, timeSeries) != null) {
       throw new IllegalArgumentException("A "+TimeSeries.class.getSimpleName()+" with id <"+id+"> already exists");
     }
     return timeSeries;
   }
 
-  @Idempotent
-  public void close(final String id) throws IOException {
-    Preconditions.checkNotNull(id, "null id");
-
-    final TimeSeries timeSeries = this.timeSeriess.remove(id);
-    if (timeSeries == null) {
-      
-    }
-//    timeSeries.close();
+  Optional<TimeSeries> remove(final TimeSeries timeSeries) {
+    return Optional.fromNullable(this.timeSeriess.remove(timeSeries.getId()));
   }
 
   @Idempotent
-  public void close() {
+  @Override
+  public void close() throws IOException {
+    this.timeSeriess.clear();
+    this.storageFactory.close();
   }
 
 }

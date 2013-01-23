@@ -68,17 +68,17 @@ public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage
   private final Runnable compactor = new Runnable() {
     @Override
     public void run() {
-      try {
-        if (JournalIOStorageFactory.LOGGER.isLoggable(Level.FINEST)) {
-          JournalIOStorageFactory.LOGGER.finest("About to compact");
-        }
+      if (JournalIOStorageFactory.LOGGER.isLoggable(Level.FINEST)) {
+        JournalIOStorageFactory.LOGGER.finest("About to compact");
+      }
 
-        for (final JournalIOStorage storage : getStorages()) {
+      for (final JournalIOStorage storage : getStorages()) {
+        try {
           storage.compact();
-        }
-      } catch (IOException e) {
-        if (JournalIOStorageFactory.LOGGER.isLoggable(Level.WARNING)) {
-          JournalIOStorageFactory.LOGGER.log(Level.WARNING, "Got exception while compacting", e);
+        } catch (IOException e) {
+          if (JournalIOStorageFactory.LOGGER.isLoggable(Level.WARNING)) {
+            JournalIOStorageFactory.LOGGER.log(Level.WARNING, "Got exception while compacting <"+storage+">", e);
+          }
         }
       }
     }
@@ -90,7 +90,7 @@ public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage
   }
 
   public JournalIOStorageFactory(final Duration compactionInterval, final Executor writerExecutor, final ScheduledExecutorService disposerScheduledExecutorService) {
-    this.compactionInterval = compactionInterval.getMillis();
+    this.compactionInterval = Preconditions.checkNotNull(compactionInterval, "null compactionInterval").getMillis();
     this.writerExecutor = Preconditions.checkNotNull(writerExecutor, "null writerExecutor");
     this.disposerScheduledExecutorService = Preconditions.checkNotNull(disposerScheduledExecutorService, "null disposerScheduledExecutorService");
     this.compactionScheduler.scheduleWithFixedDelay(this.compactor, this.compactionInterval, this.compactionInterval, TimeUnit.MILLISECONDS);
@@ -199,8 +199,8 @@ public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage
   }
 
   @Override
-  protected void cleanup(final JournalIOStorage storage) throws IOException {
-    storage.close();
+  protected void close(final JournalIOStorage storage) throws IOException {
+    storage.getJournal().close();
   }
 
   @Override

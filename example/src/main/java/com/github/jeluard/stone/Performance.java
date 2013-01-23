@@ -21,7 +21,9 @@ import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.Database;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.api.Window;
+import com.github.jeluard.stone.impl.consolidators.LastConsolidator;
 import com.github.jeluard.stone.impl.consolidators.MaxConsolidator;
+import com.github.jeluard.stone.impl.consolidators.MinConsolidator;
 import com.github.jeluard.stone.storage.journalio.JournalIOStorageFactory;
 
 import java.util.ArrayList;
@@ -33,35 +35,35 @@ import org.joda.time.Duration;
 
 public class Performance {
   public static void main(String[] args) throws Exception {
-    final Database dataBase = new Database(new JournalIOStorageFactory());
+    final Database database = new Database(new JournalIOStorageFactory());
     final Archive archive1 = new Archive(Arrays.asList(MaxConsolidator.class), 
-            Arrays.asList(new Window(Duration.standardMinutes(5), Duration.standardDays(1))));
-    final Archive archive2 = new Archive(Arrays.asList(MaxConsolidator.class, MaxConsolidator.class), 
+            Arrays.asList(new Window(Duration.standardMinutes(5), Duration.standardDays(1)),
+                          new Window(Duration.standardHours(1), Duration.standardDays(7)),
+                          new Window(Duration.standardDays(1), Duration.standardDays(365))));
+    final Archive archive2 = new Archive(Arrays.asList(MinConsolidator.class, LastConsolidator.class), 
             Arrays.asList(new Window(Duration.standardHours(1), Duration.standardDays(7))));
-    final Archive archive3 = new Archive(Arrays.asList(MaxConsolidator.class, MaxConsolidator.class), 
-            Arrays.asList(new Window(Duration.standardDays(1), Duration.standardDays(365))));
 
-    final int nbSeries = 10000;
+    final int nbSeries = 1000;
 
     final List<TimeSeries> timeSeries = new ArrayList<TimeSeries>(nbSeries);
     for (int i = 0; i < nbSeries; i++) {
-      timeSeries.add(dataBase.create("ping-server-"+i, Arrays.asList(archive1, archive2, archive3), Collections.<ConsolidationListener>emptyList()));
+      timeSeries.add(database.createOrOpen("ping-server-"+i, Arrays.asList(archive1, archive2), Collections.<ConsolidationListener>emptyList()));
     }
 
     try {
+      long timestamp = 1;
       for (int i = 0; i < 100000; i++) {
         final long before = System.currentTimeMillis();
         for (int j = 0; j < 1000; j++) {
+          Thread.sleep(1);
           for (final TimeSeries ts : timeSeries) {
-            ts.publish(System.currentTimeMillis(), 100);
+            ts.publish(++timestamp, 100);
           }
         }
         System.out.println(System.currentTimeMillis()-before);
       }
     } finally {
-      for (final TimeSeries ts : timeSeries) {
-        dataBase.close(ts.getId());
-      }
+      database.close();
     }
   }
 }

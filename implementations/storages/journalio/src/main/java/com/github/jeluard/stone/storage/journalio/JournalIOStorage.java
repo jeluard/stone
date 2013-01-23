@@ -22,7 +22,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.AbstractIterator;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
@@ -53,7 +52,7 @@ import org.joda.time.Duration;
  * <br>
  * This format is both easy to implement and fast to parse but waste significant space.
  */
-public final class JournalIOStorage extends BaseBinaryStorage implements Closeable {
+public final class JournalIOStorage extends BaseBinaryStorage {
 
   private static final WriteCallback LOGGING_WRITE_CALLBACK = new WriteCallback() {
     @Override
@@ -80,6 +79,13 @@ public final class JournalIOStorage extends BaseBinaryStorage implements Closeab
   public JournalIOStorage(final Journal journal, final Duration duration) throws IOException {
     this.journal = Preconditions.checkNotNull(journal, "null journal");
     this.duration = Preconditions.checkNotNull(duration, "null duration").getMillis();
+  }
+
+  /**
+   * @return underlying {@link Journal} used
+   */
+  Journal getJournal() {
+    return this.journal;
   }
 
   private void removeUntil(final long until) throws IOException {
@@ -171,11 +177,6 @@ public final class JournalIOStorage extends BaseBinaryStorage implements Closeab
    */
   void compact() throws IOException {
     this.journal.compact();
-  }
-
-  @Override
-  public void close() throws IOException {
-    this.journal.close();
   }
 
 }
