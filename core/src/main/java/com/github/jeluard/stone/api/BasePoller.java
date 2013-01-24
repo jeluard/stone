@@ -119,7 +119,9 @@ public abstract class BasePoller<T> implements Cancelable {
    * @param t
    * @return a unique id for this {@link TimeSeries}
    */
-  protected abstract String id(T t);
+  protected String id(T t) {
+    return t.toString();
+  }
 
   /**
    * @param t
