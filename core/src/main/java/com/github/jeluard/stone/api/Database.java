@@ -68,7 +68,7 @@ public final class Database implements Closeable {
    * @return
    * @throws IOException 
    */
-  public TimeSeries createOrOpen(final String id, final Duration granularity, final Collection<Archive> archives, final Collection<ConsolidationListener> consolidationListeners) throws IOException {
+  public TimeSeries createOrOpen(final String id, final Duration granularity, final Collection<Archive> archives, final Collection<? extends ConsolidationListener> consolidationListeners) throws IOException {
     Preconditions.checkNotNull(id, "null id");
     Preconditions.checkNotNull(granularity, "null granularity");
     Preconditions.checkNotNull(archives, "null archives");
