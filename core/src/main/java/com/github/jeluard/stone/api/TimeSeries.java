@@ -60,7 +60,7 @@ public final class TimeSeries {
   private long beginning;
   private long latest;
 
-  TimeSeries(final String id, final Duration granularity, final Collection<Archive> archives, final Collection<ConsolidationListener> consolidationListeners, final Database database) throws IOException {
+  TimeSeries(final String id, final Duration granularity, final Collection<Archive> archives, final Collection<? extends ConsolidationListener> consolidationListeners, final Database database) throws IOException {
     this.id = Preconditions.checkNotNull(id, "null id");
     this.granularity = (int) Preconditions.checkNotNull(granularity, "null granularity").getMillis();
     this.archives = Preconditions.checkNotNull(archives, "null archives");
@@ -216,10 +216,16 @@ public final class TimeSeries {
     return readers;
   }
 
-  private void checkNotBeforeLatestTimestamp(final long previousTimestamp, final long currentTimestamp) {
-    if (!((currentTimestamp - previousTimestamp) >= this.granularity)) {
-      throw new IllegalArgumentException("Provided timestamp <"+currentTimestamp+"> must be greater than <"+(previousTimestamp + this.granularity)+"> (granularity <"+this.granularity+"> ms)");
+  /**
+   * @param previousTimestamp
+   * @param currentTimestamp
+   * @return true if timestamp is after previous one (considering granularity)
+   */
+  private boolean isAfterPreviousTimestamp(final long previousTimestamp, final long currentTimestamp, final long granularity) {
+    if (!((currentTimestamp - previousTimestamp) >= granularity)) {
+      return false;
     }
+    return true;
   }
 
   /**
@@ -230,7 +236,6 @@ public final class TimeSeries {
     //Set to the new timestamp if value is null (i.e. no value as yet been recorded)
     final long previousTimestamp = this.latest;
     this.latest = timestamp;
-    checkNotBeforeLatestTimestamp(previousTimestamp, timestamp);
     return previousTimestamp;
   }
 
@@ -256,16 +261,28 @@ public final class TimeSeries {
    *
    * @param timestamp
    * @param value
+   * @return true if {@code value} has been considered for accumulation
    * @throws IOException 
    */
-  public void publish(final long timestamp, final int value) throws IOException {
+  public boolean publish(final long timestamp, final int value) throws IOException {
     final long previousTimestamp = recordLatest(timestamp);
+    final boolean isAfter = isAfterPreviousTimestamp(previousTimestamp, timestamp, this.granularity);
+    if (!isAfter) {
+      //timestamp is older that what can be accepted; return early
+      if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
+        final long difference = timestamp - previousTimestamp + this.granularity;
+        Loggers.BASE_LOGGER.log(Level.WARNING, "Provided timestamp <{0}> must be greater than <{1}> (difference is <{2}> but granularity is <{3}> ms)", new Object[]{timestamp, previousTimestamp + this.granularity, difference, this.granularity});
+      }
+      return false;
+    }
+
     final long beginningTimestamp = inferBeginning(timestamp);
 
     //previousTimestamp == 0 if this is the first publish call and associated storage was empty (or new)
     if (previousTimestamp != 0L) {
       this.database.engine.publish(this.flattened, this.consolidationListeners, beginningTimestamp, previousTimestamp, timestamp, value);
     }
+    return true;
   }
 
   @Idempotent
