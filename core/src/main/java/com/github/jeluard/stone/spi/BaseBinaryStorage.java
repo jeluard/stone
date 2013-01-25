@@ -16,8 +16,6 @@
  */
 package com.github.jeluard.stone.spi;
 
-import com.github.jeluard.guayaba.base.Pair;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 

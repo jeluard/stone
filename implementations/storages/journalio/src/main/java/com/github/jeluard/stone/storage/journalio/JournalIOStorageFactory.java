@@ -22,7 +22,6 @@ import com.github.jeluard.stone.api.Consolidator;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.helper.Loggers;
 import com.github.jeluard.stone.spi.BaseStorageFactory;
-import com.github.jeluard.stone.spi.StorageFactory;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -46,7 +45,7 @@ import journal.io.api.RecoveryErrorHandler;
 import org.joda.time.Duration;
 
 /**
- * {@link StorageFactory} implementation creating {@link JournalIOStorage}.
+ * {@link com.github.jeluard.stone.spi.StorageFactory} implementation creating {@link JournalIOStorage}.
  * <br>
  * When {@code maxFileLength} is kept low (no more than couple hundreds values) new files will be created and older ones (only containing deleted values) will be physically deleted.
  */

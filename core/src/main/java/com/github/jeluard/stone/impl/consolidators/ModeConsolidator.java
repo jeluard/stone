@@ -21,8 +21,6 @@ import com.google.common.collect.Multiset;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
 
-import java.util.List;
-
 /**
  * A {@link com.github.jeluard.stone.spi.Consolidator} providing the {@code mode} of accumulated values.
  */

@@ -21,7 +21,6 @@ import com.github.jeluard.guayaba.util.concurrent.Scheduler;
 import com.github.jeluard.stone.helper.Loggers;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;

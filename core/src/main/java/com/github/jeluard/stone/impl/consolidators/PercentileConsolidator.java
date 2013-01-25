@@ -16,7 +16,6 @@
  */
 package com.github.jeluard.stone.impl.consolidators;
 
-import com.github.jeluard.stone.api.Window;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
 
@@ -27,7 +26,7 @@ import java.util.Arrays;
  * <br>
  * <b>nearest rank</b> algorithm is used here.
  * <br>
- * A integer array of {@link Window#getMaxSamples()} will be allocated to limit array resizing. This leads to high memory usage.
+ * A integer array of {@link com.github.jeluard.stone.api.Window#getMaxSamples()} will be allocated to limit array resizing. This leads to high memory usage.
  */
 public abstract class PercentileConsolidator extends BaseConsolidator {
 

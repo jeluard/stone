@@ -22,7 +22,6 @@ import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.helper.Loggers;
 import com.github.jeluard.stone.spi.Storage;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.logging.Level;
 
