@@ -97,7 +97,8 @@ public final class JournalIOStorage extends BaseBinaryStorage {
       }
 
       //This value does not belong to the window (it's before): delete it.
-      this.journal.delete(location);//Deletion during iteration is safe
+      //Deletion during iteration is safe.
+      this.journal.delete(location);
     }
   }
 

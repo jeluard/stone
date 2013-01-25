@@ -60,7 +60,8 @@ public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage
   private static final String COMPACTOR_THREAD = "Stone JournalIO-Compactor";
   private static final String CONSOLIDATOR_SUFFIX = "Consolidator";
 
-  private static final int DEFAULT_MAX_FILE_LENGTH = 42*512;//42 bytes (size of timestamp/value with 1 consolidate)
+  //42 bytes = size of timestamp/value with 1 consolidate
+  private static final int DEFAULT_MAX_FILE_LENGTH = 42*512;
 
   private final long compactionInterval;
   private final int maxFileLength;
