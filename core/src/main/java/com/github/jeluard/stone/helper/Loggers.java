@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 /**
  * Helper methods for {@link Logger}.
  */
-public class Loggers {
+public final class Loggers {
 
   private Loggers() {
   }
