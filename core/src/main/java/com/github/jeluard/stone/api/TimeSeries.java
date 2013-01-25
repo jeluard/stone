@@ -105,7 +105,7 @@ public final class TimeSeries {
         final Constructor<? extends Consolidator> defaultConstructor = type.getConstructor();
         return defaultConstructor.newInstance();
       } catch (NoSuchMethodException e) {
-        throw new IllegalArgumentException("Failed to find int or default constructor for "+type.getCanonicalName());
+        throw new IllegalArgumentException("Failed to find int or default constructor for "+type.getCanonicalName(), e);
       }
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
