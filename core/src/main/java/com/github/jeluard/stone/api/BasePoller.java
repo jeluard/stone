@@ -88,28 +88,22 @@ public abstract class BasePoller<T> implements Cancelable {
             final int metric = metric(t);
             try {
               BasePoller.this.timeseriess.get(t).publish(timestamp, metric);
-            } catch (IOException e) {
+            } catch (InterruptedIOException e) {
               //If metric extraction is too long process will be interrupted
-              if (e instanceof InterruptedIOException) {
-                if (Loggers.BASE_LOGGER.isLoggable(Level.FINEST)) {
-                  Loggers.BASE_LOGGER.log(Level.FINEST, "Interrupted while publishing for <"+t+">", e);
-                }
-                return;
+              if (Loggers.BASE_LOGGER.isLoggable(Level.FINEST)) {
+                Loggers.BASE_LOGGER.log(Level.FINEST, "Interrupted while publishing for <"+t+">", e);
               }
-
+            } catch (IOException e) {
               if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
                 Loggers.BASE_LOGGER.log(Level.WARNING, "Got exception while publishing for <"+t+">", e);
               }
             }
-          } catch (Exception e) {
+          } catch (InterruptedException e) {
             //If metric extraction is too long process will be interrupted
-            if (e instanceof InterruptedException) {
-              if (Loggers.BASE_LOGGER.isLoggable(Level.FINEST)) {
-                Loggers.BASE_LOGGER.log(Level.FINEST, "Interrupted while publishing for <"+t+">", e);
-              }
-              return;
+            if (Loggers.BASE_LOGGER.isLoggable(Level.FINEST)) {
+              Loggers.BASE_LOGGER.log(Level.FINEST, "Interrupted while publishing for <"+t+">", e);
             }
-
+          } catch (Exception e) {
             if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
               Loggers.BASE_LOGGER.log(Level.WARNING, "Got exception while accessing metric for <"+t+">", e);
             }
