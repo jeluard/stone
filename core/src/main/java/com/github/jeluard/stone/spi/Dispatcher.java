@@ -23,6 +23,8 @@ import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.helper.Loggers;
 
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Level;
 
 /**
@@ -123,16 +125,36 @@ public abstract class Dispatcher {
    * @param previousTimestamp
    * @param currentTimestamp
    * @param value
+   * @return all rejected {@link Triple}s
    * @throws IOException 
    */
-  public final void publish(final Triple<Window, Storage, Consolidator[]>[] triples, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) throws IOException {
+  public final List<Triple<Window, Storage, Consolidator[]>> publish(final Triple<Window, Storage, Consolidator[]>[] triples, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) throws IOException {
     //Note: triples could be factored by Window#getResolution() to limit window threshold crossing checks.
     //Given the low probability several Window have same resolution but different duration this optimisation is not considered to keep implementation simple.
+    final List<Triple<Window, Storage, Consolidator[]>> rejected = new LinkedList<Triple<Window, Storage, Consolidator[]>>();
     for (final Triple<Window, Storage, Consolidator[]> triple : triples) {
-      dispatch(triple.first, triple.second, triple.third, consolidationListeners, beginningTimestamp, previousTimestamp, currentTimestamp, value);
+      if (!dispatch(triple.first, triple.second, triple.third, consolidationListeners, beginningTimestamp, previousTimestamp, currentTimestamp, value)) {
+        rejected.add(triple);
+      }
     }
+    return rejected;
   }
 
+  /**
+   * Dispatch a {@link #publish(com.github.jeluard.guayaba.base.Triple<com.github.jeluard.stone.api.Window,com.github.jeluard.stone.spi.Storage,com.github.jeluard.stone.api.Consolidator[]>[], com.github.jeluard.stone.api.ConsolidationListener[], long, long, long, int)} call.
+   * To be effective the call must be delegated to {@link #accumulateAndPersist(com.github.jeluard.stone.api.Window, com.github.jeluard.stone.spi.Storage, com.github.jeluard.stone.api.Consolidator[], com.github.jeluard.stone.api.ConsolidationListener[], long, long, long, int)}.
+   *
+   * @param window
+   * @param storage
+   * @param consolidators
+   * @param consolidationListeners
+   * @param beginningTimestamp
+   * @param previousTimestamp
+   * @param currentTimestamp
+   * @param value
+   * @return true if dispatch has been accepted; false if rejected
+   * @throws IOException 
+   */
   protected abstract boolean dispatch(Window window, Storage storage, Consolidator[] consolidators, ConsolidationListener[] consolidationListeners, long beginningTimestamp, long previousTimestamp, long currentTimestamp, int value) throws IOException;
 
 }
