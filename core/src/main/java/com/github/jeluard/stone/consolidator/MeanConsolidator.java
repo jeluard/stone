@@ -19,24 +19,27 @@ package com.github.jeluard.stone.consolidator;
 /**
  * A {@link com.github.jeluard.stone.spi.Consolidator} providing the {@code mean} of accumulated values.
  */
-public class MeanConsolidator extends BaseConsolidator {
+public final class MeanConsolidator extends BaseConsolidator {
 
-  private int sum = 0;
-  private int count = 0;
+  private volatile int sum = 0;
+  private volatile int count = 0;
 
   @Override
   public void accumulate(final long timestamp, final int value) {
+    //Not atomic but not needed.
     this.sum += value;
     ++this.count;
   }
 
   @Override
   public int consolidate() {
+    //Not atomic but not needed.
     return this.sum / this.count;
   }
 
   @Override
   protected void reset() {
+    //Not atomic but not needed.
     this.sum = 0;
     this.count = 0;
   }

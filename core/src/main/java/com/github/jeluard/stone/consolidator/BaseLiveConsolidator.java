@@ -23,7 +23,7 @@ package com.github.jeluard.stone.consolidator;
  */
 public abstract class BaseLiveConsolidator extends BaseConsolidator {
 
-  private int currentResult;
+  private volatile int currentResult;
 
   /**
    * @return value used as basis for {@link #getCurrentResult()}
@@ -49,12 +49,12 @@ public abstract class BaseLiveConsolidator extends BaseConsolidator {
   }
 
   @Override
-  protected int consolidate() {
+  protected final int consolidate() {
     return this.currentResult;
   }
 
   @Override
-  protected void reset() {
+  protected final void reset() {
     this.currentResult = initialValue();
 
     afterReset();

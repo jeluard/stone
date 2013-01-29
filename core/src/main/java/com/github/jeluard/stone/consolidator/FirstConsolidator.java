@@ -19,12 +19,13 @@ package com.github.jeluard.stone.consolidator;
 /**
  * {@link com.github.jeluard.stone.spi.Consolidator} implementation using first {@code value} as result.
  */
-public class FirstConsolidator  extends BaseLiveConsolidator {
+public final class FirstConsolidator  extends BaseLiveConsolidator {
 
-  private boolean hasBeenReset;
+  private volatile boolean hasBeenReset;
 
   @Override
   public void accumulate(final long timestamp, final int value) {
+    //Not atomic but not needed.
     if (this.hasBeenReset) {
       setCurrentResult(value);
       this.hasBeenReset = false;

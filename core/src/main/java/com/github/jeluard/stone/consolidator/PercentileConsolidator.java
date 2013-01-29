@@ -16,10 +16,12 @@
  */
 package com.github.jeluard.stone.consolidator;
 
+import com.github.jeluard.guayaba.base.Preconditions2;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
 
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 
 /**
  * A {@link com.github.jeluard.stone.spi.Consolidator} providing the pth {@code percentile} of accumulated values.
@@ -30,14 +32,16 @@ import java.util.Arrays;
  */
 public abstract class PercentileConsolidator extends BaseConsolidator {
 
+  private final int maxSamples;
   private final float pth;
-  private final int[] values;
-  private int index = 0;
+  private volatile int index = 0;
+  private AtomicIntegerArray values;//rely on happens-before ordering to avoid volatile modifier
 
   public PercentileConsolidator(final int maxSamples, final float pth) {
     Preconditions.checkArgument(pth > 0 && pth < 100, "pth must be > 0 and < 100");
+    this.maxSamples = maxSamples;
     this.pth = pth;
-    this.values = new int[maxSamples];
+    this.values = new AtomicIntegerArray(Preconditions2.checkSize(maxSamples));
   }
 
   private int rank(final float p, final int size) {
@@ -45,20 +49,23 @@ public abstract class PercentileConsolidator extends BaseConsolidator {
   }
 
   @Override
-  public void accumulate(final long timestamp, final int value) {
-    this.values[++this.index] = value;
+  public final void accumulate(final long timestamp, final int value) {
+    //Not atomic but not needed.
+    this.values.set(++this.index, value);//volatile access on index, force to see latest content for values
   }
 
   @Override
-  public int consolidate() {
-    final int rank = Math.max(0, Math.min(rank(this.pth, this.index) - 1, this.index));
-    return this.values[rank];
+  public final int consolidate() {
+    //Not atomic but not needed.
+    final int rank = Math.max(0, Math.min(rank(this.pth, this.index) - 1, this.index));//volatile access on index, force to see latest content for values
+    return this.values.get(rank);
   }
 
   @Override
   protected void reset() {
-    this.index = 0;
-    Arrays.fill(this.values, 0);
+    //Not atomic but not needed.
+    this.values = new AtomicIntegerArray(this.maxSamples);
+    this.index = 0;//Make sure index is written *after* values, making values content available to any thread after reading index
   }
 
 }

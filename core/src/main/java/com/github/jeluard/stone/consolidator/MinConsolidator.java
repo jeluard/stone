@@ -19,7 +19,7 @@ package com.github.jeluard.stone.consolidator;
 /**
  * {@link com.github.jeluard.stone.spi.Consolidator} implementation using min {@code value} as result.
  */
-public class MinConsolidator extends BaseLiveConsolidator {
+public final class MinConsolidator extends BaseLiveConsolidator {
 
   @Override
   protected int initialValue() {
@@ -28,6 +28,7 @@ public class MinConsolidator extends BaseLiveConsolidator {
 
   @Override
   public void accumulate(final long timestamp, final int value) {
+    //Not atomic but not needed.
     if (value < getCurrentResult()) {
       setCurrentResult(value);
     }

@@ -24,7 +24,7 @@ import com.google.common.primitives.Ints;
 /**
  * A {@link com.github.jeluard.stone.spi.Consolidator} providing the {@code mode} of accumulated values.
  */
-public class ModeConsolidator extends BaseConsolidator {
+public final class ModeConsolidator extends BaseConsolidator {
 
   private final Multiset<Integer> values;
   //Inspired from guava internals
@@ -40,17 +40,17 @@ public class ModeConsolidator extends BaseConsolidator {
   }
 
   @Override
-  public void accumulate(final long timestamp, final int value) {
+  public synchronized void accumulate(final long timestamp, final int value) {
     this.values.add(value);
   }
 
   @Override
-  public int consolidate() {
+  public synchronized int consolidate() {
     return ModeConsolidator.DECREASING_COUNT_ORDERING.greatestOf(this.values.entrySet(), 1).get(0).getElement();
   }
 
   @Override
-  protected void reset() {
+  protected synchronized void reset() {
     this.values.clear();
   }
 
