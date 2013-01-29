@@ -43,7 +43,7 @@ public class PollerPerformance {
       ints.add(new Pair<Integer, Integer>(i, 100+random.nextInt(20)));
     }
 
-    final Database database = new Database(new SequentialDispatcher(), new JournalIOStorageFactory());
+    final Database database = new Database(new SequentialDispatcher(), new JournalIOStorageFactory(JournalIOStorageFactory.defaultWriteExecutor(), JournalIOStorageFactory.defaultDisposerScheduledExecutor()));
     final Archive archive = new Archive(Arrays.asList(Percentile95Consolidator.class), Arrays.asList(new Window(Duration.standardSeconds(10), Duration.standardDays(1))));
     final BasePoller<Pair<Integer, Integer>> poller = new BasePoller<Pair<Integer, Integer>>(database, ints, Duration.millis(1000), Arrays.asList(archive)) {
       @Override

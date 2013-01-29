@@ -25,6 +25,11 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>com.github.jeluard.stone.implementations.dispatchers</groupId>
+      <artifactId>stone-dispatcher-disruptor</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.github.jeluard.stone.implementations.storages</groupId>
       <artifactId>stone-storage-journalio</artifactId>
       <version>${project.version}</version>

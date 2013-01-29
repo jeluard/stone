@@ -24,7 +24,7 @@ import com.github.jeluard.stone.api.Reader;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.consolidator.Percentile99Consolidator;
-import com.github.jeluard.stone.dispatcher.sequential.SequentialDispatcher;
+import com.github.jeluard.stone.dispatcher.disruptor.DisruptorDispatcher;
 import com.github.jeluard.stone.storage.journalio.JournalIOStorageFactory;
 
 import java.util.Arrays;
@@ -35,7 +35,7 @@ import org.joda.time.Duration;
 
 public class Test {
   public static void main(String[] args) throws Exception {
-    final Database database = new Database(new SequentialDispatcher(), new JournalIOStorageFactory());
+    final Database database = new Database(new DisruptorDispatcher(DisruptorDispatcher.defaultExecutorService(), 1024), new JournalIOStorageFactory(JournalIOStorageFactory.defaultWriteExecutor(), JournalIOStorageFactory.defaultDisposerScheduledExecutor()));
     final Archive archive = new Archive(Arrays.asList(Percentile99Consolidator.class), 
             Arrays.asList(new Window(Duration.standardSeconds(10), Duration.standardMinutes(1))));
     final ConsolidationListener consolidationListener = new ConsolidationListener() {

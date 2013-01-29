@@ -36,7 +36,7 @@ import org.joda.time.Duration;
 
 public class Performance {
   public static void main(String[] args) throws Exception {
-    final Database database = new Database(new SequentialDispatcher(), new JournalIOStorageFactory());
+    final Database database = new Database(new SequentialDispatcher(), new JournalIOStorageFactory(JournalIOStorageFactory.defaultWriteExecutor(), JournalIOStorageFactory.defaultDisposerScheduledExecutor()));
     final Archive archive1 = new Archive(Arrays.asList(MaxConsolidator.class), 
             Arrays.asList(new Window(Duration.standardMinutes(5), Duration.standardDays(1)),
                           new Window(Duration.standardHours(1), Duration.standardDays(7)),

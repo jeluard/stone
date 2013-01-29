@@ -76,8 +76,8 @@ public class DisruptorDispatcher extends Dispatcher implements Cancelable {
   private final Disruptor<Event> disruptor;
   private static final String THREAD_NAME_FORMAT = "DisruptorDispatcher #%d";
 
-  public DisruptorDispatcher(final int bufferSize) {
-    this(DisruptorDispatcher.defaultExecutorService(), new MultiThreadedLowContentionClaimStrategy(Preconditions2.checkSize(bufferSize)), new SleepingWaitStrategy());
+  public DisruptorDispatcher(final Executor executor, final int bufferSize) {
+    this(executor, new MultiThreadedLowContentionClaimStrategy(Preconditions2.checkSize(bufferSize)), new SleepingWaitStrategy());
   }
 
   public DisruptorDispatcher(final Executor executor, final AbstractMultithreadedClaimStrategy claimStrategy, final WaitStrategy waitStrategy) {
