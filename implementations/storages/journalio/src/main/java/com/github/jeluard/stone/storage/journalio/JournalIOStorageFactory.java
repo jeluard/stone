@@ -16,6 +16,7 @@
  */
 package com.github.jeluard.stone.storage.journalio;
 
+import com.github.jeluard.guayaba.lang.UncaughtExceptionHandlers;
 import com.github.jeluard.guayaba.util.concurrent.ExecutorServices;
 import com.github.jeluard.stone.api.Archive;
 import com.github.jeluard.stone.api.Consolidator;
@@ -54,10 +55,10 @@ public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage
   static final Logger LOGGER = Loggers.create("storage.journalio");
 
   private static final String DEFAULT_ROOT_DIRECTORY = "stone-journal";
-  private static final String WRITER_THREADS_NAME_FORMAT = "Stone JournalIO-Writer #%d";
-  private static final String DISPOSER_THREADS_NAME_FORMAT = "Stone JournalIO-Disposer";
+  private static final String WRITERS_THREAD_NAME_FORMAT = "Stone JournalIO-Writer #%d";
+  private static final String DISPOSER_THREAD_NAME_FORMAT = "Stone JournalIO-Disposer";
   private static final Duration DEFAULT_COMPACTION_INTERVAL = Duration.standardMinutes(10);
-  private static final String COMPACTOR_THREAD = "Stone JournalIO-Compactor";
+  private static final String COMPACTOR_THREAD_NAME_FORMAT = "Stone JournalIO-Compactor";
   private static final String CONSOLIDATOR_SUFFIX = "Consolidator";
 
   //42 bytes = size of timestamp/value with 1 consolidate
@@ -89,7 +90,7 @@ public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage
       }
     }
   };
-  private final ScheduledExecutorService compactionScheduler = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setDaemon(true).setNameFormat(JournalIOStorageFactory.COMPACTOR_THREAD).build());
+  private final ScheduledExecutorService compactionScheduler = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setDaemon(true).setNameFormat(JournalIOStorageFactory.COMPACTOR_THREAD_NAME_FORMAT).setUncaughtExceptionHandler(UncaughtExceptionHandlers.defaultHandler(JournalIOStorageFactory.LOGGER)).build());
 
   public JournalIOStorageFactory() {
     this(JournalIOStorageFactory.DEFAULT_COMPACTION_INTERVAL, JournalIOStorageFactory.DEFAULT_MAX_FILE_LENGTH, JournalIOStorageFactory.defaultWriteExecutor(), JournalIOStorageFactory.defaultDisposerScheduledExecutor());
@@ -105,11 +106,11 @@ public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage
   }
 
   public static Executor defaultWriteExecutor() {
-    return Executors.newFixedThreadPool(2*Runtime.getRuntime().availableProcessors(), new ThreadFactoryBuilder().setDaemon(true).setNameFormat(JournalIOStorageFactory.WRITER_THREADS_NAME_FORMAT).build());
+    return Executors.newFixedThreadPool(2*Runtime.getRuntime().availableProcessors(), new ThreadFactoryBuilder().setDaemon(true).setNameFormat(JournalIOStorageFactory.WRITERS_THREAD_NAME_FORMAT).build());
   }
 
   public static ScheduledExecutorService defaultDisposerScheduledExecutor() {
-    return Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setDaemon(true).setNameFormat(JournalIOStorageFactory.DISPOSER_THREADS_NAME_FORMAT).build());
+    return Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setDaemon(true).setNameFormat(JournalIOStorageFactory.DISPOSER_THREAD_NAME_FORMAT).build());
   }
 
   /**
