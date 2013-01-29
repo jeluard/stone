@@ -21,9 +21,10 @@ import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.Database;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.api.Window;
-import com.github.jeluard.stone.impl.consolidators.LastConsolidator;
 import com.github.jeluard.stone.impl.consolidators.MaxConsolidator;
 import com.github.jeluard.stone.impl.consolidators.MinConsolidator;
+import com.github.jeluard.stone.impl.consolidators.LastConsolidator;
+import com.github.jeluard.stone.dispatcher.sequential.SequentialDispatcher;
 import com.github.jeluard.stone.storage.journalio.JournalIOStorageFactory;
 
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ import org.joda.time.Duration;
 
 public class Performance {
   public static void main(String[] args) throws Exception {
-    final Database database = new Database(new JournalIOStorageFactory());
+    final Database database = new Database(new SequentialDispatcher(), new JournalIOStorageFactory());
     final Archive archive1 = new Archive(Arrays.asList(MaxConsolidator.class), 
             Arrays.asList(new Window(Duration.standardMinutes(5), Duration.standardDays(1)),
                           new Window(Duration.standardHours(1), Duration.standardDays(7)),
@@ -43,7 +44,7 @@ public class Performance {
     final Archive archive2 = new Archive(Arrays.asList(MinConsolidator.class, LastConsolidator.class), 
             Arrays.asList(new Window(Duration.standardHours(1), Duration.standardDays(7))));
 
-    final int nbSeries = 1000;
+    final int nbSeries = 10000;
 
     final List<TimeSeries> timeSeries = new ArrayList<TimeSeries>(nbSeries);
     for (int i = 0; i < nbSeries; i++) {
@@ -54,7 +55,7 @@ public class Performance {
       long timestamp = 1;
       for (int i = 0; i < 100000; i++) {
         final long before = System.currentTimeMillis();
-        for (int j = 0; j < 1000; j++) {
+        for (int j = 0; j < 10; j++) {
           Thread.sleep(1);
           for (final TimeSeries ts : timeSeries) {
             ts.publish(++timestamp, 100);

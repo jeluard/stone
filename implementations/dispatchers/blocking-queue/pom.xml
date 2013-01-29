@@ -3,9 +3,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.github.jeluard.stone.implementations.dispatchers</groupId>
-  <artifactId>stone-dispatcher-sequential</artifactId>
+  <artifactId>stone-dispatcher-blocking-queue</artifactId>
 
-  <name>Stone sequential dispatcher</name>
+  <name>Stone blocking-queue dispatcher</name>
 
   <parent>
     <groupId>com.github.jeluard.stone.implementations.dispatchers</groupId>

@@ -16,16 +16,12 @@
  */
 package com.github.jeluard.stone.api;
 
-import com.github.jeluard.stone.impl.Engine;
 import com.github.jeluard.stone.spi.Storage;
 import com.google.common.base.Optional;
 
 import java.io.IOException;
-import java.util.Collections;
 
 import org.joda.time.DateTime;
-import org.joda.time.Duration;
-import org.junit.Test;
 import org.mockito.Mockito;
 
 public class TimeSeriesTest {

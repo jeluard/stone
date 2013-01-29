@@ -16,22 +16,123 @@
  */
 package com.github.jeluard.stone.spi;
 
+import com.github.jeluard.guayaba.base.Triple;
+import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.Consolidator;
+import com.github.jeluard.stone.api.Window;
+import com.github.jeluard.stone.helper.Loggers;
+
+import java.io.IOException;
+import java.util.logging.Level;
 
 /**
- * Dispatches timestamp/value to currently configured {@link Consolidator}.
+ * Encapsulate the logic that triggers call to {@link Consolidator#accumulate(long, int)}, {@link Consolidator#consolidateAndReset()} and {@link Storage#append(long, int[])}.
+ * <br>
+ * A single {@link Engine} is available per {@link com.github.jeluard.stone.api.Database} thus shared among all associated {@link com.github.jeluard.stone.api.TimeSeries}.
  */
-public interface Dispatcher {
+public abstract class Dispatcher {
 
   /**
+   * @param beginning
+   * @param timestamp
+   * @param duration
+   * @return id of the {@link Window} containing {@code timestamp}
+   */
+  private long windowId(final long beginning, final long timestamp, final long duration) {
+    return (timestamp - beginning) / duration;
+  }
+
+  /**
+   * Propagates {@code timestamp}/{@code value} to all {@code consolidators} {@link Consolidator#accumulate(long, int)}.
    *
-   * At this point both parameters have been validated and are not null.
-   *
+   * @param consolidators
    * @param timestamp
    * @param value 
    */
-  void accumulate(long timestamp, int value, Consolidator[] consolidators);
+  private void accumulate(final Consolidator[] consolidators, final long timestamp, final int value) {
+    for (final Consolidator consolidator : consolidators) {
+      consolidator.accumulate(timestamp, value);
+    }
+  }
 
-  int[] reduce(Consolidator[] consolidators);
+  /**
+   * Generate all consolidates then propagates them to {@link Storage#append(long, int[])}.
+   * <br>
+   * If any, {@link ConsolidationListener#onConsolidation(com.github.jeluard.stone.api.Window, long, int[])} are then called.
+   * Failure of one of {@link ConsolidationListener#onConsolidation(com.github.jeluard.stone.api.Window, long, int[])} does not prevent others to be called.
+   *
+   * @param timestamp
+   * @param consolidators
+   * @param storage
+   * @return consolidates
+   * @throws IOException 
+   */
+  private int[] persist(final long timestamp, final Consolidator[] consolidators, final Storage storage) throws IOException {
+    //TODO Do not create arrays each time?
+    final int[] consolidates = new int[consolidators.length];
+    for (int i = 0; i < consolidators.length; i++) {
+      consolidates[i] = consolidators[i].consolidateAndReset();
+    }
+    storage.append(timestamp, consolidates);
+    return consolidates;
+  }
+
+  /**
+   * @param timestamp
+   * @param consolidates
+   * @param consolidationListeners
+   * @param window passed to {@link ConsolidationListener#onConsolidation(com.github.jeluard.stone.api.Window, long, int[])}
+   */
+  private void notifyConsolidationListeners(final long timestamp, final int[] consolidates, final ConsolidationListener[] consolidationListeners, final Window window) {
+    for (final ConsolidationListener consolidationListener : consolidationListeners) {
+      try {
+        consolidationListener.onConsolidation(window, timestamp, consolidates);
+      } catch (Exception e)  {
+        if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
+          Loggers.BASE_LOGGER.log(Level.WARNING, "Got exception while executing <"+consolidationListener+">", e);
+        }
+      }
+    }
+  }
+
+  protected final void accumulateAndPersist(final Window window, final Storage storage, final Consolidator[] consolidators, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) throws IOException {
+    accumulate(consolidators, currentTimestamp, value);
+
+    final long duration = window.getResolution().getMillis();
+    final long currentWindowId = windowId(beginningTimestamp, currentTimestamp, duration);
+    final long previousWindowId = windowId(beginningTimestamp, previousTimestamp, duration);
+    if (currentWindowId != previousWindowId) {
+      final long previousWindowBeginning = beginningTimestamp + previousWindowId * duration;
+
+      final int[] consolidates = persist(previousWindowBeginning, consolidators, storage);
+      notifyConsolidationListeners(previousWindowBeginning, consolidates, consolidationListeners, window);
+    }
+  }
+
+  /**
+   * Perform {@link Consolidator#accumulate(long, int)} and {@link Consolidator#consolidateAndReset()} for all {@link Window} depending on {@code timestamp}.
+   * <br>
+   * Result of {@link Consolidator#consolidateAndReset()} is then persisted (via {@link Storage#append(long, int[])}) through the right {@link Storage}.
+   * <br>
+   * <br>
+   * When provided {@link ConsolidationListener}s are called <strong>after</strong> a successful {@link Storage#append(long, int[])}.
+   *
+   * @param triples
+   * @param consolidationListeners
+   * @param beginningTimestamp
+   * @param previousTimestamp
+   * @param currentTimestamp
+   * @param value
+   * @throws IOException 
+   */
+  public final void publish(final Triple<Window, Storage, Consolidator[]>[] triples, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) throws IOException {
+    //Note: triples could be factored by Window#getResolution() to limit window threshold crossing checks.
+    //Given the low probability several Window have same resolution but different duration this optimisation is not considered to keep implementation simple.
+    for (final Triple<Window, Storage, Consolidator[]> triple : triples) {
+      dispatch(triple.first, triple.second, triple.third, consolidationListeners, beginningTimestamp, previousTimestamp, currentTimestamp, value);
+    }
+  }
+
+  protected abstract boolean dispatch(Window window, Storage storage, Consolidator[] consolidators, ConsolidationListener[] consolidationListeners, long beginningTimestamp, long previousTimestamp, long currentTimestamp, int value) throws IOException;
 
 }

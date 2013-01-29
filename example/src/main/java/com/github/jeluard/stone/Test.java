@@ -24,6 +24,7 @@ import com.github.jeluard.stone.api.Reader;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.impl.consolidators.Percentile99Consolidator;
+import com.github.jeluard.stone.dispatcher.sequential.SequentialDispatcher;
 import com.github.jeluard.stone.storage.journalio.JournalIOStorageFactory;
 
 import java.util.Arrays;
@@ -34,7 +35,7 @@ import org.joda.time.Duration;
 
 public class Test {
   public static void main(String[] args) throws Exception {
-    final Database database = new Database(new JournalIOStorageFactory());
+    final Database database = new Database(new SequentialDispatcher(), new JournalIOStorageFactory());
     final Archive archive = new Archive(Arrays.asList(Percentile99Consolidator.class), 
             Arrays.asList(new Window(Duration.standardSeconds(10), Duration.standardMinutes(1))));
     final ConsolidationListener consolidationListener = new ConsolidationListener() {
@@ -55,7 +56,7 @@ public class Test {
 
     try {
       final Random random = new Random();
-      for (int i = 0; i < 5*60*1000; i++) {
+      for (int i = 0; i < 1000*1000; i++) {
         Thread.sleep(1);//Make sure there's at least 1ms in between publication
         timeSeries.publish(System.currentTimeMillis(), 100+random.nextInt(25));
       }

@@ -18,7 +18,7 @@ package com.github.jeluard.stone.api;
 
 import com.github.jeluard.guayaba.annotation.Idempotent;
 import com.github.jeluard.stone.helper.Loggers;
-import com.github.jeluard.stone.impl.Engine;
+import com.github.jeluard.stone.spi.Dispatcher;
 import com.github.jeluard.stone.spi.StorageFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -41,10 +41,11 @@ public final class Database implements Closeable {
   private static final Duration DEFAULT_GRANULARITY = Duration.millis(1L);
 
   final StorageFactory<?> storageFactory;
-  final Engine engine = new Engine();
+  final Dispatcher dispatcher;
   private final ConcurrentMap<String, TimeSeries> timeSeriess = new ConcurrentHashMap<String, TimeSeries>();
 
-  public Database(final StorageFactory<?> storageFactory) throws IOException {
+  public Database(final Dispatcher dispatcher, final StorageFactory<?> storageFactory) throws IOException {
+    this.dispatcher = Preconditions.checkNotNull(dispatcher, "null dispatcher");
     this.storageFactory = Preconditions.checkNotNull(storageFactory, "null storageFactory");
   }
 

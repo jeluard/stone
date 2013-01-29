@@ -16,6 +16,7 @@
   </parent>
 
   <modules>
+    <module>blocking-queue</module>
     <module>sequential</module>
   </modules>
 
