@@ -50,14 +50,14 @@ public class DisruptorDispatcher extends Dispatcher implements Cancelable {
    */
   private static final class Event {
 
-    private Window window;
-    private Storage storage;
-    private Consolidator[] consolidators;
-    private ConsolidationListener[] consolidationListeners;
-    private long beginningTimestamp;
-    private long previousTimestamp;
-    private long currentTimestamp;
-    private int value;
+    private volatile Window window;
+    private volatile Storage storage;
+    private volatile Consolidator[] consolidators;
+    private volatile ConsolidationListener[] consolidationListeners;
+    private volatile long beginningTimestamp;
+    private volatile long previousTimestamp;
+    private volatile long currentTimestamp;
+    private volatile int value;
 
     /**
      * Unique {@link EventFactory} instance for all published arguments.
