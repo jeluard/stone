@@ -14,31 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.jeluard.stone.impl.consolidators;
+package com.github.jeluard.stone.consolidator;
 
 /**
- * A {@link com.github.jeluard.stone.spi.Consolidator} providing the {@code mean} of accumulated values.
+ * A {@link com.github.jeluard.stone.spi.Consolidator} providing the 95th {@code percentile} of accumulated values.
+ *
+ * @see PercentileConsolidator
  */
-public class MeanConsolidator extends BaseConsolidator {
+public class Percentile95Consolidator extends PercentileConsolidator {
 
-  private int sum = 0;
-  private int count = 0;
-
-  @Override
-  public void accumulate(final long timestamp, final int value) {
-    this.sum += value;
-    ++this.count;
-  }
-
-  @Override
-  public int consolidate() {
-    return this.sum / this.count;
-  }
-
-  @Override
-  protected void reset() {
-    this.sum = 0;
-    this.count = 0;
+  public Percentile95Consolidator(final int maxSamples) {
+    super(maxSamples, 95);
   }
 
 }

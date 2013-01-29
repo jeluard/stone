@@ -14,16 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.jeluard.stone.impl.consolidators;
+package com.github.jeluard.stone.consolidator;
+
+import com.github.jeluard.stone.api.Consolidator;
 
 /**
- * {@link com.github.jeluard.stone.spi.Consolidator} implementation using last {@code value} as result.
+ * Base implementation for {@link Consolidator}.
  */
-public class LastConsolidator extends BaseLiveConsolidator {
+public abstract class BaseConsolidator implements Consolidator {
+
+  /**
+   * Called right after {@link #consolidate()}.
+   */
+  protected void reset() {
+  }
+
+  /**
+   * @return final consoldated value
+   */
+  protected abstract int consolidate();
 
   @Override
-  public void accumulate(final long timestamp, final int value) {
-    setCurrentResult(value);
+  public final int consolidateAndReset() {
+    try {
+      return consolidate();
+    } finally {
+      reset();
+    }
   }
 
 }

@@ -14,26 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.jeluard.stone.impl.consolidators;
+package com.github.jeluard.stone.consolidator;
 
 /**
- * {@link com.github.jeluard.stone.spi.Consolidator} implementation using first {@code value} as result.
+ * {@link com.github.jeluard.stone.spi.Consolidator} implementation using max {@code value} as result.
  */
-public class FirstConsolidator  extends BaseLiveConsolidator {
-
-  private boolean hasBeenReset;
+public class MaxConsolidator extends BaseLiveConsolidator {
 
   @Override
-  public void accumulate(final long timestamp, final int value) {
-    if (this.hasBeenReset) {
-      setCurrentResult(value);
-      this.hasBeenReset = false;
-    }
+  protected int initialValue() {
+    return Integer.MIN_VALUE;
   }
 
   @Override
-  protected void afterReset() {
-    this.hasBeenReset = true;
+  public void accumulate(final long timestamp, final int value) {
+    if (value > getCurrentResult()) {
+      setCurrentResult(value);
+    }
   }
 
 }

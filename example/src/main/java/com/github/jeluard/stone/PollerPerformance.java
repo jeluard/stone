@@ -22,7 +22,7 @@ import com.github.jeluard.stone.api.BasePoller;
 import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.Database;
 import com.github.jeluard.stone.api.Window;
-import com.github.jeluard.stone.impl.consolidators.Percentile95Consolidator;
+import com.github.jeluard.stone.consolidator.Percentile95Consolidator;
 import com.github.jeluard.stone.dispatcher.sequential.SequentialDispatcher;
 import com.github.jeluard.stone.storage.journalio.JournalIOStorageFactory;
 import com.google.common.base.Optional;

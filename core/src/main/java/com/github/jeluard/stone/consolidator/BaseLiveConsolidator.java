@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.jeluard.stone.impl.consolidators;
+package com.github.jeluard.stone.consolidator;
 
 /**
  * Base implementation for {@link com.github.jeluard.stone.spi.Consolidator} consolidating after each accumulation.

@@ -14,23 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.jeluard.stone.impl.consolidators;
+package com.github.jeluard.stone.consolidator;
 
 /**
- * {@link com.github.jeluard.stone.spi.Consolidator} implementation using max {@code value} as result.
+ * A {@link com.github.jeluard.stone.spi.Consolidator} providing the {@code mean} of accumulated values.
  */
-public class MaxConsolidator extends BaseLiveConsolidator {
+public class MeanConsolidator extends BaseConsolidator {
 
-  @Override
-  protected int initialValue() {
-    return Integer.MIN_VALUE;
-  }
+  private int sum = 0;
+  private int count = 0;
 
   @Override
   public void accumulate(final long timestamp, final int value) {
-    if (value > getCurrentResult()) {
-      setCurrentResult(value);
-    }
+    this.sum += value;
+    ++this.count;
+  }
+
+  @Override
+  public int consolidate() {
+    return this.sum / this.count;
+  }
+
+  @Override
+  protected void reset() {
+    this.sum = 0;
+    this.count = 0;
   }
 
 }

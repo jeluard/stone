@@ -14,16 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.jeluard.stone.impl.consolidators;
+package com.github.jeluard.stone.consolidator;
 
 /**
- * A {@link com.github.jeluard.stone.spi.Consolidator} providing the {@code sum} of accumulated values.
+ * {@link com.github.jeluard.stone.spi.Consolidator} implementation using last {@code value} as result.
  */
-public class SumConsolidator extends BaseLiveConsolidator {
+public class LastConsolidator extends BaseLiveConsolidator {
 
   @Override
   public void accumulate(final long timestamp, final int value) {
-    setCurrentResult(value + getCurrentResult());
+    setCurrentResult(value);
   }
 
 }

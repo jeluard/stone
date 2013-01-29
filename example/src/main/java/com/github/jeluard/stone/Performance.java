@@ -21,9 +21,9 @@ import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.Database;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.api.Window;
-import com.github.jeluard.stone.impl.consolidators.MaxConsolidator;
-import com.github.jeluard.stone.impl.consolidators.MinConsolidator;
-import com.github.jeluard.stone.impl.consolidators.LastConsolidator;
+import com.github.jeluard.stone.consolidator.MaxConsolidator;
+import com.github.jeluard.stone.consolidator.MinConsolidator;
+import com.github.jeluard.stone.consolidator.LastConsolidator;
 import com.github.jeluard.stone.dispatcher.sequential.SequentialDispatcher;
 import com.github.jeluard.stone.storage.journalio.JournalIOStorageFactory;
 

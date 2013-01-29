@@ -14,17 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.jeluard.stone.impl.consolidators;
+package com.github.jeluard.stone.consolidator;
 
 /**
- * A {@link com.github.jeluard.stone.spi.Consolidator} providing the 99th {@code percentile} of accumulated values.
+ * A {@link com.github.jeluard.stone.spi.Consolidator} providing the 90th {@code percentile} of accumulated values.
  *
  * @see PercentileConsolidator
  */
-public class Percentile99Consolidator extends PercentileConsolidator {
+public class Percentile90Consolidator extends PercentileConsolidator {
 
-  public Percentile99Consolidator(final int maxSamples) {
-    super(maxSamples, 99);
+  public Percentile90Consolidator(final int maxSamples) {
+    super(maxSamples, 90);
   }
 
 }
