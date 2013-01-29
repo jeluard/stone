@@ -17,7 +17,19 @@
 package com.github.jeluard.stone.api;
 
 /**
- * Abstracts logic of consolidating values from a {@link com.github.jeluard.stone.api.Window} into a single {@code value}.
+ * Abstracts logic of consolidating values from a {@link Window} into a single {@code value}.
+ * <br>
+ * {@link Consolidator} must define one of following constructors:
+ * <ul>
+ *   <li>a constructor accepting an {@code int} as unique constructor (hinting the maximum number of samples in a {@link Window})</li>
+ *   <li>default constructor</li>
+ * </ul>
+ * First one will be prefered.
+ * <br>
+ * <br>
+ * A {@link Consolidator} will be instantiated per {@link TimeSeries} / {@link Window} couple.
+ * <br>
+ * Different threads might be used to call successive {@link #accumulate(long, int)} and {@link #consolidateAndReset()} but <b>never</b> concurrently.
  */
 public interface Consolidator {
 

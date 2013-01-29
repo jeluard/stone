@@ -20,6 +20,7 @@ import com.github.jeluard.guayaba.base.Pair;
 import com.google.common.base.Optional;
 
 import java.io.IOException;
+import javax.annotation.concurrent.ThreadSafe;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
@@ -29,6 +30,7 @@ import org.joda.time.Interval;
  * <br>
  * A {@link Reader} is specific to a single {@link Window} of a {@link TimeSeries}.
  */
+@ThreadSafe
 public interface Reader {
 
   /**

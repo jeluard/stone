@@ -18,11 +18,14 @@ package com.github.jeluard.stone.api;
 
 import com.google.common.base.Preconditions;
 
+import javax.annotation.concurrent.Immutable;
+
 import org.joda.time.Duration;
 
 /**
  * Encapsulate details about how published data will be kept.
  */
+@Immutable
 public final class Window {
 
   private final Duration resolution;

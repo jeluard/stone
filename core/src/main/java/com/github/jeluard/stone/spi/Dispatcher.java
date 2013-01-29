@@ -26,12 +26,14 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
+import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * Encapsulate the logic that triggers call to {@link Consolidator#accumulate(long, int)}, {@link Consolidator#consolidateAndReset()} and {@link Storage#append(long, int[])}.
  * <br>
  * A single {@link Engine} is available per {@link com.github.jeluard.stone.api.Database} thus shared among all associated {@link com.github.jeluard.stone.api.TimeSeries}.
  */
+@ThreadSafe
 public abstract class Dispatcher {
 
   /**
@@ -143,6 +145,8 @@ public abstract class Dispatcher {
   /**
    * Dispatch a {@link #publish(com.github.jeluard.guayaba.base.Triple<com.github.jeluard.stone.api.Window,com.github.jeluard.stone.spi.Storage,com.github.jeluard.stone.api.Consolidator[]>[], com.github.jeluard.stone.api.ConsolidationListener[], long, long, long, int)} call.
    * To be effective the call must be delegated to {@link #accumulateAndPersist(com.github.jeluard.stone.api.Window, com.github.jeluard.stone.spi.Storage, com.github.jeluard.stone.api.Consolidator[], com.github.jeluard.stone.api.ConsolidationListener[], long, long, long, int)}.
+   * <br>
+   * Must be thread-safe.
    *
    * @param window
    * @param storage

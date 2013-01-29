@@ -30,12 +30,14 @@ import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
+import javax.annotation.concurrent.ThreadSafe;
 
 import org.joda.time.Duration;
 
 /**
  * Main entry point to manage {@link TimeSeries} life cycle.
  */
+@ThreadSafe
 public final class Database implements Closeable {
 
   private static final Duration DEFAULT_GRANULARITY = Duration.millis(1L);

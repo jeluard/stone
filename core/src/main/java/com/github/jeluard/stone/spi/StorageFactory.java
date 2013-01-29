@@ -22,12 +22,14 @@ import com.github.jeluard.stone.api.Window;
 
 import java.io.Closeable;
 import java.io.IOException;
+import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * Abstracts create of {@link Storage} backend per {@link Archive}.
  * <br />
  * Common structure can then be shared accross {@link Storage}.
  */
+@ThreadSafe
 public interface StorageFactory<T extends Storage> extends Closeable {
 
   /**

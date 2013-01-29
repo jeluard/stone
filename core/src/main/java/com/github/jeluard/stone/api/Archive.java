@@ -22,10 +22,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * Encapsulate details about how published values will be persisted.
  */
+@Immutable
 public final class Archive {
 
   private final Collection<Class<? extends Consolidator>> consolidators;

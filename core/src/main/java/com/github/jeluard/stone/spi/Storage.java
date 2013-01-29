@@ -19,12 +19,14 @@ package com.github.jeluard.stone.spi;
 import com.github.jeluard.stone.api.Reader;
 
 import java.io.IOException;
+import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * Abstraction dealing with {@link TimeSeries} persistency.
  * <br>
  * A {@link Storage} is specific to a single {@link Window} of a {@link TimeSeries}.
  */
+@ThreadSafe
 public interface Storage extends Reader {
 
   /**

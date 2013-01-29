@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.logging.Level;
+import javax.annotation.concurrent.NotThreadSafe;
 
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
@@ -46,9 +47,12 @@ import org.joda.time.Interval;
  * Each published value is passed to all associated {@link Consolidator} (defined in {@link Archive#getConsolidators()}) first for accumulation (see {@link Consolidator#accumulate(long, int)})
  * then each time a {@link Window#getResolution()} threshold is crossed for consolidation (see {@link Consolidator#consolidateAndReset()}).
  * Final consolidated results are persisted in a {@link TimeSeries}/{@link Window} specific {@link Storage}.
+ * <br>
+ * {@link TimeSeries} is not threadsafe and supposed to be manipulated from a unique thread.
  *
  * @see Database
  */
+  @NotThreadSafe
 public final class TimeSeries {
 
   private final String id;
