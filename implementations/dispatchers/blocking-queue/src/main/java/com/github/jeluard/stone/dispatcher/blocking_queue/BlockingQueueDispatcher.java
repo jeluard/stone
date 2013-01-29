@@ -94,10 +94,6 @@ public class BlockingQueueDispatcher extends Dispatcher {
   private final ExecutorService executorService;
   private static final String CONSUMERS_THREAD_NAME_FORMAT = "BlockingQueueDispatcher-Consumers #%d";
 
-  public BlockingQueueDispatcher(final BlockingQueue<Entry> queue) {
-    this(queue, BlockingQueueDispatcher.defaultExecutorService(), Runtime.getRuntime().availableProcessors());
-  }
-
   public BlockingQueueDispatcher(final BlockingQueue<Entry> queue, final ExecutorService executorService, final int consumers) {
     this.queue = Preconditions.checkNotNull(queue, "null queue");
     this.executorService = Preconditions.checkNotNull(executorService, "null executorService");
