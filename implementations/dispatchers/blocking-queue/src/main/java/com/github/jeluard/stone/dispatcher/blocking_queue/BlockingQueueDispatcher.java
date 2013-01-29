@@ -40,6 +40,9 @@ import java.util.logging.Logger;
  */
 public class BlockingQueueDispatcher extends Dispatcher {
 
+  /**
+   * Holder for {@link Dispatcher#accumulateAndPersist(com.github.jeluard.stone.api.Window, com.github.jeluard.stone.spi.Storage, com.github.jeluard.stone.api.Consolidator[], com.github.jeluard.stone.api.ConsolidationListener[], long, long, long, int)} arguments.
+   */
   public static final class Entry {
 
     public final Window window;
@@ -104,6 +107,9 @@ public class BlockingQueueDispatcher extends Dispatcher {
     }
   }
 
+  /**
+   * @return an {@link ExecutorService} with a fixed thread pool of {@link Runtime#availableProcessors()} threads
+   */
   public static ExecutorService defaultExecutorService() {
     final ThreadFactory threadFactory = new ThreadFactoryBuilder().setDaemon(true).setNameFormat(BlockingQueueDispatcher.CONSUMERS_THREAD_NAME_FORMAT).setUncaughtExceptionHandler(UncaughtExceptionHandlers.defaultHandler(BlockingQueueDispatcher.LOGGER)).build();
     return Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), threadFactory);
