@@ -17,6 +17,7 @@
 
   <modules>
     <module>blocking-queue</module>
+    <module>disruptor</module>
     <module>sequential</module>
   </modules>
 
