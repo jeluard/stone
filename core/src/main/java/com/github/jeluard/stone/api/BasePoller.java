@@ -22,6 +22,8 @@ import com.github.jeluard.guayaba.util.concurrent.Scheduler;
 import com.github.jeluard.stone.helper.Loggers;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -133,8 +135,15 @@ public abstract class BasePoller<T> implements Cancelable {
    */
   protected abstract int metric(T t) throws Exception;
 
+  /**
+   * @return a {@link Map} of all underlying {@link Reader}
+   */
   public final Map<String, Map<Window, Reader>> getReaders() {
-    return null;//TODO
+    final Builder<String, Map<Window, Reader>> builder = ImmutableMap.builder();
+    for (final TimeSeries timeSeries : this.timeseriess.values()) {
+      builder.put(timeSeries.getId(), timeSeries.getReaders());
+    }
+    return builder.build();
   }
 
   @Override
