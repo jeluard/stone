@@ -29,9 +29,21 @@ import java.io.IOException;
  */
 public class SequentialDispatcher extends Dispatcher {
 
+  public SequentialDispatcher() {
+    this(Dispatcher.DEFAULT_EXCEPTION_HANDLER);
+  }
+
+  public SequentialDispatcher(final ExceptionHandler exceptionHandler) {
+    super(exceptionHandler);
+  }
+
   @Override
   public final boolean dispatch(final Window window, final Storage storage, final Consolidator[] consolidators, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) throws IOException {
-    accumulateAndPersist(window, storage, consolidators, consolidationListeners, beginningTimestamp, previousTimestamp, currentTimestamp, value);
+    try {
+      accumulateAndPersist(window, storage, consolidators, consolidationListeners, beginningTimestamp, previousTimestamp, currentTimestamp, value);
+    } catch (Exception e) {
+      notifyExceptionHandler(e);
+    }
     return true;
   }
 

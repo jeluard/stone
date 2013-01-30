@@ -21,11 +21,14 @@ import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.Consolidator;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.helper.Loggers;
+import com.google.common.base.Preconditions;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
@@ -35,6 +38,50 @@ import javax.annotation.concurrent.ThreadSafe;
  */
 @ThreadSafe
 public abstract class Dispatcher {
+
+  /**
+   * Intercept {@link Exception} thrown when a {@code value} is published.
+   */
+  public interface ExceptionHandler {
+
+    /**
+     * Invoked when an {@link Exception} is thrown during accumulation/persistency process.
+     *
+     * @param exception
+     */
+    void onException(Exception exception);
+
+  }
+
+  private static final Logger LOGGER = Loggers.create("dispatcher");
+  private final ExceptionHandler exceptionHandler;
+  protected static final ExceptionHandler DEFAULT_EXCEPTION_HANDLER = new ExceptionHandler() {
+    @Override
+    public void onException(final Exception exception) {
+      if (Dispatcher.LOGGER.isLoggable(Level.WARNING)) {
+        Dispatcher.LOGGER.log(Level.WARNING, "Got exception while publishing", exception);
+      }
+    }
+  };
+
+  public Dispatcher(final ExceptionHandler exceptionHandler) {
+    this.exceptionHandler = Preconditions.checkNotNull(exceptionHandler, "null exceptionHandler");
+  }
+
+  /**
+   * Safely execute {@link ExceptionHandler#onException(com.github.jeluard.stone.api.Window, com.github.jeluard.stone.api.Consolidator[], java.lang.Exception)} 
+   *
+   * @param exception 
+   */
+  protected final void notifyExceptionHandler(final Exception exception) {
+    try {
+      this.exceptionHandler.onException(exception);
+    } catch (Exception e) {
+      if (Dispatcher.LOGGER.isLoggable(Level.WARNING)) {
+        Dispatcher.LOGGER.log(Level.WARNING, "Got exception while executing "+ExceptionHandler.class.getSimpleName()+" <"+this.exceptionHandler+">", e);
+      }
+    }
+  }
 
   /**
    * @param beginning
@@ -92,8 +139,8 @@ public abstract class Dispatcher {
       try {
         consolidationListener.onConsolidation(window, timestamp, consolidates);
       } catch (Exception e)  {
-        if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
-          Loggers.BASE_LOGGER.log(Level.WARNING, "Got exception while executing <"+consolidationListener+">", e);
+        if (Dispatcher.LOGGER.isLoggable(Level.WARNING)) {
+          Dispatcher.LOGGER.log(Level.WARNING, "Got exception while executing <"+consolidationListener+">", e);
         }
       }
     }

@@ -75,9 +75,8 @@ public class BlockingQueueDispatcher extends Dispatcher {
           final Entry entry = BlockingQueueDispatcher.this.queue.take();
           try {
             accumulateAndPersist(entry.window, entry.storage, entry.consolidators, entry.consolidationListeners, entry.beginningTimestamp, entry.previousTimestamp, entry.currentTimestamp, entry.value);
-          } catch (IOException e) {
-            //TODO
-            e.printStackTrace();
+          } catch (Exception e) {
+            notifyExceptionHandler(e);
           }
         }
       } catch (InterruptedException e) {
@@ -95,6 +94,12 @@ public class BlockingQueueDispatcher extends Dispatcher {
   private static final String CONSUMERS_THREAD_NAME_FORMAT = "BlockingQueueDispatcher-Consumers #%d";
 
   public BlockingQueueDispatcher(final BlockingQueue<Entry> queue, final ExecutorService executorService, final int consumers) {
+    this(queue, executorService, consumers, Dispatcher.DEFAULT_EXCEPTION_HANDLER);
+  }
+
+  public BlockingQueueDispatcher(final BlockingQueue<Entry> queue, final ExecutorService executorService, final int consumers, final ExceptionHandler exceptionHandler) {
+    super(exceptionHandler);
+
     this.queue = Preconditions.checkNotNull(queue, "null queue");
     this.executorService = Preconditions.checkNotNull(executorService, "null executorService");
 

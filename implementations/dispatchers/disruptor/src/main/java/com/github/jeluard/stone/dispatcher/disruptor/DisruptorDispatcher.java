@@ -30,6 +30,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.lmax.disruptor.AbstractMultithreadedClaimStrategy;
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.FatalExceptionHandler;
 import com.lmax.disruptor.MultiThreadedLowContentionClaimStrategy;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.SleepingWaitStrategy;
@@ -71,21 +72,34 @@ public class DisruptorDispatcher extends Dispatcher implements Cancelable {
 
   }
 
-  private static final Logger LOGGER = Loggers.create("dispatcher.disruptor");
+  static final Logger LOGGER = Loggers.create("dispatcher.disruptor");
 
   private final Disruptor<Event> disruptor;
   private static final String THREAD_NAME_FORMAT = "DisruptorDispatcher #%d";
 
   public DisruptorDispatcher(final Executor executor, final int bufferSize) {
-    this(executor, new MultiThreadedLowContentionClaimStrategy(Preconditions2.checkSize(bufferSize)), new SleepingWaitStrategy());
+    this(executor, new MultiThreadedLowContentionClaimStrategy(Preconditions2.checkSize(bufferSize)), new SleepingWaitStrategy(), Dispatcher.DEFAULT_EXCEPTION_HANDLER);
   }
 
-  public DisruptorDispatcher(final Executor executor, final AbstractMultithreadedClaimStrategy claimStrategy, final WaitStrategy waitStrategy) {
+  public DisruptorDispatcher(final Executor executor, final AbstractMultithreadedClaimStrategy claimStrategy, final WaitStrategy waitStrategy, final ExceptionHandler exceptionHandler) {
+    super(exceptionHandler);
+
     Preconditions.checkNotNull(executor, "null executor");
     Preconditions.checkNotNull(claimStrategy, "null claimStrategy");
     Preconditions.checkNotNull(waitStrategy, "null waitStrategy");
 
     this.disruptor = new Disruptor<Event>(Event.EVENT_FACTORY, executor, claimStrategy, waitStrategy);
+    this.disruptor.handleExceptionsWith(new CustomExceptionHandler(){
+      @Override
+      public void handleEventException(final Throwable exception, final long sequence, final Object event) {
+        if (!(exception instanceof Exception)) {
+          super.handleEventException(exception, sequence, event);
+          return;
+        }
+
+        notifyExceptionHandler((Exception) exception);
+      }
+    });
     this.disruptor.handleEventsWith(new EventHandler<Event>() {
       @Override
       public void onEvent(final Event event, final long sequence, final boolean endOfBatch) throws Exception {
