@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import javax.annotation.concurrent.NotThreadSafe;
@@ -279,7 +280,8 @@ public final class TimeSeries {
 
     //previousTimestamp == 0 if this is the first publish call and associated storage was empty (or new)
     if (previousTimestamp != 0L) {
-      this.database.dispatcher.publish(this.flattened, this.consolidationListeners, beginningTimestamp, previousTimestamp, timestamp, value);
+      final List<Triple<Window, Storage, Consolidator[]>> rejected = this.database.dispatcher.publish(this.flattened, this.consolidationListeners, beginningTimestamp, previousTimestamp, timestamp, value);
+      //TODO deal with rejected
     }
     return true;
   }
