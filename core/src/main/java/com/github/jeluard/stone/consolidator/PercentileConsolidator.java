@@ -51,7 +51,7 @@ public abstract class PercentileConsolidator extends BaseConsolidator {
   @Override
   public final void accumulate(final long timestamp, final int value) {
     //Not atomic but not needed.
-    this.values.set(++this.index, value);//volatile access on index, force to see latest content for values
+    this.values.set(this.index++, value);//volatile access on index, force to see latest content for values
   }
 
   @Override
