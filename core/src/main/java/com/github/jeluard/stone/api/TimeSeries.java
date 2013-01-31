@@ -274,7 +274,7 @@ public final class TimeSeries {
     if (!isAfter) {
       //timestamp is older that what can be accepted; return early
       if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
-        final long difference = timestamp - previousTimestamp + this.granularity;
+        final long difference = timestamp - previousTimestamp;
         Loggers.BASE_LOGGER.log(Level.WARNING, "Provided timestamp <{0}> must be greater than <{1}> (difference is <{2}> but granularity is <{3}> ms)", new Object[]{timestamp, previousTimestamp + this.granularity, difference, this.granularity});
       }
       return false;
