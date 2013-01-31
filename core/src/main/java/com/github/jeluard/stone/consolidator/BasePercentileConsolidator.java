@@ -30,14 +30,14 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
  * <br>
  * A integer array of {@link com.github.jeluard.stone.api.Window#getMaxSamples()} will be allocated to limit array resizing. This leads to high memory usage.
  */
-public abstract class PercentileConsolidator extends BaseConsolidator {
+public abstract class BasePercentileConsolidator extends BaseConsolidator {
 
   private final int maxSamples;
   private final float pth;
   private volatile int index = 0;
   private AtomicIntegerArray values;//rely on happens-before ordering to avoid volatile modifier
 
-  public PercentileConsolidator(final int maxSamples, final float pth) {
+  public BasePercentileConsolidator(final int maxSamples, final float pth) {
     Preconditions.checkArgument(pth > 0 && pth < 100, "pth must be > 0 and < 100");
     this.maxSamples = maxSamples;
     this.pth = pth;

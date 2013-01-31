@@ -21,7 +21,7 @@ package com.github.jeluard.stone.consolidator;
  *
  * @see PercentileConsolidator
  */
-public final class Percentile999Consolidator extends PercentileConsolidator {
+public final class Percentile999Consolidator extends BasePercentileConsolidator {
 
   public Percentile999Consolidator(final int maxSamples) {
     super(maxSamples, 99.9f);
