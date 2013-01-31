@@ -73,7 +73,7 @@ public class BlockingQueueDispatcher extends Dispatcher {
         while (true) {
           final Entry entry = BlockingQueueDispatcher.this.queue.take();
           try {
-            accumulateAndPersist(entry.window, entry.storage, entry.consolidators, entry.consolidationListeners, entry.beginningTimestamp, entry.previousTimestamp, entry.currentTimestamp, entry.value);
+            persistAndAccumulate(entry.window, entry.storage, entry.consolidators, entry.consolidationListeners, entry.beginningTimestamp, entry.previousTimestamp, entry.currentTimestamp, entry.value);
           } catch (Exception e) {
             notifyExceptionHandler(e);
           }

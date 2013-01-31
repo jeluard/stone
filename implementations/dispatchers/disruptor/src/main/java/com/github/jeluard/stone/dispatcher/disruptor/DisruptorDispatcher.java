@@ -101,7 +101,7 @@ public class DisruptorDispatcher extends Dispatcher implements Cancelable {
     this.disruptor.handleEventsWith(new EventHandler<Event>() {
       @Override
       public void onEvent(final Event event, final long sequence, final boolean endOfBatch) throws Exception {
-        accumulateAndPersist(event.window, event.storage, event.consolidators, event.consolidationListeners, event.beginningTimestamp, event.previousTimestamp, event.currentTimestamp, event.value);
+        persistAndAccumulate(event.window, event.storage, event.consolidators, event.consolidationListeners, event.beginningTimestamp, event.previousTimestamp, event.currentTimestamp, event.value);
       }
     });
     this.disruptor.start();

@@ -145,9 +145,20 @@ public abstract class Dispatcher {
     }
   }
 
-  protected final void accumulateAndPersist(final Window window, final Storage storage, final Consolidator[] consolidators, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) throws IOException {
-    accumulate(consolidators, currentTimestamp, value);
-
+  /**
+   * Call {@link #persist(long, com.github.jeluard.stone.api.Consolidator[], com.github.jeluard.stone.spi.Storage)} if {@link Window} threshold crossed then {@link #accumulate(com.github.jeluard.stone.api.Consolidator[], long, int)} {@code value}.
+   *
+   * @param window
+   * @param storage
+   * @param consolidators
+   * @param consolidationListeners
+   * @param beginningTimestamp
+   * @param previousTimestamp
+   * @param currentTimestamp
+   * @param value
+   * @throws IOException 
+   */
+  protected final void persistAndAccumulate(final Window window, final Storage storage, final Consolidator[] consolidators, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) throws IOException {
     final long duration = window.getResolution().getMillis();
     final long currentWindowId = windowId(beginningTimestamp, currentTimestamp, duration);
     final long previousWindowId = windowId(beginningTimestamp, previousTimestamp, duration);
@@ -157,6 +168,9 @@ public abstract class Dispatcher {
       final int[] consolidates = persist(previousWindowBeginning, consolidators, storage);
       notifyConsolidationListeners(previousWindowBeginning, consolidates, consolidationListeners, window);
     }
+
+    //If a new Window is entered previous persist call will have reset all consolidators.
+    accumulate(consolidators, currentTimestamp, value);
   }
 
   /**

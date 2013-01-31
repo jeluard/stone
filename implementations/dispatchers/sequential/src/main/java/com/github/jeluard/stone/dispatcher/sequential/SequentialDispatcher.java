@@ -38,7 +38,7 @@ public class SequentialDispatcher extends Dispatcher {
   @Override
   public final boolean dispatch(final Window window, final Storage storage, final Consolidator[] consolidators, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) {
     try {
-      accumulateAndPersist(window, storage, consolidators, consolidationListeners, beginningTimestamp, previousTimestamp, currentTimestamp, value);
+      persistAndAccumulate(window, storage, consolidators, consolidationListeners, beginningTimestamp, previousTimestamp, currentTimestamp, value);
     } catch (Exception e) {
       notifyExceptionHandler(e);
     }
