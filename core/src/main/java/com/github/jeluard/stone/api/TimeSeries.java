@@ -88,15 +88,14 @@ public final class TimeSeries {
    * First look for a constructor accepting an int as unique argument then fallback to the default constructor.
    *
    * @param type
-   * @param window
+   * @param maxSamples
    * @return a {@link Consolidator} from specified {@code type}
    */
-  private Consolidator createConsolidator(final Class<? extends Consolidator> type, final Window window) {
+  private Consolidator createConsolidator(final Class<? extends Consolidator> type, final int maxSamples) {
     try {
       //First look for a constructor accepting int as argument
       try {
         final Constructor<? extends Consolidator> samplesConstructor = type.getConstructor(int.class);
-        final int maxSamples = (int) window.getDuration().getMillis() / this.granularity;
         return samplesConstructor.newInstance(maxSamples);
       } catch (NoSuchMethodException e) {
         if (Loggers.BASE_LOGGER.isLoggable(Level.FINEST)) {
@@ -118,15 +117,15 @@ public final class TimeSeries {
 
   /**
    * @param archive
-   * @param window
+   * @param maxSamples
    * @return all {@link Consolidator} mapping to {@link Archive#getConsolidators()}
    * @see #createConsolidator(java.lang.Class)
    */
-  private Consolidator[] createConsolidators(final Archive archive, final Window window) {
+  private Consolidator[] createConsolidators(final Archive archive, final int maxSamples) {
     final Collection<Class<? extends Consolidator>> types = archive.getConsolidators();
     final Consolidator[] consolidators = new Consolidator[types.size()];
     for (final Iterables2.Indexed<Class<? extends Consolidator>> indexedType : Iterables2.withIndex(types)) {
-      consolidators[indexedType.index] = createConsolidator(indexedType.value, window);
+      consolidators[indexedType.index] = createConsolidator(indexedType.value, maxSamples);
     }
     return consolidators;
   }
@@ -154,7 +153,8 @@ public final class TimeSeries {
     final Collection<Triple<Window, Storage, Consolidator[]>> windowTriples = new LinkedList<Triple<Window, Storage, Consolidator[]>>();
     for (final Archive archive : archives) {
       for (final Window window : archive.getWindows()) {
-        windowTriples.add(new Triple<Window, Storage, Consolidator[]>(window, createStorage(storageFactory, id, archive, window), createConsolidators(archive, window)));
+        final int maxSamples = (int) window.getResolution().getMillis() / this.granularity;
+        windowTriples.add(new Triple<Window, Storage, Consolidator[]>(window, createStorage(storageFactory, id, archive, window), createConsolidators(archive, maxSamples)));
       }
     }
     return windowTriples;
