@@ -89,18 +89,7 @@ public abstract class BasePoller<T> implements Cancelable {
           final long timestamp = System.currentTimeMillis();
           try {
             final int metric = metric(t);
-            try {
-              BasePoller.this.timeseriess.get(t).publish(timestamp, metric);
-            } catch (InterruptedIOException e) {
-              //If metric extraction is too long process will be interrupted
-              if (Loggers.BASE_LOGGER.isLoggable(Level.FINEST)) {
-                Loggers.BASE_LOGGER.log(Level.FINEST, "Interrupted while publishing for <"+t+">", e);
-              }
-            } catch (IOException e) {
-              if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
-                Loggers.BASE_LOGGER.log(Level.WARNING, "Got exception while publishing for <"+t+">", e);
-              }
-            }
+            BasePoller.this.timeseriess.get(t).publish(timestamp, metric);
           } catch (InterruptedException e) {
             //If metric extraction is too long process will be interrupted
             if (Loggers.BASE_LOGGER.isLoggable(Level.FINEST)) {

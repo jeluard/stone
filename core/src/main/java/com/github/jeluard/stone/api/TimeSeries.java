@@ -266,9 +266,8 @@ public final class TimeSeries {
    * @param timestamp
    * @param value
    * @return true if {@code value} has been considered for accumulation
-   * @throws IOException 
    */
-  public boolean publish(final long timestamp, final int value) throws IOException {
+  public boolean publish(final long timestamp, final int value) {
     final long previousTimestamp = recordLatest(timestamp);
     final boolean isAfter = isAfterPreviousTimestamp(previousTimestamp, timestamp, this.granularity);
     if (!isAfter) {

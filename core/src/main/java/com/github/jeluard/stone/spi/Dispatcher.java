@@ -174,9 +174,8 @@ public abstract class Dispatcher {
    * @param currentTimestamp
    * @param value
    * @return all rejected {@link Triple}s
-   * @throws IOException 
    */
-  public final List<Triple<Window, Storage, Consolidator[]>> publish(final Triple<Window, Storage, Consolidator[]>[] triples, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) throws IOException {
+  public final List<Triple<Window, Storage, Consolidator[]>> publish(final Triple<Window, Storage, Consolidator[]>[] triples, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) {
     //Note: triples could be factored by Window#getResolution() to limit window threshold crossing checks.
     //Given the low probability several Window have same resolution but different duration this optimisation is not considered to keep implementation simple.
     final List<Triple<Window, Storage, Consolidator[]>> rejected = new LinkedList<Triple<Window, Storage, Consolidator[]>>();
@@ -203,8 +202,7 @@ public abstract class Dispatcher {
    * @param currentTimestamp
    * @param value
    * @return true if dispatch has been accepted; false if rejected
-   * @throws IOException 
    */
-  protected abstract boolean dispatch(Window window, Storage storage, Consolidator[] consolidators, ConsolidationListener[] consolidationListeners, long beginningTimestamp, long previousTimestamp, long currentTimestamp, int value) throws IOException;
+  protected abstract boolean dispatch(Window window, Storage storage, Consolidator[] consolidators, ConsolidationListener[] consolidationListeners, long beginningTimestamp, long previousTimestamp, long currentTimestamp, int value);
 
 }
