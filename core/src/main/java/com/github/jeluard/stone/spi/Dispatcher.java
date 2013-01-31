@@ -159,6 +159,8 @@ public abstract class Dispatcher {
    * @throws IOException 
    */
   protected final void persistAndAccumulate(final Window window, final Storage storage, final Consolidator[] consolidators, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) throws IOException {
+    //Check if currentTimestamp is in current Window.
+    //If not consolidate and persist results.
     final long duration = window.getResolution().getMillis();
     final long currentWindowId = windowId(beginningTimestamp, currentTimestamp, duration);
     final long previousWindowId = windowId(beginningTimestamp, previousTimestamp, duration);
