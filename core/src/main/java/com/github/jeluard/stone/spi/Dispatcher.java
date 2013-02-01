@@ -24,8 +24,6 @@ import com.github.jeluard.stone.helper.Loggers;
 import com.google.common.base.Preconditions;
 
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.concurrent.ThreadSafe;
@@ -37,6 +35,25 @@ import javax.annotation.concurrent.ThreadSafe;
  */
 @ThreadSafe
 public abstract class Dispatcher {
+
+  /**
+   * Intercept rejection while dispatching.
+   *
+   * @see #dispatch(com.github.jeluard.stone.api.Window, com.github.jeluard.stone.spi.Storage, com.github.jeluard.stone.api.Consolidator[], com.github.jeluard.stone.api.ConsolidationListener[], long, long, long, int) 
+   */
+  public interface RejectionHandler {
+
+    /**
+     * Invoked when a dispatch returns false during publication process.
+     *
+     * @param window
+     * @param storage
+     * @param timstamp
+     * @param value 
+     */
+    void onRejection(Window window, Storage storage, long timstamp, int value);
+
+  }
 
   /**
    * Intercept {@link Exception} thrown when a {@code value} is published.
@@ -53,6 +70,16 @@ public abstract class Dispatcher {
   }
 
   private static final Logger LOGGER = Loggers.create("dispatcher");
+
+  private final RejectionHandler rejectionHandler;
+  protected static final RejectionHandler DEFAULT_REJECTION_HANDLER = new RejectionHandler() {
+    @Override
+    public void onRejection(final Window window, final Storage storage, final long timestamp, final int value) {
+      if (Dispatcher.LOGGER.isLoggable(Level.WARNING)) {
+        Dispatcher.LOGGER.log(Level.WARNING, "Rejection of <{0}> <{1}> for <{2}> by <{3}>", new Object[]{timestamp, value, window, storage});
+      }
+    }
+  };
   private final ExceptionHandler exceptionHandler;
   protected static final ExceptionHandler DEFAULT_EXCEPTION_HANDLER = new ExceptionHandler() {
     @Override
@@ -63,8 +90,27 @@ public abstract class Dispatcher {
     }
   };
 
-  public Dispatcher(final ExceptionHandler exceptionHandler) {
+  public Dispatcher(final RejectionHandler rejectionHandler, final ExceptionHandler exceptionHandler) {
+    this.rejectionHandler = Preconditions.checkNotNull(rejectionHandler, "null rejectionHandler");
     this.exceptionHandler = Preconditions.checkNotNull(exceptionHandler, "null exceptionHandler");
+  }
+
+  /**
+   * Safely execute {@link RejectionHandler#onRejection(com.github.jeluard.stone.api.Window, com.github.jeluard.stone.spi.Storage, long, int)} 
+   *
+   * @param window 
+   * @param storage 
+   * @param timestamp 
+   * @param value 
+   */
+  private void notifyRejectionHandler(final Window window, final Storage storage, final long timestamp, final int value) {
+    try {
+      this.rejectionHandler.onRejection(window, storage, timestamp, value);
+    } catch (Exception e) {
+      if (Dispatcher.LOGGER.isLoggable(Level.WARNING)) {
+        Dispatcher.LOGGER.log(Level.WARNING, "Got exception while executing "+RejectionHandler.class.getSimpleName()+" <"+this.exceptionHandler+">", e);
+      }
+    }
   }
 
   /**
@@ -167,8 +213,8 @@ public abstract class Dispatcher {
     if (currentWindowId != previousWindowId) {
       final long previousWindowBeginning = beginningTimestamp + previousWindowId * duration;
 
-      final int[] consolidates = persist(previousWindowBeginning, consolidators, storage);
-      notifyConsolidationListeners(previousWindowBeginning, consolidates, consolidationListeners, window);
+  //    final int[] consolidates = persist(previousWindowBeginning, consolidators, storage);
+  //    notifyConsolidationListeners(previousWindowBeginning, consolidates, consolidationListeners, window);
     }
 
     //If a new Window is entered previous persist call will have reset all consolidators.
@@ -189,18 +235,15 @@ public abstract class Dispatcher {
    * @param previousTimestamp
    * @param currentTimestamp
    * @param value
-   * @return all rejected {@link Triple}s
    */
-  public final List<Triple<Window, Storage, Consolidator[]>> publish(final Triple<Window, Storage, Consolidator[]>[] triples, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) {
+  public final void publish(final Triple<Window, Storage, Consolidator[]>[] triples, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) {
     //Note: triples could be factored by Window#getResolution() to limit window threshold crossing checks.
     //Given the low probability several Window have same resolution but different duration this optimisation is not considered to keep implementation simple.
-    final List<Triple<Window, Storage, Consolidator[]>> rejected = new LinkedList<Triple<Window, Storage, Consolidator[]>>();
     for (final Triple<Window, Storage, Consolidator[]> triple : triples) {
       if (!dispatch(triple.first, triple.second, triple.third, consolidationListeners, beginningTimestamp, previousTimestamp, currentTimestamp, value)) {
-        rejected.add(triple);
+        notifyRejectionHandler(triple.first, triple.second, currentTimestamp, value);
       }
     }
-    return rejected;
   }
 
   /**

@@ -274,7 +274,7 @@ public final class TimeSeries implements Identifiable<String> {
    *
    * @param timestamp
    * @param value
-   * @return true if {@code value} has been considered for accumulation
+   * @return true if {@code value} has been considered for accumulation (i.e. it is not a value in the past)
    */
   public boolean publish(final long timestamp, final int value) {
     final long previousTimestamp = recordLatest(timestamp);
@@ -288,8 +288,7 @@ public final class TimeSeries implements Identifiable<String> {
 
     //previousTimestamp == 0 if this is the first publish call and associated storage was empty (or new)
     if (previousTimestamp != 0L) {
-      final List<Triple<Window, Storage, Consolidator[]>> rejected = this.database.dispatcher.publish(this.flattened, this.consolidationListeners, beginningTimestamp, previousTimestamp, timestamp, value);
-      //TODO deal with rejected
+      this.database.dispatcher.publish(this.flattened, this.consolidationListeners, beginningTimestamp, previousTimestamp, timestamp, value);
     }
     return true;
   }

@@ -76,11 +76,11 @@ public class DisruptorDispatcher extends Dispatcher implements Cancelable {
   private static final String THREAD_NAME_FORMAT = "DisruptorDispatcher #%d";
 
   public DisruptorDispatcher(final Executor executor, final int bufferSize) {
-    this(executor, new MultiThreadedLowContentionClaimStrategy(Preconditions2.checkSize(bufferSize)), new SleepingWaitStrategy(), Dispatcher.DEFAULT_EXCEPTION_HANDLER);
+    this(executor, new MultiThreadedLowContentionClaimStrategy(Preconditions2.checkSize(bufferSize)), new SleepingWaitStrategy(), Dispatcher.DEFAULT_REJECTION_HANDLER, Dispatcher.DEFAULT_EXCEPTION_HANDLER);
   }
 
-  public DisruptorDispatcher(final Executor executor, final AbstractMultithreadedClaimStrategy claimStrategy, final WaitStrategy waitStrategy, final ExceptionHandler exceptionHandler) {
-    super(exceptionHandler);
+  public DisruptorDispatcher(final Executor executor, final AbstractMultithreadedClaimStrategy claimStrategy, final WaitStrategy waitStrategy, final RejectionHandler rejectionHandler, final ExceptionHandler exceptionHandler) {
+    super(rejectionHandler, exceptionHandler);
 
     Preconditions.checkNotNull(executor, "null executor");
     Preconditions.checkNotNull(claimStrategy, "null claimStrategy");

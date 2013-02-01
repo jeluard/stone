@@ -93,11 +93,11 @@ public class BlockingQueueDispatcher extends Dispatcher {
   private static final String CONSUMERS_THREAD_NAME_FORMAT = "BlockingQueueDispatcher-Consumers #%d";
 
   public BlockingQueueDispatcher(final BlockingQueue<Entry> queue, final ExecutorService executorService, final int consumers) {
-    this(queue, executorService, consumers, Dispatcher.DEFAULT_EXCEPTION_HANDLER);
+    this(queue, executorService, consumers, Dispatcher.DEFAULT_REJECTION_HANDLER, Dispatcher.DEFAULT_EXCEPTION_HANDLER);
   }
 
-  public BlockingQueueDispatcher(final BlockingQueue<Entry> queue, final ExecutorService executorService, final int consumers, final ExceptionHandler exceptionHandler) {
-    super(exceptionHandler);
+  public BlockingQueueDispatcher(final BlockingQueue<Entry> queue, final ExecutorService executorService, final int consumers, final RejectionHandler rejectionHandler, final ExceptionHandler exceptionHandler) {
+    super(rejectionHandler, exceptionHandler);
 
     this.queue = Preconditions.checkNotNull(queue, "null queue");
     this.executorService = Preconditions.checkNotNull(executorService, "null executorService");

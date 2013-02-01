@@ -28,11 +28,11 @@ import com.github.jeluard.stone.spi.Storage;
 public class SequentialDispatcher extends Dispatcher {
 
   public SequentialDispatcher() {
-    this(Dispatcher.DEFAULT_EXCEPTION_HANDLER);
+    this(Dispatcher.DEFAULT_REJECTION_HANDLER, Dispatcher.DEFAULT_EXCEPTION_HANDLER);
   }
 
-  public SequentialDispatcher(final ExceptionHandler exceptionHandler) {
-    super(exceptionHandler);
+  public SequentialDispatcher(final RejectionHandler rejectionHandler, final ExceptionHandler exceptionHandler) {
+    super(rejectionHandler, exceptionHandler);
   }
 
   @Override
