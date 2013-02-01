@@ -213,6 +213,7 @@ public final class TimeSeries implements Identifiable<String> {
   /**
    * @return a unique id identifying this {@link TimeSeries} in associated {@link Database}
    */
+  @Override
   public String getId() {
     return this.id;
   }
@@ -245,7 +246,6 @@ public final class TimeSeries implements Identifiable<String> {
    * @return latest {@code timestamp} published
    */
   private long recordLatest(final long timestamp) {
-    //Set to the new timestamp if value is null (i.e. no value as yet been recorded)
     final long previousTimestamp = this.latest;
     this.latest = timestamp;
     return previousTimestamp;
@@ -256,7 +256,7 @@ public final class TimeSeries implements Identifiable<String> {
    * @return beginning {@code timestamp} for this {@link TimeSeries}. Either last value stored in {@link Storage} if any or first published in this run.
    */
   private long inferBeginning(final long timestamp) {
-    //If beginning is still null (i.e. all storages where empty) sets it's value to timestamp
+    //If beginning is still default (i.e. all storages where empty) sets it's value to timestamp
     //This will be done only once (hence track the first timestamp received)
     if (this.beginning == 0L) {
       this.beginning = timestamp;

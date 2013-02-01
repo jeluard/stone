@@ -191,8 +191,23 @@ public abstract class Dispatcher {
     }
   }
 
+  private long windowBeginning(final long timestamp, final long windowId, final long duration) {
+    return timestamp + windowId * duration;
+  }
+
+  private boolean isLatestFromWindow(final long timestamp, final long beginning, final long duration) {
+    return (timestamp - beginning) % duration == 0;
+  }
+
   /**
    * Call {@link #persist(long, com.github.jeluard.stone.api.Consolidator[], com.github.jeluard.stone.spi.Storage)} if {@link Window} threshold crossed then {@link #accumulate(com.github.jeluard.stone.api.Consolidator[], long, int)} {@code value}.
+   *
+   * 1st case: current timestamp is latest from this window and belongs to previous' window: persist after consolidation of current
+   * 2nd case: current timestamp is in a new window 
+   *  2-1 previous is not the latest from previous window : persist before consolidation of current (existing stuff)
+   *  2-2 previous is latest from previous window: do not persist as we already did it during previous reception
+   *
+   * 2-2 allows to handle restart from existing storage (where previous will be latest from previous window)
    *
    * @param window
    * @param storage
@@ -205,20 +220,26 @@ public abstract class Dispatcher {
    * @throws IOException 
    */
   protected final void persistAndAccumulate(final Window window, final Storage storage, final Consolidator[] consolidators, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) throws IOException {
-    //Check if currentTimestamp is in current Window.
-    //If not consolidate and persist results.
     final long duration = window.getResolution().getMillis();
     final long currentWindowId = windowId(beginningTimestamp, currentTimestamp, duration);
     final long previousWindowId = windowId(beginningTimestamp, previousTimestamp, duration);
     if (currentWindowId != previousWindowId) {
-      final long previousWindowBeginning = beginningTimestamp + previousWindowId * duration;
+      if (isLatestFromWindow(previousTimestamp, beginningTimestamp, duration)) {
+        final long previousWindowBeginning = windowBeginning(beginningTimestamp, previousWindowId, duration);
 
-  //    final int[] consolidates = persist(previousWindowBeginning, consolidators, storage);
-  //    notifyConsolidationListeners(previousWindowBeginning, consolidates, consolidationListeners, window);
+        final int[] consolidates = persist(previousWindowBeginning, consolidators, storage);
+        notifyConsolidationListeners(previousWindowBeginning, consolidates, consolidationListeners, window);
+      }
     }
 
-    //If a new Window is entered previous persist call will have reset all consolidators.
     accumulate(consolidators, currentTimestamp, value);
+
+    if (isLatestFromWindow(currentTimestamp, beginningTimestamp, duration)) {
+      final long currentWindowBeginning = windowBeginning(beginningTimestamp, currentWindowId, duration);
+
+      final int[] consolidates = persist(currentWindowBeginning, consolidators, storage);
+      notifyConsolidationListeners(currentWindowBeginning, consolidates, consolidationListeners, window);
+    }
   }
 
   /**
