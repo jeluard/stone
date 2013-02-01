@@ -235,10 +235,7 @@ public final class TimeSeries implements Identifiable<String> {
    * @return true if timestamp is after previous one (considering granularity)
    */
   private boolean isAfterPreviousTimestamp(final long previousTimestamp, final long currentTimestamp, final long granularity) {
-    if (!((currentTimestamp - previousTimestamp) >= granularity)) {
-      return false;
-    }
-    return true;
+    return (currentTimestamp - previousTimestamp) >= granularity;
   }
 
   /**
