@@ -57,6 +57,8 @@ import org.joda.time.Interval;
 @NotThreadSafe
 public final class TimeSeries implements Identifiable<String> {
 
+  private static final int MAX_SAMPLES_WARNING_THRESHOLD = 1000 * 1000;
+
   private final String id;
   private final int granularity;
   private final Collection<Archive> archives;
@@ -98,6 +100,11 @@ public final class TimeSeries implements Identifiable<String> {
       //First look for a constructor accepting int as argument
       try {
         final Constructor<? extends Consolidator> samplesConstructor = type.getConstructor(int.class);
+        if (maxSamples > TimeSeries.MAX_SAMPLES_WARNING_THRESHOLD) {
+          if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
+            Loggers.BASE_LOGGER.log(Level.WARNING, "Using <{0}> as maxSamples for <{1}>; this might lead to excessive memory consumption.", new Object[]{maxSamples, type});
+          }
+        }
         return samplesConstructor.newInstance(maxSamples);
       } catch (NoSuchMethodException e) {
         if (Loggers.BASE_LOGGER.isLoggable(Level.FINEST)) {
