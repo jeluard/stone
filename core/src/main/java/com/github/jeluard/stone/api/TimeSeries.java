@@ -19,6 +19,7 @@ package com.github.jeluard.stone.api;
 import com.github.jeluard.guayaba.annotation.Idempotent;
 import com.github.jeluard.guayaba.base.Pair;
 import com.github.jeluard.guayaba.base.Triple;
+import com.github.jeluard.guayaba.lang.Identifiable;
 import com.github.jeluard.guayaba.lang.Iterables2;
 import com.github.jeluard.stone.helper.Loggers;
 import com.github.jeluard.stone.spi.Storage;
@@ -53,8 +54,8 @@ import org.joda.time.Interval;
  *
  * @see Database
  */
-  @NotThreadSafe
-public final class TimeSeries {
+@NotThreadSafe
+public final class TimeSeries implements Identifiable<String> {
 
   private final String id;
   private final int granularity;
