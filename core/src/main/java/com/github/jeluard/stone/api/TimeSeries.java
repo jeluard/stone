@@ -245,23 +245,15 @@ public final class TimeSeries implements Identifiable<String> {
    * @param timestamp
    * @return latest {@code timestamp} published
    */
-  private long recordLatest(final long timestamp) {
+  private long recordTimestamp(final long timestamp) {
     final long previousTimestamp = this.latest;
     this.latest = timestamp;
-    return previousTimestamp;
-  }
-
-  /**
-   * @param timestamp
-   * @return beginning {@code timestamp} for this {@link TimeSeries}. Either last value stored in {@link Storage} if any or first published in this run.
-   */
-  private long inferBeginning(final long timestamp) {
     //If beginning is still default (i.e. all storages where empty) sets it's value to timestamp
     //This will be done only once (hence track the first timestamp received)
     if (this.beginning == 0L) {
       this.beginning = timestamp;
     }
-    return this.beginning;
+    return previousTimestamp;
   }
 
   /**
@@ -276,18 +268,16 @@ public final class TimeSeries implements Identifiable<String> {
    * @return true if {@code value} has been considered for accumulation (i.e. it is not a value in the past)
    */
   public boolean publish(final long timestamp, final int value) {
-    final long previousTimestamp = recordLatest(timestamp);
+    final long previousTimestamp = recordTimestamp(timestamp);
     final boolean isAfter = isAfterPreviousTimestamp(previousTimestamp, timestamp, this.granularity);
     if (!isAfter) {
       //timestamp is older that what can be accepted; return early
       return false;
     }
 
-    final long beginningTimestamp = inferBeginning(timestamp);
-
     //previousTimestamp == 0 if this is the first publish call and associated storage was empty (or new)
     if (previousTimestamp != 0L) {
-      this.database.dispatcher.publish(this.flattened, this.consolidationListeners, beginningTimestamp, previousTimestamp, timestamp, value);
+      this.database.dispatcher.publish(this.flattened, this.consolidationListeners, this.beginning, previousTimestamp, timestamp, value);
     }
     return true;
   }
