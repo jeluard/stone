@@ -202,9 +202,9 @@ public abstract class Dispatcher {
   /**
    * Call {@link #persist(long, com.github.jeluard.stone.api.Consolidator[], com.github.jeluard.stone.spi.Storage)} if {@link Window} threshold crossed then {@link #accumulate(com.github.jeluard.stone.api.Consolidator[], long, int)} {@code value}.
    *
-   * 1st case: current timestamp is latest from this window and belongs to previous' window: persist after consolidation of current
+   * 1st case: current timestamp *is* latest from this window and belongs to previous' window: persist after consolidation of current
    * 2nd case: current timestamp is in a new window 
-   *  2-1 previous is not the latest from previous window : persist before consolidation of current (existing stuff)
+   *  2-1 previous *is not* the latest from previous window : persist before consolidation of current (existing stuff)
    *  2-2 previous is latest from previous window: do not persist as we already did it during previous reception
    *
    * 2-2 allows to handle restart from existing storage (where previous will be latest from previous window)
@@ -224,7 +224,7 @@ public abstract class Dispatcher {
     final long currentWindowId = windowId(beginningTimestamp, currentTimestamp, duration);
     final long previousWindowId = windowId(beginningTimestamp, previousTimestamp, duration);
     if (currentWindowId != previousWindowId) {
-      if (isLatestFromWindow(previousTimestamp, beginningTimestamp, duration)) {
+      if (!isLatestFromWindow(previousTimestamp, beginningTimestamp, duration)) {
         final long previousWindowBeginning = windowBeginning(beginningTimestamp, previousWindowId, duration);
 
         final int[] consolidates = persist(previousWindowBeginning, consolidators, storage);
@@ -234,7 +234,7 @@ public abstract class Dispatcher {
 
     accumulate(consolidators, currentTimestamp, value);
 
-    if (isLatestFromWindow(currentTimestamp, beginningTimestamp, duration)) {
+    if (currentWindowId == previousWindowId && isLatestFromWindow(currentTimestamp, beginningTimestamp, duration)) {
       final long currentWindowBeginning = windowBeginning(beginningTimestamp, currentWindowId, duration);
 
       final int[] consolidates = persist(currentWindowBeginning, consolidators, storage);
