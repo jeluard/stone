@@ -28,7 +28,7 @@ import org.junit.Test;
 
 public class BaseStorageTest {
 
-  @Test
+  /*@Test
   public void shouldLastReturnAbsentWhenAllIsEmpty() throws IOException {
     final BaseStorage storage = new BaseStorage() {
       @Override
@@ -56,6 +56,6 @@ public class BaseStorageTest {
     };
 
     Assert.assertTrue(storage.beginning().isPresent());
-  }
+  }*/
 
 }
