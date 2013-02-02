@@ -15,9 +15,8 @@
  */
 package com.github.jeluard.stone.spi;
 
-import com.github.jeluard.guayaba.base.Triple;
+import com.github.jeluard.guayaba.base.Pair;
 import com.github.jeluard.guayaba.util.concurrent.ConcurrentMaps;
-import com.github.jeluard.stone.api.Archive;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.helper.Loggers;
 import com.google.common.base.Supplier;
@@ -27,20 +26,22 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 
+import org.joda.time.Duration;
+
 /**
  * Base implementation for {@link StorageFactory}.
  */
 public abstract class BaseStorageFactory<T extends Storage> implements StorageFactory<T> {
 
-  private final ConcurrentMap<Triple<String, Archive, Window>, T> cache = new ConcurrentHashMap<Triple<String, Archive, Window>, T>();
+  private final ConcurrentMap<Pair<String, Window>, T> cache = new ConcurrentHashMap<Pair<String, Window>, T>();
 
   @Override
-  public final T createOrGet(final String id, final Archive archive, final Window window) throws IOException {
-    return ConcurrentMaps.putIfAbsentAndReturn(this.cache, new Triple<String, Archive, Window>(id, archive, window), new Supplier<T>() {
+  public final T createOrGet(final String id, final Window window, final Duration duration) throws IOException {
+    return ConcurrentMaps.putIfAbsentAndReturn(this.cache, new Pair<String, Window>(id, window), new Supplier<T>() {
       @Override
       public T get() {
         try {
-          return create(id, archive, window);
+          return create(id, window, duration);
         } catch (IOException e) {
           throw new RuntimeException(e);
         }
@@ -50,12 +51,11 @@ public abstract class BaseStorageFactory<T extends Storage> implements StorageFa
 
   /**
    * @param id
-   * @param archive
    * @param window
-   * @return an initialized {@link Storage} dedicated to {@code id}/{@code archive}/{@code window}
+   * @return an initialized {@link Storage} dedicated to {@code id}/{@code window}/{@code duration}
    * @throws IOException 
    */
-  protected abstract T create(String id, Archive archive, Window window) throws IOException;
+  protected abstract T create(String id, Window window, Duration duration) throws IOException;
 
   /**
    * @return all currently created {@link Storage}s
@@ -74,11 +74,11 @@ public abstract class BaseStorageFactory<T extends Storage> implements StorageFa
   }
 
   @Override
-  public void close(final String id, final Archive archive, final Window window) throws IOException {
-    final T storage = this.cache.remove(new Triple<String, Archive, Window>(id, archive, window));
+  public void close(final String id, final Window window) throws IOException {
+    final T storage = this.cache.remove(new Pair<String, Window>(id, window));
     if (storage == null) {
       if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
-        Loggers.BASE_LOGGER.log(Level.WARNING, "{0} for <{1}, {2}, {3}> does not exist", new Object[]{Storage.class.getSimpleName(), id, storage, window});
+        Loggers.BASE_LOGGER.log(Level.WARNING, "{0} for <{1}, {2}> does not exist", new Object[]{Storage.class.getSimpleName(), id, window});
       }
       return;
     }

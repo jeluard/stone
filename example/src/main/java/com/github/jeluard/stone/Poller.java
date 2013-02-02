@@ -16,20 +16,16 @@
  */
 package com.github.jeluard.stone;
 
-import com.github.jeluard.stone.api.Archive;
 import com.github.jeluard.stone.api.BasePoller;
-import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.Database;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.consolidator.Percentile95Consolidator;
 import com.github.jeluard.stone.dispatcher.sequential.SequentialDispatcher;
 import com.github.jeluard.stone.storage.journalio.JournalIOStorageFactory;
-import com.google.common.base.Optional;
 import com.google.common.util.concurrent.Futures;
 
 import java.net.URL;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.concurrent.Future;
 
 import org.joda.time.Duration;
@@ -37,8 +33,8 @@ import org.joda.time.Duration;
 public class Poller {
   public static void main(String[] args) throws Exception {
     final Database database = new Database(new SequentialDispatcher(), new JournalIOStorageFactory(JournalIOStorageFactory.defaultWriteExecutor(), JournalIOStorageFactory.defaultDisposerScheduledExecutor()));
-    final Archive archive = new Archive(Arrays.asList(Percentile95Consolidator.class), Arrays.asList(new Window(Duration.standardSeconds(10), Duration.standardDays(1))));
-    final BasePoller<URL> poller = new BasePoller<URL>(database, Arrays.asList(new URL("http://google.com")), Duration.millis(1000), Arrays.asList(archive)) {
+    final Window window = new Window(Duration.standardSeconds(10), Duration.standardDays(1), Arrays.asList(Percentile95Consolidator.class));
+    final BasePoller<URL> poller = new BasePoller<URL>(database, Arrays.asList(new URL("http://google.com")), Duration.millis(1000), Arrays.asList(window)) {
       @Override
       protected String id(final URL url) {
         return url.toString();

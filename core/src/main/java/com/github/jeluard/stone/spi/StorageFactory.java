@@ -17,15 +17,16 @@
 package com.github.jeluard.stone.spi;
 
 import com.github.jeluard.guayaba.annotation.Idempotent;
-import com.github.jeluard.stone.api.Archive;
 import com.github.jeluard.stone.api.Window;
 
 import java.io.Closeable;
 import java.io.IOException;
 import javax.annotation.concurrent.ThreadSafe;
 
+import org.joda.time.Duration;
+
 /**
- * Abstracts create of {@link Storage} backend per {@link Archive}.
+ * Abstract creation of {@link Storage} backend per persistent {@link Window}.
  * <br />
  * Common structure can then be shared accross {@link Storage}.
  */
@@ -42,23 +43,22 @@ public interface StorageFactory<T extends Storage> extends Closeable {
    * No caching should be done here as this is done by the caller.
    *
    * @param id unique id of associated {@link com.github.jeluard.stone.api.TimeSeries}
-   * @param archive associated {@link Archive}
    * @param window associated {@link Window}
+   * @param duration
    * @return a fully initialized {@link Storage}
    * @throws IOException 
    */
-  T createOrGet(String id, Archive archive, Window window) throws IOException;
+  T createOrGet(String id, Window window, Duration duration) throws IOException;
 
   /**
    * Close the {@link Storage} created for this triple.
    *
    * @param id
-   * @param archive
    * @param window
    * @throws IOException 
    */
   @Idempotent
-  void close(String id, Archive archive, Window window) throws IOException;
+  void close(String id, Window window) throws IOException;
 
   /**
    * {@inheritDoc}

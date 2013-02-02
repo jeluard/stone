@@ -25,8 +25,6 @@ import com.google.common.base.Preconditions;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
@@ -51,8 +49,8 @@ public final class Database implements Closeable {
     this.storageFactory = Preconditions.checkNotNull(storageFactory, "null storageFactory");
   }
 
-  public TimeSeries createOrOpen(final String id, final Collection<Archive> archives) throws IOException {
-    return createOrOpen(id, Database.DEFAULT_GRANULARITY, archives);
+  public TimeSeries createOrOpen(final String id, final Window ... windows) throws IOException {
+    return createOrOpen(id, Database.DEFAULT_GRANULARITY, windows);
   }
 
   /**
@@ -62,16 +60,16 @@ public final class Database implements Closeable {
    *
    * @param id
    * @param granularity
-   * @param archives
+   * @param windows
    * @return
    * @throws IOException 
    */
-  public TimeSeries createOrOpen(final String id, final Duration granularity, final Collection<Archive> archives) throws IOException {
+  public TimeSeries createOrOpen(final String id, final Duration granularity, final Window ... windows) throws IOException {
     Preconditions.checkNotNull(id, "null id");
     Preconditions.checkNotNull(granularity, "null granularity");
-    Preconditions.checkNotNull(archives, "null archives");
+    Preconditions.checkNotNull(windows, "null windows");
 
-    final TimeSeries timeSeries = new TimeSeries(id, granularity, archives, this);
+    final TimeSeries timeSeries = new TimeSeries(id, granularity, windows, this.dispatcher, this.storageFactory);
     if (this.timeSeriess.putIfAbsent(id, timeSeries) != null) {
       throw new IllegalArgumentException("A "+TimeSeries.class.getSimpleName()+" with id <"+id+"> already exists");
     }

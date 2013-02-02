@@ -55,28 +55,28 @@ public abstract class BasePoller<T> implements Cancelable {
   private final Database database;
   private final Duration period;
   private final Iterable<T> ts;
-  private final Collection<Archive> archives;
+  private final Window[] windows;
   private final Map<T, TimeSeries> timeseriess;
   private final Scheduler scheduler;
 
-  public BasePoller(final Database database, final Iterable<T> ts, final Duration period, final Collection<Archive> archives, final ExecutorService schedulerExecutorService) throws IOException {
+  public BasePoller(final Database database, final Iterable<T> ts, final Duration period, final Collection<Window> windows, final ExecutorService schedulerExecutorService) throws IOException {
     this.database = Preconditions.checkNotNull(database, "null database");
     this.period = Preconditions.checkNotNull(period, "null period");
     this.ts = Preconditions.checkNotNull(ts, "null ts");
-    this.archives = Preconditions.checkNotNull(archives, "null archives");
+    this.windows = Preconditions.checkNotNull(windows, "null windows").toArray(new Window[windows.size()]);
     this.timeseriess = createTimeSeries(ts);
     this.scheduler = new Scheduler(period.getMillis(), TimeUnit.MILLISECONDS, schedulerExecutorService, Loggers.BASE_LOGGER);
   }
 
-  public BasePoller(final Database database, final Iterable<T> ts, final Duration period, final Collection<Archive> archives) throws IOException {
-    this(database, ts, period, archives, Scheduler.defaultExecutorService(1, Loggers.BASE_LOGGER));
+  public BasePoller(final Database database, final Iterable<T> ts, final Duration period, final Collection<Window> windows) throws IOException {
+    this(database, ts, period, windows, Scheduler.defaultExecutorService(1, Loggers.BASE_LOGGER));
   }
 
   private Map<T, TimeSeries> createTimeSeries(final Iterable<T> ts) throws IOException {
     final Map<T, TimeSeries> map = new HashMap<T, TimeSeries>();
     for (final T t : ts) {
       final String id = id(t);
-      map.put(t, this.database.createOrOpen(id, this.period, this.archives));
+      map.put(t, this.database.createOrOpen(id, this.period, this.windows));
     }
     return map;
   }
@@ -141,7 +141,8 @@ public abstract class BasePoller<T> implements Cancelable {
   public final Map<String, List<Reader>> getReaders() {
     final Builder<String, List<Reader>> builder = ImmutableMap.builder();
     for (final TimeSeries timeSeries : this.timeseriess.values()) {
-      builder.put(timeSeries.getId(), timeSeries.getReaders());
+    //TODO
+      //  builder.put(timeSeries.getId(), timeSeries.getReaders());
     }
     return builder.build();
   }

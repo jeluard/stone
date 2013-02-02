@@ -16,8 +16,11 @@
  */
 package com.github.jeluard.stone.api;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+
 import java.util.Arrays;
+import java.util.List;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -30,12 +33,22 @@ import org.joda.time.Duration;
 public final class Window {
 
   private final Duration resolution;
-  private final Duration duration;
+  private final Optional<Duration> optionalPersistentDuration;
+  private final Class<? extends Consolidator>[] consolidatorTypes;
   private final ConsolidationListener[] consolidationListeners;
 
-  public Window(final Duration resolution, final Duration duration, final ConsolidationListener ... consolidationListeners) {
+  public Window(final Duration resolution, final List<? extends Class<? extends Consolidator>> consolidatorTypes, final ConsolidationListener ... consolidationListeners) {
+    this(resolution, Optional.<Duration>absent(), consolidatorTypes, consolidationListeners);
+  }
+
+  public Window(final Duration resolution, final Duration persistentDuration, final List<? extends Class<? extends Consolidator>> consolidatorTypes, final ConsolidationListener ... consolidationListeners) {
+    this(resolution, Optional.of(Preconditions.checkNotNull(persistentDuration, "null persistentDuration")), consolidatorTypes, consolidationListeners);
+  }
+
+  private Window(final Duration resolution, final Optional<Duration> optionalPersistentDuration, final List<? extends Class<? extends Consolidator>> consolidatorTypes, final ConsolidationListener ... consolidationListeners) {
     this.resolution = Preconditions.checkNotNull(resolution, "null resolution");
-    this.duration = Preconditions.checkNotNull(duration, "null duration");
+    this.optionalPersistentDuration = Preconditions.checkNotNull(optionalPersistentDuration, "null optionalPersistentDuration");
+    this.consolidatorTypes = Preconditions.checkNotNull(consolidatorTypes, "null consolidatorTypes").toArray(new Class[consolidatorTypes.size()]);
     this.consolidationListeners = Preconditions.checkNotNull(consolidationListeners, "null consolidationListeners");
   }
 
@@ -43,8 +56,12 @@ public final class Window {
     return this.resolution;
   }
 
-  public Duration getDuration() {
-    return this.duration;
+  public Optional<Duration> getPersistentDuration() {
+    return this.optionalPersistentDuration;
+  }
+
+  public Class<? extends Consolidator>[] getConsolidatorTypes() {
+    return this.consolidatorTypes;
   }
 
   public ConsolidationListener[] getConsolidationListeners() {
@@ -53,7 +70,7 @@ public final class Window {
 
   @Override
   public int hashCode() {
-    return this.resolution.hashCode() + this.duration.hashCode() + Arrays.hashCode(this.consolidationListeners);
+    return this.resolution.hashCode() + Arrays.hashCode(this.consolidatorTypes) + Arrays.hashCode(this.consolidationListeners);
   }
 
   @Override
@@ -63,12 +80,12 @@ public final class Window {
     }
 
     final Window other = (Window) object;
-    return this.resolution.equals(other.resolution) && this.duration.equals(other.duration) && Arrays.equals(this.consolidationListeners, other.consolidationListeners);
+    return this.resolution.equals(other.resolution) && Arrays.equals(this.consolidatorTypes, other.consolidatorTypes) && Arrays.equals(this.consolidationListeners, other.consolidationListeners);
   }
 
   @Override
   public String toString() {
-    return "resolution <"+this.resolution+"> duration <"+this.duration+"> consolidationListeners <"+Arrays.asList(this.consolidationListeners)+">";
+    return "resolution <"+this.resolution+"> consolidatorTypes <"+this.consolidatorTypes+"> consolidationListeners <"+Arrays.asList(this.consolidationListeners)+">";
   }
 
 }

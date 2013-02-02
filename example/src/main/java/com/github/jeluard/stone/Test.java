@@ -17,7 +17,6 @@
 package com.github.jeluard.stone;
 
 import com.github.jeluard.guayaba.base.Pair;
-import com.github.jeluard.stone.api.Archive;
 import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.Database;
 import com.github.jeluard.stone.api.Reader;
@@ -42,16 +41,15 @@ public class Test {
         System.out.println("Got "+Arrays.toString(consolidates));
       }
     };
-    final Archive archive = new Archive(Arrays.asList(MaxConsolidator.class), 
-            Arrays.asList(new Window(Duration.standardSeconds(10), Duration.standardMinutes(1), consolidationListener)));
-    final TimeSeries timeSeries = database.createOrOpen("timeseries", Arrays.asList(archive));
-    final List<Reader> storages = timeSeries.getReaders();
+    //final Window window = Window.of(Duration.standardSeconds(10)).listenedBy(consolidationListener).archivedDuring(Duration.standardMinutes(1)).consolidatedBy(MaxConsolidator.class);
+    final TimeSeries timeSeries = database.createOrOpen("timeseries", new Window(Duration.standardSeconds(10), Arrays.asList(MaxConsolidator.class)));
+    /*final List<Reader> storages = timeSeries.getReaders();
     System.out.println("TimeSeries "+timeSeries.getId());
     for (final Reader entry : storages) {
       for (final Pair<Long, int[]> value : entry.all()) {
         System.out.println("\t\ttimestamp <"+value.first+"> values <"+Arrays.toString(value.second)+">");
       }
-    }
+    }*/
 
     try {
       final Random random = new Random();

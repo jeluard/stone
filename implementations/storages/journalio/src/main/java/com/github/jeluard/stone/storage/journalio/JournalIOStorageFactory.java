@@ -18,7 +18,6 @@ package com.github.jeluard.stone.storage.journalio;
 
 import com.github.jeluard.guayaba.lang.UncaughtExceptionHandlers;
 import com.github.jeluard.guayaba.util.concurrent.ExecutorServices;
-import com.github.jeluard.stone.api.Archive;
 import com.github.jeluard.stone.api.Consolidator;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.helper.Loggers;
@@ -32,6 +31,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -140,31 +140,33 @@ public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage
 
   /**
    * @param id
-   * @param archive
+   * @param window
+   * @param duration 
    * @return an optional prefix used when creating file names
    */
-  protected Optional<String> filePrefix(final String id, final Archive archive, final Window window) {
-    final Collection<String> consolidatorIdentifiers = extractConsolidatorIdentifiers(archive.getConsolidators());
-    return Optional.of(Joiner.on("-").join(consolidatorIdentifiers)+"-"+window.getDuration()+"@"+window.getResolution()+"-");
+  protected Optional<String> filePrefix(final String id, final Window window, final Duration duration) {
+    final Collection<String> consolidatorIdentifiers = extractConsolidatorIdentifiers(Arrays.asList(window.getConsolidatorTypes()));
+    return Optional.of(Joiner.on("-").join(consolidatorIdentifiers)+"-"+duration+"@"+window.getResolution()+"-");
   }
 
   /**
    * @param id
-   * @param archive
+   * @param window
+   * @param duration 
    * @return an optional suffix used when creating file names
    */
-  protected Optional<String> fileSuffix(final String id, final Archive archive, final Window window) {
+  protected Optional<String> fileSuffix(final String id, final Window window, final Duration duration) {
     return Optional.absent();
   }
 
   /**
    * @param id
-   * @param archive
-   * @param window 
-   * @return an initialized {@link Journal} dedicated to this {@code id} / {@code archive} / {@code window} tuple
+   * @param window
+   * @param duration 
+   * @return an initialized {@link Journal} dedicated to this {@code id} / {@code window} / {@code duration} tuple
    * @throws IOException 
    */
-  protected Journal createJournal(final String id, final Archive archive, final Window window) throws IOException {
+  protected Journal createJournal(final String id, final Window window, final Duration duration) throws IOException {
     final Journal journal = new Journal();
     final String mainDirectory = rootDirectoryPath(id);
     final File file = new File(mainDirectory);
@@ -181,11 +183,11 @@ public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage
       throw new IllegalArgumentException("Cannot write to main directory <"+mainDirectory+">");
     }
     journal.setDirectory(file);
-    final Optional<String> filePrefix = filePrefix(id, archive, window);
+    final Optional<String> filePrefix = filePrefix(id, window, duration);
     if (filePrefix.isPresent()) {
       journal.setFilePrefix(filePrefix.get());
     }
-    final Optional<String> fileSuffix = fileSuffix(id, archive, window);
+    final Optional<String> fileSuffix = fileSuffix(id, window, duration);
     if (fileSuffix.isPresent()) {
       journal.setFileSuffix(fileSuffix.get());
     }
@@ -203,12 +205,12 @@ public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage
   }
 
   @Override
-  public final JournalIOStorage create(final String id, final Archive archive, final Window window) throws IOException {
+  public final JournalIOStorage create(final String id, final Window window, final Duration duration) throws IOException {
     Preconditions.checkNotNull(id, "null id");
-    Preconditions.checkNotNull(archive, "null archive");
     Preconditions.checkNotNull(window, "null window");
+    Preconditions.checkNotNull(duration, "null duration");
 
-    return new JournalIOStorage(createJournal(id, archive, window), window.getDuration());
+    return new JournalIOStorage(createJournal(id, window, duration), duration);
   }
 
   @Override

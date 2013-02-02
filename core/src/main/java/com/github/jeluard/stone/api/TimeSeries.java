@@ -20,8 +20,8 @@ import com.github.jeluard.guayaba.annotation.Idempotent;
 import com.github.jeluard.guayaba.base.Pair;
 import com.github.jeluard.guayaba.base.Triple;
 import com.github.jeluard.guayaba.lang.Identifiable;
-import com.github.jeluard.guayaba.lang.Iterables2;
 import com.github.jeluard.stone.helper.Loggers;
+import com.github.jeluard.stone.spi.Dispatcher;
 import com.github.jeluard.stone.spi.Storage;
 import com.github.jeluard.stone.spi.StorageFactory;
 import com.google.common.base.Function;
@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -60,29 +61,44 @@ public final class TimeSeries implements Identifiable<String> {
 
   private final String id;
   private final int granularity;
-  private final Collection<Archive> archives;
-  private final Database database;
+  private final Window[] windows;
+  private final Dispatcher dispatcher;
+  private final StorageFactory<?> storageFactory;
   private final Triple<Duration, Consolidator[], ConsolidationListener[]>[] flattened;
-  private long beginning;
-  private long latest;
+  private long beginning = 0L;
+  private long latest = 0L;
 
-  TimeSeries(final String id, final Duration granularity, final Collection<Archive> archives, final Database database) throws IOException {
+  TimeSeries(final String id, final Duration granularity, final Window[] windows, final Dispatcher dispatcher, final StorageFactory<?> storageFactory) throws IOException {
     this.id = Preconditions.checkNotNull(id, "null id");
     this.granularity = (int) Preconditions.checkNotNull(granularity, "null granularity").getMillis();
-    this.archives = Preconditions.checkNotNull(archives, "null archives");
-    this.database = Preconditions.checkNotNull(database, "null database");
-    final Collection<Triple<Duration, Consolidator[], ConsolidationListener[]>> flattenedList = createFlatten(database.storageFactory, id, archives);
+    this.windows = Preconditions.checkNotNull(windows, "null windows");
+    this.storageFactory = Preconditions.checkNotNull(storageFactory, "null storageFactory");
+    this.dispatcher = Preconditions.checkNotNull(dispatcher, "null dispatcher");
+    final Collection<Triple<Duration, Consolidator[], ConsolidationListener[]>> flattenedList = createFlatten(storageFactory, id, windows);
     this.flattened = flattenedList.toArray(new Triple[flattenedList.size()]);
 
-    final Interval initialSpan = extractInterval(Collections2.transform(Arrays.asList(this.flattened), new Function<Triple<Duration, Consolidator[], ConsolidationListener[]>, Pair<Duration, Storage>>() {
+    final Collection<Triple<Duration, Consolidator[], ConsolidationListener[]>> flattenedWithStorage = Collections2.filter(Arrays.asList(this.flattened), new Predicate<Triple<Duration, Consolidator[], ConsolidationListener[]>>() {
+      @Override
+      public boolean apply(final Triple<Duration, Consolidator[], ConsolidationListener[]> input) {
+        for (final ConsolidationListener consolidationListener : input.third) {
+          if (consolidationListener instanceof Storage) {
+            return true;
+          }
+        }
+        return false;
+      }
+    });
+    final Optional<Interval> optionalInitialSpan = extractInterval(Collections2.transform(flattenedWithStorage, new Function<Triple<Duration, Consolidator[], ConsolidationListener[]>, Pair<Duration, Storage>>() {
       @Override
       public Pair<Duration, Storage> apply(final Triple<Duration, Consolidator[], ConsolidationListener[]> input) {
-        final Storage storage = extractStorage(input.third);
-        return new Pair<Duration, Storage>(input.first, storage);
+        return new Pair<Duration, Storage>(input.first, extractStorage(input.third));
       }
     }));
-    this.beginning = initialSpan.getStartMillis();
-    this.latest = initialSpan.getEndMillis();
+    if (optionalInitialSpan.isPresent()) {
+      final Interval initialSpan = optionalInitialSpan.get();
+      this.beginning = initialSpan.getStartMillis();
+      this.latest = initialSpan.getEndMillis();
+    }
   }
 
   private Storage extractStorage(final ConsolidationListener[] consolidationListeners) {
@@ -129,14 +145,14 @@ public final class TimeSeries implements Identifiable<String> {
   /**
    * @param archive
    * @param maxSamples
-   * @return all {@link Consolidator} mapping to {@link Archive#getConsolidators()}
+   * @return all {@link Consolidator} mapping to {@link Window#getConsolidatorTypes()}
    * @see #createConsolidator(java.lang.Class)
    */
-  private Consolidator[] createConsolidators(final Archive archive, final int maxSamples) {
-    final Collection<Class<? extends Consolidator>> types = archive.getConsolidators();
-    final Consolidator[] consolidators = new Consolidator[types.size()];
-    for (final Iterables2.Indexed<Class<? extends Consolidator>> indexedType : Iterables2.withIndex(types)) {
-      consolidators[indexedType.index] = createConsolidator(indexedType.value, maxSamples);
+  private Consolidator[] createConsolidators(final Window window, final int maxSamples) {
+    final Class<? extends Consolidator>[] types = window.getConsolidatorTypes();
+    final Consolidator[] consolidators = new Consolidator[types.length];
+    for (int i = 0; i<types.length; i++) {
+      consolidators[i] = createConsolidator(types[i], maxSamples);
     }
     return consolidators;
   }
@@ -144,32 +160,33 @@ public final class TimeSeries implements Identifiable<String> {
   /**
    * @param storageFactory
    * @param id
-   * @param archive
    * @param window
+   * @param duration
    * @return the {@link Storage} instance for this {@link Window}
    * @throws IOException 
    */
-  private Storage createStorage(final StorageFactory storageFactory, final String id, final Archive archive, final Window window) throws IOException {
-    return storageFactory.createOrGet(id, archive, window);
+  private Storage createStorage(final StorageFactory storageFactory, final String id, final Window window, final Duration duration) throws IOException {
+    return storageFactory.createOrGet(id, window, duration);
   }
 
   /**
    * @param storageFactory
    * @param id
-   * @param archives
+   * @param windows
    * @return all pair of {@link Window} and {@link Consolidator[]}. {@link Consolidator[]} is specific to associated {@link Window} 
    * @throws IOException 
    */
-  private Collection<Triple<Duration, Consolidator[], ConsolidationListener[]>> createFlatten(final StorageFactory storageFactory, final String id, final Collection<Archive> archives) throws IOException {
+  private Collection<Triple<Duration, Consolidator[], ConsolidationListener[]>> createFlatten(final StorageFactory storageFactory, final String id, final Window[] windows) throws IOException {
     final Collection<Triple<Duration, Consolidator[], ConsolidationListener[]>> windowTriples = new LinkedList<Triple<Duration, Consolidator[], ConsolidationListener[]>>();
-    for (final Archive archive : archives) {
-      for (final Window window : archive.getWindows()) {
-        final int maxSamples = (int) window.getResolution().getMillis() / this.granularity;
-        final List<ConsolidationListener> consolidationListeners = new LinkedList<ConsolidationListener>();
-        consolidationListeners.add(createStorage(storageFactory, id, archive, window));
-        consolidationListeners.addAll(Arrays.asList(window.getConsolidationListeners()));
-        windowTriples.add(new Triple<Duration, Consolidator[], ConsolidationListener[]>(window.getResolution(), createConsolidators(archive, maxSamples), consolidationListeners.toArray(new ConsolidationListener[consolidationListeners.size()])));
+    for (final Window window : windows) {
+      final int maxSamples = (int) window.getResolution().getMillis() / this.granularity;
+      final List<ConsolidationListener> consolidationListeners = new LinkedList<ConsolidationListener>();
+      final Optional<Duration> optionalDuration = window.getPersistentDuration();
+      if (optionalDuration.isPresent()) {
+        consolidationListeners.add(createStorage(storageFactory, id, window, optionalDuration.get()));
       }
+      consolidationListeners.addAll(Arrays.asList(window.getConsolidationListeners()));
+      windowTriples.add(new Triple<Duration, Consolidator[], ConsolidationListener[]>(window.getResolution(), createConsolidators(window, maxSamples), consolidationListeners.toArray(new ConsolidationListener[consolidationListeners.size()])));
     }
     return windowTriples;
   }
@@ -179,8 +196,11 @@ public final class TimeSeries implements Identifiable<String> {
    * @return maximum {@link Interval} covered by all {@link Window}s
    * @throws IOException 
    */
-  private Interval extractInterval(final Collection<Pair<Duration, Storage>> pairs) throws IOException {
-    return new Interval(extractBeginning(pairs.iterator().next().second), extractLatest(pairs));
+  private Optional<Interval> extractInterval(final Collection<Pair<Duration, Storage>> pairs) throws IOException {
+    if (pairs.isEmpty()) {
+      return Optional.absent();
+    }
+    return Optional.of(new Interval(extractBeginning(pairs.iterator().next().second), extractLatest(pairs)));
   }
 
   /**
@@ -227,12 +247,14 @@ public final class TimeSeries implements Identifiable<String> {
   /**
    * @return all underlying {@link Reader} ordered by {@link Window}
    */
-  public List<Reader> getReaders() {
-    final List<Reader> readers = new LinkedList<Reader>();
+  public Map<Window, Reader> getReaders() {
+    //TODO
+    return null;
+    /*final List<Reader> readers = new LinkedList<Reader>();
     for (final Triple<Duration, Consolidator[], ConsolidationListener[]> triple : this.flattened) {
-      readers.add(extractStorage(triple.third));
+      //readers.add(extractStorage(triple.third));
     }
-    return readers;
+    return readers;*/
   }
 
   /**
@@ -280,22 +302,19 @@ public final class TimeSeries implements Identifiable<String> {
 
     //previousTimestamp == 0 if this is the first publish call and associated storage was empty (or new)
     if (previousTimestamp != 0L) {
-      this.database.dispatcher.publish(this.flattened, this.beginning, previousTimestamp, timestamp, value);
+      this.dispatcher.publish(this.flattened, this.beginning, previousTimestamp, timestamp, value);
     }
     return true;
   }
 
   @Idempotent
   public void close() {
-    this.database.remove(this.id);
-    for (final Archive archive : this.archives) {
-      for (final Window window : archive.getWindows()) {
-        try {
-          this.database.storageFactory.close(this.id, archive, window);
-        } catch (IOException e) {
-          if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
-            Loggers.BASE_LOGGER.log(Level.WARNING, "Got exception while closing "+Storage.class.getSimpleName()+" for <"+this.id+"> <"+archive+"> <"+window+">", e);
-          }
+    for (final Window window : this.windows) {
+      try {
+        this.storageFactory.close(this.id, window);
+      } catch (IOException e) {
+        if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
+          Loggers.BASE_LOGGER.log(Level.WARNING, "Got exception while closing "+Storage.class.getSimpleName()+" for <"+this.id+"> <"+window+">", e);
         }
       }
     }
