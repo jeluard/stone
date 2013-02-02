@@ -168,7 +168,7 @@ public final class TimeSeries implements Identifiable<String> {
         final List<ConsolidationListener> consolidationListeners = new LinkedList<ConsolidationListener>();
         consolidationListeners.add(createStorage(storageFactory, id, archive, window));
         consolidationListeners.addAll(Arrays.asList(window.getConsolidationListeners()));
-        windowTriples.add(new Triple<Duration, Consolidator[], ConsolidationListener[]>(window.getDuration(), createConsolidators(archive, maxSamples), consolidationListeners.toArray(new ConsolidationListener[consolidationListeners.size()])));
+        windowTriples.add(new Triple<Duration, Consolidator[], ConsolidationListener[]>(window.getResolution(), createConsolidators(archive, maxSamples), consolidationListeners.toArray(new ConsolidationListener[consolidationListeners.size()])));
       }
     }
     return windowTriples;
