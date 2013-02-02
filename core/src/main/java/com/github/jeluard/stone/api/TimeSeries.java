@@ -165,8 +165,10 @@ public final class TimeSeries implements Identifiable<String> {
     for (final Archive archive : archives) {
       for (final Window window : archive.getWindows()) {
         final int maxSamples = (int) window.getResolution().getMillis() / this.granularity;
-        final ConsolidationListener[] consolidationListeners = Arrays.asList(createStorage(storageFactory, id, archive, window), window.getConsolidationListeners()).toArray(new ConsolidationListener[1+window.getConsolidationListeners().length]);
-        windowTriples.add(new Triple<Duration, Consolidator[], ConsolidationListener[]>(window.getDuration(), createConsolidators(archive, maxSamples), consolidationListeners));
+        final List<ConsolidationListener> consolidationListeners = new LinkedList<ConsolidationListener>();
+        consolidationListeners.add(createStorage(storageFactory, id, archive, window));
+        consolidationListeners.addAll(Arrays.asList(window.getConsolidationListeners()));
+        windowTriples.add(new Triple<Duration, Consolidator[], ConsolidationListener[]>(window.getDuration(), createConsolidators(archive, maxSamples), consolidationListeners.toArray(new ConsolidationListener[consolidationListeners.size()])));
       }
     }
     return windowTriples;
