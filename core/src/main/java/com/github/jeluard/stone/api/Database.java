@@ -52,11 +52,7 @@ public final class Database implements Closeable {
   }
 
   public TimeSeries createOrOpen(final String id, final Collection<Archive> archives) throws IOException {
-    return createOrOpen(id, archives, Collections.<ConsolidationListener>emptyList());
-  }
-
-  public TimeSeries createOrOpen(final String id, final Collection<Archive> archives, final Collection<ConsolidationListener> consolidationListeners) throws IOException {
-    return createOrOpen(id, Database.DEFAULT_GRANULARITY, archives, consolidationListeners);
+    return createOrOpen(id, Database.DEFAULT_GRANULARITY, archives);
   }
 
   /**
@@ -67,17 +63,15 @@ public final class Database implements Closeable {
    * @param id
    * @param granularity
    * @param archives
-   * @param consolidationListeners
    * @return
    * @throws IOException 
    */
-  public TimeSeries createOrOpen(final String id, final Duration granularity, final Collection<Archive> archives, final Collection<? extends ConsolidationListener> consolidationListeners) throws IOException {
+  public TimeSeries createOrOpen(final String id, final Duration granularity, final Collection<Archive> archives) throws IOException {
     Preconditions.checkNotNull(id, "null id");
     Preconditions.checkNotNull(granularity, "null granularity");
     Preconditions.checkNotNull(archives, "null archives");
-    Preconditions.checkNotNull(consolidationListeners, "null consolidationListeners");
 
-    final TimeSeries timeSeries = new TimeSeries(id, granularity, archives, consolidationListeners, this);
+    final TimeSeries timeSeries = new TimeSeries(id, granularity, archives, this);
     if (this.timeSeriess.putIfAbsent(id, timeSeries) != null) {
       throw new IllegalArgumentException("A "+TimeSeries.class.getSimpleName()+" with id <"+id+"> already exists");
     }

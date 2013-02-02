@@ -26,17 +26,19 @@ import com.github.jeluard.stone.consolidator.Percentile95Consolidator;
 import com.github.jeluard.stone.dispatcher.sequential.SequentialDispatcher;
 import com.github.jeluard.stone.storage.journalio.JournalIOStorageFactory;
 import com.google.common.base.Optional;
+import com.google.common.util.concurrent.Futures;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Random;
+import java.util.concurrent.Future;
 
 import org.joda.time.Duration;
 
 public class PollerPerformance {
   public static void main(String[] args) throws Exception {
-    final int sampleSize = 1000;
+    final int sampleSize = 10;
     final Random random = new Random();
     final Collection<Pair<Integer, Integer>> ints = new LinkedList<Pair<Integer, Integer>>();
     for (int i = 0; i < sampleSize; i++) {
@@ -45,27 +47,14 @@ public class PollerPerformance {
 
     final Database database = new Database(new SequentialDispatcher(), new JournalIOStorageFactory(JournalIOStorageFactory.defaultWriteExecutor(), JournalIOStorageFactory.defaultDisposerScheduledExecutor()));
     final Archive archive = new Archive(Arrays.asList(Percentile95Consolidator.class), Arrays.asList(new Window(Duration.standardSeconds(10), Duration.standardDays(1))));
-    final BasePoller<Pair<Integer, Integer>> poller = new BasePoller<Pair<Integer, Integer>>(database, ints, Duration.millis(1000), Arrays.asList(archive)) {
+    final BasePoller<Pair<Integer, Integer>> poller = new BasePoller<Pair<Integer, Integer>>(database, ints, Duration.millis(100), Arrays.asList(archive)) {
       @Override
       protected String id(final Pair<Integer, Integer> pair) {
         return pair.first.toString();
       }
       @Override
-      protected Optional<Collection<ConsolidationListener>> createConsolidationListeners(final Pair<Integer, Integer> pair, final String id) {
-        final ConsolidationListener consolidationListener = new ConsolidationListener() {
-          @Override
-          public void onConsolidation(final Window window, final long timestamp, final int[] consolidates) {
-            System.out.println("Got for <"+id+"> "+Arrays.toString(consolidates));
-          }
-        };
-        final Collection<ConsolidationListener> consolidationListeners = Arrays.asList(consolidationListener);
-        return Optional.of(consolidationListeners);
-      }
-      @Override
-      protected int metric(final Pair<Integer, Integer> pair) throws Exception {
-        long before = System.currentTimeMillis();
-        Thread.sleep(pair.second);
-        return (int) (System.currentTimeMillis() - before);
+      protected Future<Integer> metric(final Pair<Integer, Integer> pair) throws Exception {
+        return Futures.immediateFuture(1);
       }
     };
     poller.start();

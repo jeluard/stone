@@ -17,6 +17,7 @@
 package com.github.jeluard.stone.api;
 
 import com.google.common.base.Preconditions;
+import java.util.Arrays;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -30,10 +31,12 @@ public final class Window {
 
   private final Duration resolution;
   private final Duration duration;
+  private final ConsolidationListener[] consolidationListeners;
 
-  public Window(final Duration resolution, final Duration duration) {
+  public Window(final Duration resolution, final Duration duration, final ConsolidationListener ... consolidationListeners) {
     this.resolution = Preconditions.checkNotNull(resolution, "null resolution");
     this.duration = Preconditions.checkNotNull(duration, "null duration");
+    this.consolidationListeners = Preconditions.checkNotNull(consolidationListeners, "null consolidationListeners");
   }
 
   public Duration getResolution() {
@@ -44,9 +47,13 @@ public final class Window {
     return this.duration;
   }
 
+  public ConsolidationListener[] getConsolidationListeners() {
+    return this.consolidationListeners;
+  }
+
   @Override
   public int hashCode() {
-    return this.resolution.hashCode() + this.duration.hashCode();
+    return this.resolution.hashCode() + this.duration.hashCode() + Arrays.hashCode(this.consolidationListeners);
   }
 
   @Override
@@ -56,12 +63,12 @@ public final class Window {
     }
 
     final Window other = (Window) object;
-    return this.resolution.equals(other.resolution) && this.duration.equals(other.duration);
+    return this.resolution.equals(other.resolution) && this.duration.equals(other.duration) && Arrays.equals(this.consolidationListeners, other.consolidationListeners);
   }
 
   @Override
   public String toString() {
-    return "resolution <"+this.resolution+"> duration <"+this.duration+">";
+    return "resolution <"+this.resolution+"> duration <"+this.duration+"> consolidationListeners <"+Arrays.asList(this.consolidationListeners)+">";
   }
 
 }

@@ -16,9 +16,9 @@
  */
 package com.github.jeluard.stone.spi;
 
+import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.Reader;
 
-import java.io.IOException;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
@@ -27,17 +27,5 @@ import javax.annotation.concurrent.ThreadSafe;
  * A {@link Storage} is specific to a single {@link Window} of a {@link TimeSeries}.
  */
 @ThreadSafe
-public interface Storage extends Reader {
-
-  /**
-   * Append a {@code timestamp}/{@code consolidates} pair.
-   * <br>
-   * At this point {@code consolidates} has been validated and is not null.
-   *
-   * @param timestamp the beginning of the associated window
-   * @param consolidates
-   * @throws IOException 
-   */
-  void append(long timestamp, int[] consolidates) throws IOException;
-
+public interface Storage extends Reader, ConsolidationListener {
 }

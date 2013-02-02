@@ -21,10 +21,8 @@ import com.github.jeluard.guayaba.lang.Cancelable;
 import com.github.jeluard.guayaba.lang.UncaughtExceptionHandlers;
 import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.Consolidator;
-import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.helper.Loggers;
 import com.github.jeluard.stone.spi.Dispatcher;
-import com.github.jeluard.stone.spi.Storage;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.lmax.disruptor.AbstractMultithreadedClaimStrategy;
@@ -42,6 +40,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.logging.Logger;
 
+import org.joda.time.Duration;
+
 public class DisruptorDispatcher extends Dispatcher implements Cancelable {
 
   /**
@@ -49,8 +49,7 @@ public class DisruptorDispatcher extends Dispatcher implements Cancelable {
    */
   private static final class Event {
 
-    private volatile Window window;
-    private volatile Storage storage;
+    private volatile Duration resolution;
     private volatile Consolidator[] consolidators;
     private volatile ConsolidationListener[] consolidationListeners;
     private volatile long beginningTimestamp;
@@ -101,7 +100,7 @@ public class DisruptorDispatcher extends Dispatcher implements Cancelable {
     this.disruptor.handleEventsWith(new EventHandler<Event>() {
       @Override
       public void onEvent(final Event event, final long sequence, final boolean endOfBatch) throws Exception {
-        persistAndAccumulate(event.window, event.storage, event.consolidators, event.consolidationListeners, event.beginningTimestamp, event.previousTimestamp, event.currentTimestamp, event.value);
+        persistAndAccumulate(event.resolution, event.consolidators, event.consolidationListeners, event.beginningTimestamp, event.previousTimestamp, event.currentTimestamp, event.value);
       }
     });
     this.disruptor.start();
@@ -116,12 +115,11 @@ public class DisruptorDispatcher extends Dispatcher implements Cancelable {
   }
 
   @Override
-  protected boolean dispatch(final Window window, final Storage storage, final Consolidator[] consolidators, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) {
+  protected boolean dispatch(final Duration resolution, final Consolidator[] consolidators, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) {
     final RingBuffer<Event> ringBuffer = this.disruptor.getRingBuffer();
     final long sequence = ringBuffer.next();
     final Event event = ringBuffer.get(sequence);
-    event.window = window;
-    event.storage = storage;
+    event.resolution = resolution;
     event.consolidators = consolidators;
     event.consolidationListeners = consolidationListeners;
     event.beginningTimestamp = beginningTimestamp;

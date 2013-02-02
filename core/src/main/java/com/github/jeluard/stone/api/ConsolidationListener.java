@@ -23,13 +23,10 @@ public interface ConsolidationListener {
 
   /**
    * Invoked each time a newly published value cross a {@link Window} boundary triggering the consolidation process.
-   * <br>
-   * Called after {@link com.github.jeluard.stone.spi.Storage#append(long, int[])} has been succesfully executed.
    *
-   * @param window
    * @param timestamp
    * @param consolidates 
    */
-  void onConsolidation(final Window window, final long timestamp, final int[] consolidates);
+  void onConsolidation(final long timestamp, final int[] consolidates) throws Exception;
 
 }

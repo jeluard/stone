@@ -28,8 +28,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.concurrent.ThreadSafe;
 
+import org.joda.time.Duration;
+
 /**
- * Encapsulate the logic that triggers call to {@link Consolidator#accumulate(long, int)}, {@link Consolidator#consolidateAndReset()} and {@link Storage#append(long, int[])}.
+ * Encapsulate the logic that triggers call to {@link Consolidator#accumulate(long, int)}, {@link Consolidator#consolidateAndReset()} and {@link ConsolidationListener#onConsolidation(com.github.jeluard.stone.api.Window, long, int[])}.
  * <br>
  * A single {@link Engine} is available per {@link com.github.jeluard.stone.api.Database} thus shared among all associated {@link com.github.jeluard.stone.api.TimeSeries}.
  */
@@ -39,19 +41,20 @@ public abstract class Dispatcher {
   /**
    * Intercept rejection while dispatching.
    *
-   * @see #dispatch(com.github.jeluard.stone.api.Window, com.github.jeluard.stone.spi.Storage, com.github.jeluard.stone.api.Consolidator[], com.github.jeluard.stone.api.ConsolidationListener[], long, long, long, int) 
+   * @see #dispatch(com.github.jeluard.stone.api.Window, com.github.jeluard.stone.api.Consolidator[], com.github.jeluard.stone.api.ConsolidationListener[], long, long, long, int) 
    */
   public interface RejectionHandler {
 
     /**
      * Invoked when a dispatch returns false during publication process.
      *
-     * @param window
-     * @param storage
-     * @param timstamp
+     * @param resolution
+     * @param consolidators 
+     * @param consolidationListeners 
+     * @param timestamp
      * @param value 
      */
-    void onRejection(Window window, Storage storage, long timstamp, int value);
+    void onRejection(Duration resolution, Consolidator[] consolidators, ConsolidationListener[] consolidationListeners, long timestamp, int value);
 
   }
 
@@ -74,9 +77,9 @@ public abstract class Dispatcher {
   private final RejectionHandler rejectionHandler;
   protected static final RejectionHandler DEFAULT_REJECTION_HANDLER = new RejectionHandler() {
     @Override
-    public void onRejection(final Window window, final Storage storage, final long timestamp, final int value) {
+    public void onRejection(final Duration resolution, final Consolidator[] consolidators, final ConsolidationListener[] consolidationListeners, final long timestamp, final int value) {
       if (Dispatcher.LOGGER.isLoggable(Level.WARNING)) {
-        Dispatcher.LOGGER.log(Level.WARNING, "Rejection of <{0}> <{1}> for <{2}> by <{3}>", new Object[]{timestamp, value, window, storage});
+        Dispatcher.LOGGER.log(Level.WARNING, "Rejection of <{0}> <{1}> for <{2}>", new Object[]{timestamp, value, consolidators});
       }
     }
   };
@@ -96,19 +99,20 @@ public abstract class Dispatcher {
   }
 
   /**
-   * Safely execute {@link RejectionHandler#onRejection(com.github.jeluard.stone.api.Window, com.github.jeluard.stone.spi.Storage, long, int)} 
+   * Safely execute {@link RejectionHandler#onRejection(com.github.jeluard.stone.api.Window, long, int)} 
    *
-   * @param window 
-   * @param storage 
+   * @param resolution 
+   * @param consolidators
+   * @param consolidationListeners
    * @param timestamp 
    * @param value 
    */
-  private void notifyRejectionHandler(final Window window, final Storage storage, final long timestamp, final int value) {
+  private void notifyRejectionHandler(final Duration resolution, final Consolidator[] consolidators, final ConsolidationListener[] consolidationListeners, final long timestamp, final int value) {
     try {
-      this.rejectionHandler.onRejection(window, storage, timestamp, value);
+      this.rejectionHandler.onRejection(resolution, consolidators, consolidationListeners, timestamp, value);
     } catch (Exception e) {
       if (Dispatcher.LOGGER.isLoggable(Level.WARNING)) {
-        Dispatcher.LOGGER.log(Level.WARNING, "Got exception while executing "+RejectionHandler.class.getSimpleName()+" <"+this.exceptionHandler+">", e);
+        Dispatcher.LOGGER.log(Level.WARNING, "Got exception while executing "+RejectionHandler.class.getSimpleName()+" <"+this.rejectionHandler+">", e);
       }
     }
   }
@@ -152,43 +156,44 @@ public abstract class Dispatcher {
   }
 
   /**
-   * Generate all consolidates then propagates them to {@link Storage#append(long, int[])}.
-   * <br>
-   * If any, {@link ConsolidationListener#onConsolidation(com.github.jeluard.stone.api.Window, long, int[])} are then called.
-   * Failure of one of {@link ConsolidationListener#onConsolidation(com.github.jeluard.stone.api.Window, long, int[])} does not prevent others to be called.
+   * Generate all consolidates.
    *
-   * @param timestamp
    * @param consolidators
-   * @param storage
    * @return consolidates
    * @throws IOException 
    */
-  private int[] persist(final long timestamp, final Consolidator[] consolidators, final Storage storage) throws IOException {
+  private int[] generateConsolidates(final Consolidator[] consolidators) throws IOException {
     //TODO Do not create arrays each time?
     final int[] consolidates = new int[consolidators.length];
     for (int i = 0; i < consolidators.length; i++) {
       consolidates[i] = consolidators[i].consolidateAndReset();
     }
-    storage.append(timestamp, consolidates);
     return consolidates;
   }
 
   /**
+   * Failure of one of {@link ConsolidationListener#onConsolidation(com.github.jeluard.stone.api.Window, long, int[])} does not prevent others to be called.
+   *
    * @param timestamp
    * @param consolidates
    * @param consolidationListeners
    * @param window passed to {@link ConsolidationListener#onConsolidation(com.github.jeluard.stone.api.Window, long, int[])}
    */
-  private void notifyConsolidationListeners(final long timestamp, final int[] consolidates, final ConsolidationListener[] consolidationListeners, final Window window) {
+  private void notifyConsolidationListeners(final long timestamp, final int[] consolidates, final ConsolidationListener[] consolidationListeners) {
     for (final ConsolidationListener consolidationListener : consolidationListeners) {
       try {
-        consolidationListener.onConsolidation(window, timestamp, consolidates);
+        consolidationListener.onConsolidation(timestamp, consolidates);
       } catch (Exception e)  {
         if (Dispatcher.LOGGER.isLoggable(Level.WARNING)) {
           Dispatcher.LOGGER.log(Level.WARNING, "Got exception while executing <"+consolidationListener+">", e);
         }
       }
     }
+  }
+
+  private void generateConsolidatesThenNotify(final long timestamp, final Consolidator[] consolidators, final ConsolidationListener[] consolidationListeners) throws IOException {
+    final int[] consolidates = generateConsolidates(consolidators);
+    notifyConsolidationListeners(timestamp, consolidates, consolidationListeners);
   }
 
   private long windowBeginning(final long timestamp, final long windowId, final long duration) {
@@ -209,8 +214,7 @@ public abstract class Dispatcher {
    *
    * 2-2 allows to handle restart from existing storage (where previous will be latest from previous window)
    *
-   * @param window
-   * @param storage
+   * @param resolution
    * @param consolidators
    * @param consolidationListeners
    * @param beginningTimestamp
@@ -219,16 +223,14 @@ public abstract class Dispatcher {
    * @param value
    * @throws IOException 
    */
-  protected final void persistAndAccumulate(final Window window, final Storage storage, final Consolidator[] consolidators, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) throws IOException {
-    final long duration = window.getResolution().getMillis();
+  protected final void persistAndAccumulate(final Duration resolution, final Consolidator[] consolidators, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) throws IOException {
+    final long duration = resolution.getMillis();
     final long currentWindowId = windowId(beginningTimestamp, currentTimestamp, duration);
     final long previousWindowId = windowId(beginningTimestamp, previousTimestamp, duration);
     if (currentWindowId != previousWindowId) {
       if (!isLatestFromWindow(previousTimestamp, beginningTimestamp, duration)) {
         final long previousWindowBeginning = windowBeginning(beginningTimestamp, previousWindowId, duration);
-
-        final int[] consolidates = persist(previousWindowBeginning, consolidators, storage);
-        notifyConsolidationListeners(previousWindowBeginning, consolidates, consolidationListeners, window);
+        generateConsolidatesThenNotify(previousWindowBeginning, consolidators, consolidationListeners);
       }
     }
 
@@ -236,9 +238,7 @@ public abstract class Dispatcher {
 
     if (currentWindowId == previousWindowId && isLatestFromWindow(currentTimestamp, beginningTimestamp, duration)) {
       final long currentWindowBeginning = windowBeginning(beginningTimestamp, currentWindowId, duration);
-
-      final int[] consolidates = persist(currentWindowBeginning, consolidators, storage);
-      notifyConsolidationListeners(currentWindowBeginning, consolidates, consolidationListeners, window);
+      generateConsolidatesThenNotify(currentWindowBeginning, consolidators, consolidationListeners);
     }
   }
 
@@ -257,32 +257,34 @@ public abstract class Dispatcher {
    * @param currentTimestamp
    * @param value
    */
-  public final void publish(final Triple<Window, Storage, Consolidator[]>[] triples, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) {
-    //Note: triples could be factored by Window#getResolution() to limit window threshold crossing checks.
+  public final void publish(final Triple<Duration, Consolidator[], ConsolidationListener[]>[] triples, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) {
+    //Note: triples could be factored by Duration to limit window threshold crossing checks.
     //Given the low probability several Window have same resolution but different duration this optimisation is not considered to keep implementation simple.
-    for (final Triple<Window, Storage, Consolidator[]> triple : triples) {
-      if (!dispatch(triple.first, triple.second, triple.third, consolidationListeners, beginningTimestamp, previousTimestamp, currentTimestamp, value)) {
-        notifyRejectionHandler(triple.first, triple.second, currentTimestamp, value);
+    for (final Triple<Duration, Consolidator[], ConsolidationListener[]> triple : triples) {
+      final Duration resolution = triple.first;
+      final Consolidator[] consolidators = triple.second;
+      final ConsolidationListener[] consolidationListeners = triple.third;
+      if (!dispatch(resolution, consolidators, consolidationListeners, beginningTimestamp, previousTimestamp, currentTimestamp, value)) {
+        notifyRejectionHandler(resolution, consolidators, consolidationListeners, currentTimestamp, value);
       }
     }
   }
 
   /**
-   * Dispatch a {@link #publish(com.github.jeluard.guayaba.base.Triple<com.github.jeluard.stone.api.Window,com.github.jeluard.stone.spi.Storage,com.github.jeluard.stone.api.Consolidator[]>[], com.github.jeluard.stone.api.ConsolidationListener[], long, long, long, int)} call.
-   * To be effective the call must be delegated to {@link #accumulateAndPersist(com.github.jeluard.stone.api.Window, com.github.jeluard.stone.spi.Storage, com.github.jeluard.stone.api.Consolidator[], com.github.jeluard.stone.api.ConsolidationListener[], long, long, long, int)}.
+   * Dispatch a {@link #publish} call.
+   * To be effective the call must be delegated to {@link #accumulateAndPersist}.
    * <br>
    * Must be thread-safe.
    *
-   * @param window
-   * @param storage
+   * @param resolution
    * @param consolidators
-   * @param consolidationListeners
+   * @param consolidationListeners 
    * @param beginningTimestamp
    * @param previousTimestamp
    * @param currentTimestamp
    * @param value
    * @return true if dispatch has been accepted; false if rejected
    */
-  protected abstract boolean dispatch(Window window, Storage storage, Consolidator[] consolidators, ConsolidationListener[] consolidationListeners, long beginningTimestamp, long previousTimestamp, long currentTimestamp, int value);
+  protected abstract boolean dispatch(Duration resolution, Consolidator[] consolidators, ConsolidationListener[] consolidationListeners, long beginningTimestamp, long previousTimestamp, long currentTimestamp, int value);
 
 }

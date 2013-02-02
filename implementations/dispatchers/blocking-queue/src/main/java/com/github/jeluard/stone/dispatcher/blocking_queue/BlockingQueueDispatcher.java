@@ -22,7 +22,6 @@ import com.github.jeluard.stone.api.Consolidator;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.helper.Loggers;
 import com.github.jeluard.stone.spi.Dispatcher;
-import com.github.jeluard.stone.spi.Storage;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -33,19 +32,20 @@ import java.util.concurrent.ThreadFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.joda.time.Duration;
+
 /**
- * {@link Dispatcher} implementation executing {@link Dispatcher#accumulateAndPersist(com.github.jeluard.stone.api.Window, com.github.jeluard.stone.spi.Storage, com.github.jeluard.stone.api.Consolidator[], com.github.jeluard.stone.api.ConsolidationListener[], long, long, long, int)}
+ * {@link Dispatcher} implementation executing {@link Dispatcher#accumulateAndPersist(com.github.jeluard.stone.api.Window, com.github.jeluard.stone.api.Consolidator[], long, long, long, int)}
  * through a {@link ExecutorService} waiting for new execution to be available via a {@link BlockingQueue}.
  */
 public class BlockingQueueDispatcher extends Dispatcher {
 
   /**
-   * Holder for {@link Dispatcher#accumulateAndPersist(com.github.jeluard.stone.api.Window, com.github.jeluard.stone.spi.Storage, com.github.jeluard.stone.api.Consolidator[], com.github.jeluard.stone.api.ConsolidationListener[], long, long, long, int)} arguments.
+   * Holder for {@link Dispatcher#accumulateAndPersist(com.github.jeluard.stone.api.Window, com.github.jeluard.stone.api.Consolidator[], long, long, long, int)} arguments.
    */
   public static final class Entry {
 
-    public final Window window;
-    public final Storage storage;
+    public final Duration resolution;
     public final Consolidator[] consolidators;
     public final ConsolidationListener[] consolidationListeners;
     public final long beginningTimestamp;
@@ -53,9 +53,8 @@ public class BlockingQueueDispatcher extends Dispatcher {
     public final long currentTimestamp;
     public final int value;
 
-    public Entry(final Window window, final Storage storage, final Consolidator[] consolidators, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) {
-      this.window = window;
-      this.storage = storage;
+    public Entry(final Duration resolution, final Consolidator[] consolidators, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) {
+      this.resolution = resolution;
       this.consolidators = consolidators;
       this.consolidationListeners = consolidationListeners;
       this.beginningTimestamp = beginningTimestamp;
@@ -73,7 +72,7 @@ public class BlockingQueueDispatcher extends Dispatcher {
         while (true) {
           final Entry entry = BlockingQueueDispatcher.this.queue.take();
           try {
-            persistAndAccumulate(entry.window, entry.storage, entry.consolidators, entry.consolidationListeners, entry.beginningTimestamp, entry.previousTimestamp, entry.currentTimestamp, entry.value);
+            persistAndAccumulate(entry.resolution, entry.consolidators, entry.consolidationListeners, entry.beginningTimestamp, entry.previousTimestamp, entry.currentTimestamp, entry.value);
           } catch (Exception e) {
             notifyExceptionHandler(e);
           }
@@ -116,8 +115,8 @@ public class BlockingQueueDispatcher extends Dispatcher {
   }
 
   @Override
-  public final boolean dispatch(final Window window, final Storage storage, final Consolidator[] consolidators, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) {
-    return this.queue.offer(new Entry(window, storage, consolidators, consolidationListeners, beginningTimestamp, previousTimestamp, currentTimestamp, value));
+  public final boolean dispatch(final Duration resolution, final Consolidator[] consolidators, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) {
+    return this.queue.offer(new Entry(resolution, consolidators, consolidationListeners, beginningTimestamp, previousTimestamp, currentTimestamp, value));
   }
 
 }

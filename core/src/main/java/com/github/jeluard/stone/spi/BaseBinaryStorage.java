@@ -88,7 +88,7 @@ public abstract class BaseBinaryStorage extends BaseStorage {
   }
 
   @Override
-  public final void append(final long timestamp, final int[] consolidates) throws IOException {
+  public final void onConsolidation(final long timestamp, final int[] consolidates) throws IOException {
     final int capacity = bits2Bytes(Long.SIZE) + bits2Bytes(Integer.SIZE) * consolidates.length;
     final ByteBuffer buffer = createByteBuffer(capacity);
     put(timestamp, buffer);

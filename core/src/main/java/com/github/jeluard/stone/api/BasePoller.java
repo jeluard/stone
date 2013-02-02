@@ -20,17 +20,19 @@ import com.github.jeluard.guayaba.annotation.Idempotent;
 import com.github.jeluard.guayaba.lang.Cancelable;
 import com.github.jeluard.guayaba.util.concurrent.Scheduler;
 import com.github.jeluard.stone.helper.Loggers;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
@@ -40,6 +42,15 @@ import org.joda.time.Duration;
  * Base implementation tracking a metric for a collection of resources <T> periodically.
  */
 public abstract class BasePoller<T> implements Cancelable {
+
+  class Publisher implements Runnable {
+
+    @Override
+    public void run() {
+      
+    }
+    
+  }
 
   private final Database database;
   private final Duration period;
@@ -65,14 +76,9 @@ public abstract class BasePoller<T> implements Cancelable {
     final Map<T, TimeSeries> map = new HashMap<T, TimeSeries>();
     for (final T t : ts) {
       final String id = id(t);
-      final Collection<ConsolidationListener> consolidationListeners = createConsolidationListeners(t, id).or(Collections.<ConsolidationListener>emptyList());
-      map.put(t, this.database.createOrOpen(id, this.period, this.archives, consolidationListeners));
+      map.put(t, this.database.createOrOpen(id, this.period, this.archives));
     }
     return map;
-  }
-
-  protected Optional<Collection<ConsolidationListener>> createConsolidationListeners(final T t, final String id) {
-    return Optional.absent();
   }
 
   /**
@@ -80,15 +86,21 @@ public abstract class BasePoller<T> implements Cancelable {
    */
   @Idempotent
   public final void start() {
-    //TODO Make sure this idempotent
-    this.scheduler.schedule(new Runnable() {
-      @Override
-      public void run() {
-        for (final T t : BasePoller.this.ts) {
+    for (final T t : BasePoller.this.ts) {
+      //TODO Make sure this idempotent
+      this.scheduler.schedule(new Runnable() {
+        @Override
+        public void run() {
           final long timestamp = System.currentTimeMillis();
           try {
-            final int metric = metric(t);
-            BasePoller.this.timeseriess.get(t).publish(timestamp, metric);
+            final Future<Integer> metric = metric(t);
+            final Future<Void> wrapped = new FutureTask<Void>(new Callable<Void>() {
+              @Override
+              public Void call() throws Exception {
+                throw new UnsupportedOperationException("Not supported yet.");
+              }
+            });
+            BasePoller.this.timeseriess.get(t).publish(timestamp, metric.get());
           } catch (InterruptedException e) {
             //If metric extraction is too long process will be interrupted
             if (Loggers.BASE_LOGGER.isLoggable(Level.FINEST)) {
@@ -100,12 +112,12 @@ public abstract class BasePoller<T> implements Cancelable {
             }
           }
         }
-      }
-      @Override
-      public String toString() {
-        return "Poller";
-      }
-    });
+        @Override
+        public String toString() {
+          return "Poller";
+        }
+      });
+    }
   }
 
   /**
@@ -118,16 +130,16 @@ public abstract class BasePoller<T> implements Cancelable {
 
   /**
    * @param t
-   * @return the extracted metric for {@link TimeSeries}
+   * @return a {@link Future} holding the metric extracted for {@code t}
    * @throws Exception 
    */
-  protected abstract int metric(T t) throws Exception;
+  protected abstract Future<Integer> metric(T t) throws Exception;
 
   /**
    * @return a {@link Map} of all underlying {@link Reader}
    */
-  public final Map<String, Map<Window, Reader>> getReaders() {
-    final Builder<String, Map<Window, Reader>> builder = ImmutableMap.builder();
+  public final Map<String, List<Reader>> getReaders() {
+    final Builder<String, List<Reader>> builder = ImmutableMap.builder();
     for (final TimeSeries timeSeries : this.timeseriess.values()) {
       builder.put(timeSeries.getId(), timeSeries.getReaders());
     }

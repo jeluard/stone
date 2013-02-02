@@ -27,15 +27,15 @@ import com.github.jeluard.stone.spi.StorageFactory;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Map;
+import java.util.List;
 import java.util.logging.Level;
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -61,29 +61,32 @@ public final class TimeSeries implements Identifiable<String> {
   private final String id;
   private final int granularity;
   private final Collection<Archive> archives;
-  private final ConsolidationListener[] consolidationListeners;
   private final Database database;
-  private final Triple<Window, Storage, Consolidator[]>[] flattened;
+  private final Triple<Duration, Consolidator[], ConsolidationListener[]>[] flattened;
   private long beginning;
   private long latest;
 
-  TimeSeries(final String id, final Duration granularity, final Collection<Archive> archives, final Collection<? extends ConsolidationListener> consolidationListeners, final Database database) throws IOException {
+  TimeSeries(final String id, final Duration granularity, final Collection<Archive> archives, final Database database) throws IOException {
     this.id = Preconditions.checkNotNull(id, "null id");
     this.granularity = (int) Preconditions.checkNotNull(granularity, "null granularity").getMillis();
     this.archives = Preconditions.checkNotNull(archives, "null archives");
-    this.consolidationListeners = Preconditions.checkNotNull(consolidationListeners, "null consolidationListeners").toArray(new ConsolidationListener[consolidationListeners.size()]);
     this.database = Preconditions.checkNotNull(database, "null database");
-    final Collection<Triple<Window, Storage, Consolidator[]>> flattenedList = createFlatten(database.storageFactory, id, archives);
+    final Collection<Triple<Duration, Consolidator[], ConsolidationListener[]>> flattenedList = createFlatten(database.storageFactory, id, archives);
     this.flattened = flattenedList.toArray(new Triple[flattenedList.size()]);
 
-    final Interval initialSpan = extractInterval(Collections2.transform(Arrays.asList(this.flattened), new Function<Triple<Window, Storage, Consolidator[]>, Pair<Window, Storage>>() {
+    final Interval initialSpan = extractInterval(Collections2.transform(Arrays.asList(this.flattened), new Function<Triple<Duration, Consolidator[], ConsolidationListener[]>, Pair<Duration, Storage>>() {
       @Override
-      public Pair<Window, Storage> apply(final Triple<Window, Storage, Consolidator[]> input) {
-        return new Pair<Window, Storage>(input.first, input.second);
+      public Pair<Duration, Storage> apply(final Triple<Duration, Consolidator[], ConsolidationListener[]> input) {
+        final Storage storage = extractStorage(input.third);
+        return new Pair<Duration, Storage>(input.first, storage);
       }
     }));
     this.beginning = initialSpan.getStartMillis();
     this.latest = initialSpan.getEndMillis();
+  }
+
+  private Storage extractStorage(final ConsolidationListener[] consolidationListeners) {
+    return (Storage) consolidationListeners[0];
   }
 
   /**
@@ -154,15 +157,16 @@ public final class TimeSeries implements Identifiable<String> {
    * @param storageFactory
    * @param id
    * @param archives
-   * @return all triplet of {@link Window}, {@link Storage} and {@link Consolidator[]}. Both {@link Storage} and {@link Consolidator[]} are specific to associated {@link Window} 
+   * @return all pair of {@link Window} and {@link Consolidator[]}. {@link Consolidator[]} is specific to associated {@link Window} 
    * @throws IOException 
    */
-  private Collection<Triple<Window, Storage, Consolidator[]>> createFlatten(final StorageFactory storageFactory, final String id, final Collection<Archive> archives) throws IOException {
-    final Collection<Triple<Window, Storage, Consolidator[]>> windowTriples = new LinkedList<Triple<Window, Storage, Consolidator[]>>();
+  private Collection<Triple<Duration, Consolidator[], ConsolidationListener[]>> createFlatten(final StorageFactory storageFactory, final String id, final Collection<Archive> archives) throws IOException {
+    final Collection<Triple<Duration, Consolidator[], ConsolidationListener[]>> windowTriples = new LinkedList<Triple<Duration, Consolidator[], ConsolidationListener[]>>();
     for (final Archive archive : archives) {
       for (final Window window : archive.getWindows()) {
         final int maxSamples = (int) window.getResolution().getMillis() / this.granularity;
-        windowTriples.add(new Triple<Window, Storage, Consolidator[]>(window, createStorage(storageFactory, id, archive, window), createConsolidators(archive, maxSamples)));
+        final ConsolidationListener[] consolidationListeners = Arrays.asList(createStorage(storageFactory, id, archive, window), window.getConsolidationListeners()).toArray(new ConsolidationListener[1+window.getConsolidationListeners().length]);
+        windowTriples.add(new Triple<Duration, Consolidator[], ConsolidationListener[]>(window.getDuration(), createConsolidators(archive, maxSamples), consolidationListeners));
       }
     }
     return windowTriples;
@@ -173,7 +177,7 @@ public final class TimeSeries implements Identifiable<String> {
    * @return maximum {@link Interval} covered by all {@link Window}s
    * @throws IOException 
    */
-  private Interval extractInterval(final Collection<Pair<Window, Storage>> pairs) throws IOException {
+  private Interval extractInterval(final Collection<Pair<Duration, Storage>> pairs) throws IOException {
     return new Interval(extractBeginning(pairs.iterator().next().second), extractLatest(pairs));
   }
 
@@ -195,15 +199,15 @@ public final class TimeSeries implements Identifiable<String> {
    * @return latest (more recent) timestamp stored in specified {@code storages}; 0L if all {@code storages} are empty
    * @throws IOException 
    */
-  private long extractLatest(final Collection<Pair<Window, Storage>> pairs) throws IOException {
+  private long extractLatest(final Collection<Pair<Duration, Storage>> pairs) throws IOException {
     long storageLatest = 0L;
-    for (final Pair<Window, Storage> pair : pairs) {
+    for (final Pair<Duration, Storage> pair : pairs) {
       final Storage storage = pair.second;
       final Optional<DateTime> optionalInterval = storage.end(); 
       if (optionalInterval.isPresent()) {
         final long endInterval = optionalInterval.get().getMillis();
         if ((storageLatest == 0L) || (endInterval > storageLatest)) {
-          storageLatest = endInterval + pair.first.getResolution().getMillis();
+          storageLatest = endInterval + pair.first.getMillis();
         }
       }
     }
@@ -219,12 +223,12 @@ public final class TimeSeries implements Identifiable<String> {
   }
 
   /**
-   * @return all underlying {@link Reader} mapped by {@link Window}
+   * @return all underlying {@link Reader} ordered by {@link Window}
    */
-  public Map<Window, Reader> getReaders() {
-    final Map<Window, Reader> readers = new HashMap<Window, Reader>();
-    for (final Triple<Window, Storage, Consolidator[]> triple : this.flattened) {
-      readers.put(triple.first, triple.second);
+  public List<Reader> getReaders() {
+    final List<Reader> readers = new LinkedList<Reader>();
+    for (final Triple<Duration, Consolidator[], ConsolidationListener[]> triple : this.flattened) {
+      readers.add(extractStorage(triple.third));
     }
     return readers;
   }
@@ -274,7 +278,7 @@ public final class TimeSeries implements Identifiable<String> {
 
     //previousTimestamp == 0 if this is the first publish call and associated storage was empty (or new)
     if (previousTimestamp != 0L) {
-      this.database.dispatcher.publish(this.flattened, this.consolidationListeners, this.beginning, previousTimestamp, timestamp, value);
+      this.database.dispatcher.publish(this.flattened, this.beginning, previousTimestamp, timestamp, value);
     }
     return true;
   }

@@ -25,10 +25,12 @@ import com.github.jeluard.stone.consolidator.Percentile95Consolidator;
 import com.github.jeluard.stone.dispatcher.sequential.SequentialDispatcher;
 import com.github.jeluard.stone.storage.journalio.JournalIOStorageFactory;
 import com.google.common.base.Optional;
+import com.google.common.util.concurrent.Futures;
 
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.concurrent.Future;
 
 import org.joda.time.Duration;
 
@@ -42,21 +44,10 @@ public class Poller {
         return url.toString();
       }
       @Override
-      protected Optional<Collection<ConsolidationListener>> createConsolidationListeners(final URL t, final String id) {
-        final ConsolidationListener consolidationListener = new ConsolidationListener() {
-          @Override
-          public void onConsolidation(final Window window, final long timestamp, final int[] consolidates) {
-            System.out.println("Got for <"+id+"> "+Arrays.toString(consolidates));
-          }
-        };
-        final Collection<ConsolidationListener> consolidationListeners = Arrays.asList(consolidationListener);
-        return Optional.of(consolidationListeners);
-      }
-      @Override
-      protected int metric(final URL url) throws Exception {
+      protected Future<Integer> metric(final URL url) throws Exception {
         long before = System.currentTimeMillis();
         url.openConnection().connect();
-        return (int) (System.currentTimeMillis() - before);
+        return Futures.immediateFuture((int)(System.currentTimeMillis() - before));
       }
     };
     poller.start();

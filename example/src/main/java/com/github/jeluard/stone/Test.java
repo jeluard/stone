@@ -23,12 +23,12 @@ import com.github.jeluard.stone.api.Database;
 import com.github.jeluard.stone.api.Reader;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.api.Window;
-import com.github.jeluard.stone.consolidator.Percentile99Consolidator;
+import com.github.jeluard.stone.consolidator.MaxConsolidator;
 import com.github.jeluard.stone.dispatcher.disruptor.DisruptorDispatcher;
 import com.github.jeluard.stone.storage.journalio.JournalIOStorageFactory;
 
 import java.util.Arrays;
-import java.util.Map;
+import java.util.List;
 import java.util.Random;
 
 import org.joda.time.Duration;
@@ -36,20 +36,19 @@ import org.joda.time.Duration;
 public class Test {
   public static void main(String[] args) throws Exception {
     final Database database = new Database(new DisruptorDispatcher(DisruptorDispatcher.defaultExecutorService(), 1024), new JournalIOStorageFactory(JournalIOStorageFactory.defaultWriteExecutor(), JournalIOStorageFactory.defaultDisposerScheduledExecutor()));
-    final Archive archive = new Archive(Arrays.asList(Percentile99Consolidator.class), 
-            Arrays.asList(new Window(Duration.standardSeconds(10), Duration.standardMinutes(1))));
     final ConsolidationListener consolidationListener = new ConsolidationListener() {
       @Override
-      public void onConsolidation(final Window window, final long timestamp, final int[] consolidates) {
+      public void onConsolidation(final long timestamp, final int[] consolidates) {
         System.out.println("Got "+Arrays.toString(consolidates));
       }
     };
-    final TimeSeries timeSeries = database.createOrOpen("timeseries", Arrays.asList(archive), Arrays.asList(consolidationListener));
-    final Map<Window, Reader> storages = timeSeries.getReaders();
+    final Archive archive = new Archive(Arrays.asList(MaxConsolidator.class), 
+            Arrays.asList(new Window(Duration.standardSeconds(10), Duration.standardMinutes(1), consolidationListener)));
+    final TimeSeries timeSeries = database.createOrOpen("timeseries", Arrays.asList(archive));
+    final List<Reader> storages = timeSeries.getReaders();
     System.out.println("TimeSeries "+timeSeries.getId());
-    for (final Map.Entry<Window, Reader> entry : storages.entrySet()) {
-      System.out.println("\tfor window "+entry.getKey());
-      for (final Pair<Long, int[]> value : entry.getValue().all()) {
+    for (final Reader entry : storages) {
+      for (final Pair<Long, int[]> value : entry.all()) {
         System.out.println("\t\ttimestamp <"+value.first+"> values <"+Arrays.toString(value.second)+">");
       }
     }
