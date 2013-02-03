@@ -71,7 +71,7 @@ public final class TimeSeries implements Identifiable<String> {
     this.granularity = (int) Preconditions.checkNotNull(granularity, "null granularity").getMillis();
     this.storageFactory = Preconditions.checkNotNull(storageFactory, "null storageFactory");
     this.dispatcher = Preconditions.checkNotNull(dispatcher, "null dispatcher");
-    final Collection<Triple<Duration, Consolidator[], ConsolidationListener[]>> flattenedList = createFlatten(storageFactory, id, Preconditions.checkNotNull(windows, "null windows"));
+    final Collection<Triple<Window, Consolidator[], ConsolidationListener[]>> flattenedList = createFlatten(storageFactory, id, Preconditions.checkNotNull(windows, "null windows"));
     this.flattened = flattenedList.toArray(new Triple[flattenedList.size()]);
     final Collection<Pair<Window, Storage>> storagePerWindow = filterTripleWithStorage(this.flattened);
     this.readers = Pairs.toMap(storagePerWindow);
@@ -172,8 +172,8 @@ public final class TimeSeries implements Identifiable<String> {
    * @return all pair of {@link Window} and {@link Consolidator[]}. {@link Consolidator[]} is specific to associated {@link Window} 
    * @throws IOException 
    */
-  private Collection<Triple<Duration, Consolidator[], ConsolidationListener[]>> createFlatten(final StorageFactory storageFactory, final String id, final Window[] windows) throws IOException {
-    final Collection<Triple<Duration, Consolidator[], ConsolidationListener[]>> windowTriples = new LinkedList<Triple<Duration, Consolidator[], ConsolidationListener[]>>();
+  private Collection<Triple<Window, Consolidator[], ConsolidationListener[]>> createFlatten(final StorageFactory storageFactory, final String id, final Window[] windows) throws IOException {
+    final Collection<Triple<Window, Consolidator[], ConsolidationListener[]>> windowTriples = new LinkedList<Triple<Window, Consolidator[], ConsolidationListener[]>>();
     for (final Window window : windows) {
       final int maxSamples = (int) window.getResolution().getMillis() / this.granularity;
       final List<ConsolidationListener> consolidationListeners = new LinkedList<ConsolidationListener>();
@@ -182,7 +182,7 @@ public final class TimeSeries implements Identifiable<String> {
         consolidationListeners.add(createStorage(storageFactory, id, window, optionalArchiveDuration.get()));
       }
       consolidationListeners.addAll(window.getConsolidationListeners());
-      windowTriples.add(new Triple<Duration, Consolidator[], ConsolidationListener[]>(window.getResolution(), createConsolidators(window, maxSamples), consolidationListeners.toArray(new ConsolidationListener[consolidationListeners.size()])));
+      windowTriples.add(new Triple<Window, Consolidator[], ConsolidationListener[]>(window, createConsolidators(window, maxSamples), consolidationListeners.toArray(new ConsolidationListener[consolidationListeners.size()])));
     }
     return windowTriples;
   }
