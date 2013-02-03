@@ -157,12 +157,12 @@ public final class TimeSeries implements Identifiable<String> {
    * @param storageFactory
    * @param id
    * @param window
-   * @param archiveDuration
+   * @param persistedDuration
    * @return the {@link Storage} instance for this {@link Window}
    * @throws IOException 
    */
-  private Storage createStorage(final StorageFactory storageFactory, final String id, final Window window, final Duration archiveDuration) throws IOException {
-    return storageFactory.createOrGet(id, window, archiveDuration);
+  private Storage createStorage(final StorageFactory storageFactory, final String id, final Window window, final Duration persistedDuration) throws IOException {
+    return storageFactory.createOrGet(id, window, persistedDuration);
   }
 
   /**
@@ -177,9 +177,9 @@ public final class TimeSeries implements Identifiable<String> {
     for (final Window window : windows) {
       final int maxSamples = (int) window.getResolution().getMillis() / this.granularity;
       final List<ConsolidationListener> consolidationListeners = new LinkedList<ConsolidationListener>();
-      final Optional<Duration> optionalArchiveDuration = window.getArchiveDuration();
-      if (optionalArchiveDuration.isPresent()) {
-        consolidationListeners.add(createStorage(storageFactory, id, window, optionalArchiveDuration.get()));
+      final Optional<Duration> optionalPersistedDuration = window.getPersistedDuration();
+      if (optionalPersistedDuration.isPresent()) {
+        consolidationListeners.add(createStorage(storageFactory, id, window, optionalPersistedDuration.get()));
       }
       consolidationListeners.addAll(window.getConsolidationListeners());
       windowTriples.add(new Triple<Window, Consolidator[], ConsolidationListener[]>(window, createConsolidators(window, maxSamples), consolidationListeners.toArray(new ConsolidationListener[consolidationListeners.size()])));
