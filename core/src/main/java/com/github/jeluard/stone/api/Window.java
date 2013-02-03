@@ -18,8 +18,10 @@ package com.github.jeluard.stone.api;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import java.util.ArrayList;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.concurrent.Immutable;
@@ -34,22 +36,22 @@ public final class Window {
 
   private final Duration resolution;
   private final Optional<Duration> optionalPersistentDuration;
-  private final Class<? extends Consolidator>[] consolidatorTypes;
-  private final ConsolidationListener[] consolidationListeners;
+  private final List<? extends Class<? extends Consolidator>> consolidatorTypes;
+  private final List<? extends ConsolidationListener> consolidationListeners;
 
-  public Window(final Duration resolution, final List<? extends Class<? extends Consolidator>> consolidatorTypes, final ConsolidationListener ... consolidationListeners) {
+  public Window(final Duration resolution, final List<? extends Class<? extends Consolidator>> consolidatorTypes, final List<? extends ConsolidationListener> consolidationListeners) {
     this(resolution, Optional.<Duration>absent(), consolidatorTypes, consolidationListeners);
   }
 
-  public Window(final Duration resolution, final Duration persistentDuration, final List<? extends Class<? extends Consolidator>> consolidatorTypes, final ConsolidationListener ... consolidationListeners) {
+  public Window(final Duration resolution, final Duration persistentDuration, final List<? extends Class<? extends Consolidator>> consolidatorTypes, final List<? extends ConsolidationListener> consolidationListeners) {
     this(resolution, Optional.of(Preconditions.checkNotNull(persistentDuration, "null persistentDuration")), consolidatorTypes, consolidationListeners);
   }
 
-  private Window(final Duration resolution, final Optional<Duration> optionalPersistentDuration, final List<? extends Class<? extends Consolidator>> consolidatorTypes, final ConsolidationListener ... consolidationListeners) {
+  private Window(final Duration resolution, final Optional<Duration> optionalPersistentDuration, final List<? extends Class<? extends Consolidator>> consolidatorTypes, final List<? extends ConsolidationListener> consolidationListeners) {
     this.resolution = Preconditions.checkNotNull(resolution, "null resolution");
     this.optionalPersistentDuration = Preconditions.checkNotNull(optionalPersistentDuration, "null optionalPersistentDuration");
-    this.consolidatorTypes = Preconditions.checkNotNull(consolidatorTypes, "null consolidatorTypes").toArray(new Class[consolidatorTypes.size()]);
-    this.consolidationListeners = Preconditions.checkNotNull(consolidationListeners, "null consolidationListeners");
+    this.consolidatorTypes = Collections.unmodifiableList(new ArrayList<Class<? extends Consolidator>>(Preconditions.checkNotNull(consolidatorTypes, "null consolidatorTypes")));
+    this.consolidationListeners = Collections.unmodifiableList(new ArrayList<ConsolidationListener>(Preconditions.checkNotNull(consolidationListeners, "null consolidationListeners")));
   }
 
   public Duration getResolution() {
@@ -60,17 +62,17 @@ public final class Window {
     return this.optionalPersistentDuration;
   }
 
-  public Class<? extends Consolidator>[] getConsolidatorTypes() {
+  public List<? extends Class<? extends Consolidator>> getConsolidatorTypes() {
     return this.consolidatorTypes;
   }
 
-  public ConsolidationListener[] getConsolidationListeners() {
+  public List<? extends ConsolidationListener> getConsolidationListeners() {
     return this.consolidationListeners;
   }
 
   @Override
   public int hashCode() {
-    return this.resolution.hashCode() + Arrays.hashCode(this.consolidatorTypes) + Arrays.hashCode(this.consolidationListeners);
+    return this.resolution.hashCode() + this.consolidatorTypes.hashCode() + this.consolidationListeners.hashCode();
   }
 
   @Override
@@ -80,12 +82,12 @@ public final class Window {
     }
 
     final Window other = (Window) object;
-    return this.resolution.equals(other.resolution) && Arrays.equals(this.consolidatorTypes, other.consolidatorTypes) && Arrays.equals(this.consolidationListeners, other.consolidationListeners);
+    return this.resolution.equals(other.resolution) && this.consolidatorTypes.equals(other.consolidatorTypes) && this.consolidationListeners.equals(other.consolidationListeners);
   }
 
   @Override
   public String toString() {
-    return "resolution <"+this.resolution+"> consolidatorTypes <"+this.consolidatorTypes+"> consolidationListeners <"+Arrays.asList(this.consolidationListeners)+">";
+    return "resolution <"+this.resolution+"> consolidatorTypes <"+this.consolidatorTypes+"> consolidationListeners <"+this.consolidationListeners+">";
   }
 
 }

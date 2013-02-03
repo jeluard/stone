@@ -18,6 +18,7 @@ package com.github.jeluard.stone;
 
 import com.github.jeluard.guayaba.base.Pair;
 import com.github.jeluard.stone.api.ConsolidationListener;
+import com.github.jeluard.stone.api.Consolidator;
 import com.github.jeluard.stone.api.Database;
 import com.github.jeluard.stone.api.Reader;
 import com.github.jeluard.stone.api.TimeSeries;
@@ -27,6 +28,7 @@ import com.github.jeluard.stone.dispatcher.disruptor.DisruptorDispatcher;
 import com.github.jeluard.stone.storage.journalio.JournalIOStorageFactory;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -42,7 +44,7 @@ public class Test {
       }
     };
     //final Window window = Window.of(Duration.standardSeconds(10)).listenedBy(consolidationListener).archivedDuring(Duration.standardMinutes(1)).consolidatedBy(MaxConsolidator.class);
-    final TimeSeries timeSeries = database.createOrOpen("timeseries", new Window(Duration.standardSeconds(10), Arrays.asList(MaxConsolidator.class)));
+    final TimeSeries timeSeries = database.createOrOpen("timeseries", new Window(Duration.standardSeconds(10), Arrays.asList(MaxConsolidator.class), Collections.<ConsolidationListener>emptyList()));
     /*final List<Reader> storages = timeSeries.getReaders();
     System.out.println("TimeSeries "+timeSeries.getId());
     for (final Reader entry : storages) {
@@ -54,7 +56,7 @@ public class Test {
     try {
       final Random random = new Random();
       for (int i = 0; i < 1000*1000; i++) {
-        Thread.sleep(1);//Make sure there's at least 1ms in between publication
+        //Thread.sleep(1);//Make sure there's at least 1ms in between publication
         timeSeries.publish(System.currentTimeMillis(), 100+random.nextInt(25));
       }
     } finally {

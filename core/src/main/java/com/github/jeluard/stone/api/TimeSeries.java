@@ -20,6 +20,7 @@ import com.github.jeluard.guayaba.annotation.Idempotent;
 import com.github.jeluard.guayaba.base.Pair;
 import com.github.jeluard.guayaba.base.Triple;
 import com.github.jeluard.guayaba.lang.Identifiable;
+import com.github.jeluard.guayaba.lang.Iterables2;
 import com.github.jeluard.stone.helper.Loggers;
 import com.github.jeluard.stone.spi.Dispatcher;
 import com.github.jeluard.stone.spi.Storage;
@@ -29,6 +30,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -149,10 +151,10 @@ public final class TimeSeries implements Identifiable<String> {
    * @see #createConsolidator(java.lang.Class)
    */
   private Consolidator[] createConsolidators(final Window window, final int maxSamples) {
-    final Class<? extends Consolidator>[] types = window.getConsolidatorTypes();
-    final Consolidator[] consolidators = new Consolidator[types.length];
-    for (int i = 0; i<types.length; i++) {
-      consolidators[i] = createConsolidator(types[i], maxSamples);
+    final List<? extends Class<? extends Consolidator>> consolidatorTypes = window.getConsolidatorTypes();
+    final Consolidator[] consolidators = new Consolidator[consolidatorTypes.size()];
+    for (final Iterables2.Indexed<? extends Class<? extends Consolidator>> indexed : Iterables2.withIndex(consolidatorTypes)) {
+      consolidators[indexed.index] = createConsolidator(indexed.value, maxSamples);
     }
     return consolidators;
   }
@@ -185,7 +187,7 @@ public final class TimeSeries implements Identifiable<String> {
       if (optionalDuration.isPresent()) {
         consolidationListeners.add(createStorage(storageFactory, id, window, optionalDuration.get()));
       }
-      consolidationListeners.addAll(Arrays.asList(window.getConsolidationListeners()));
+      consolidationListeners.addAll(window.getConsolidationListeners());
       windowTriples.add(new Triple<Duration, Consolidator[], ConsolidationListener[]>(window.getResolution(), createConsolidators(window, maxSamples), consolidationListeners.toArray(new ConsolidationListener[consolidationListeners.size()])));
     }
     return windowTriples;

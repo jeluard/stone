@@ -31,7 +31,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -125,7 +124,7 @@ public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage
    * @param consolidators
    * @return all consolidators identifiers (MaxConsolidator => max)
    */
-  protected final Collection<String> extractConsolidatorIdentifiers(final Collection<Class<? extends Consolidator>> consolidators) {
+  protected final Collection<String> extractConsolidatorIdentifiers(final Collection<? extends Class<? extends Consolidator>> consolidators) {
     return Collections2.transform(consolidators, new Function<Class<? extends Consolidator>, String>() {
       @Override
       public String apply(final Class<? extends Consolidator> input) {
@@ -145,7 +144,7 @@ public class JournalIOStorageFactory extends BaseStorageFactory<JournalIOStorage
    * @return an optional prefix used when creating file names
    */
   protected Optional<String> filePrefix(final String id, final Window window, final Duration duration) {
-    final Collection<String> consolidatorIdentifiers = extractConsolidatorIdentifiers(Arrays.asList(window.getConsolidatorTypes()));
+    final Collection<String> consolidatorIdentifiers = extractConsolidatorIdentifiers(window.getConsolidatorTypes());
     return Optional.of(Joiner.on("-").join(consolidatorIdentifiers)+"-"+duration+"@"+window.getResolution()+"-");
   }
 
