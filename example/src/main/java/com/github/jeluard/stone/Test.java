@@ -18,7 +18,6 @@ package com.github.jeluard.stone;
 
 import com.github.jeluard.guayaba.base.Pair;
 import com.github.jeluard.stone.api.ConsolidationListener;
-import com.github.jeluard.stone.api.Consolidator;
 import com.github.jeluard.stone.api.Database;
 import com.github.jeluard.stone.api.Reader;
 import com.github.jeluard.stone.api.TimeSeries;
@@ -29,7 +28,7 @@ import com.github.jeluard.stone.storage.journalio.JournalIOStorageFactory;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import org.joda.time.Duration;
@@ -45,13 +44,13 @@ public class Test {
     };
     //final Window window = Window.of(Duration.standardSeconds(10)).listenedBy(consolidationListener).archivedDuring(Duration.standardMinutes(1)).consolidatedBy(MaxConsolidator.class);
     final TimeSeries timeSeries = database.createOrOpen("timeseries", new Window(Duration.standardSeconds(10), Arrays.asList(MaxConsolidator.class), Collections.<ConsolidationListener>emptyList()));
-    /*final List<Reader> storages = timeSeries.getReaders();
+    final Map<Window, ? extends Reader> readers = timeSeries.getReaders();
     System.out.println("TimeSeries "+timeSeries.getId());
-    for (final Reader entry : storages) {
+    for (final Reader entry : readers.values()) {
       for (final Pair<Long, int[]> value : entry.all()) {
         System.out.println("\t\ttimestamp <"+value.first+"> values <"+Arrays.toString(value.second)+">");
       }
-    }*/
+    }
 
     try {
       final Random random = new Random();

@@ -138,11 +138,10 @@ public abstract class BasePoller<T> implements Cancelable {
   /**
    * @return a {@link Map} of all underlying {@link Reader}
    */
-  public final Map<String, List<Reader>> getReaders() {
-    final Builder<String, List<Reader>> builder = ImmutableMap.builder();
+  public final Map<String, Map<Window, ? extends Reader>> getReaders() {
+    final Builder<String, Map<Window, ? extends Reader>> builder = ImmutableMap.builder();
     for (final TimeSeries timeSeries : this.timeseriess.values()) {
-    //TODO
-      //  builder.put(timeSeries.getId(), timeSeries.getReaders());
+      builder.put(timeSeries.getId(), timeSeries.getReaders());
     }
     return builder.build();
   }
