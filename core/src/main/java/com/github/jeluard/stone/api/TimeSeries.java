@@ -87,7 +87,7 @@ public final class TimeSeries implements Identifiable<String> {
   private Collection<Pair<Window, Storage>> filterTripleWithStorage(final Triple<Window, Consolidator[], ConsolidationListener[]>[] triples) {
     final List<Pair<Window, Storage>> pairs = new LinkedList<Pair<Window, Storage>>();
     for (final Triple<Window, Consolidator[], ConsolidationListener[]> triple : triples) {
-      if (triple.third[0] instanceof Storage) {
+      if (triple.third.length >0 && triple.third[0] instanceof Storage) {
         pairs.add(new Pair<Window, Storage>(triple.first, (Storage) triple.third[0]));
       }
     }
