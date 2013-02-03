@@ -20,7 +20,9 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.annotation.concurrent.Immutable;
@@ -33,8 +35,37 @@ import org.joda.time.Duration;
 @Immutable
 public final class Window {
 
+  /**
+   * Builder for {@link Window}.
+   */
+  public static final class Builder {
+
+    private final Duration resolution;
+    private Duration archiveDuration;
+    private final List<ConsolidationListener> consolidationListeners = new LinkedList<ConsolidationListener>();
+
+    private Builder(final Duration resolution) {
+      this.resolution = resolution;
+    }
+
+    public Window.Builder listenedBy(final ConsolidationListener ... consolidationListeners) {
+      this.consolidationListeners.addAll(Arrays.asList(consolidationListeners));
+      return this;
+    }
+
+    public Window.Builder archivedDuring(final Duration persistentDuration) {
+      this.archiveDuration = Preconditions.checkNotNull(persistentDuration, "null persistentDuration");
+      return this;
+    }
+
+    public Window consolidatedBy(final Class<? extends Consolidator> ... consolidatorTypes) {
+      return new Window(this.resolution, Optional.fromNullable(this.archiveDuration), Arrays.asList(consolidatorTypes), this.consolidationListeners);
+    }
+
+  }
+
   private final Duration resolution;
-  private final Optional<Duration> optionalPersistentDuration;
+  private final Optional<Duration> optionalArchiveDuration;
   private final List<? extends Class<? extends Consolidator>> consolidatorTypes;
   private final List<? extends ConsolidationListener> consolidationListeners;
 
@@ -42,23 +73,27 @@ public final class Window {
     this(resolution, Optional.<Duration>absent(), consolidatorTypes, consolidationListeners);
   }
 
-  public Window(final Duration resolution, final Duration persistentDuration, final List<? extends Class<? extends Consolidator>> consolidatorTypes, final List<? extends ConsolidationListener> consolidationListeners) {
-    this(resolution, Optional.of(Preconditions.checkNotNull(persistentDuration, "null persistentDuration")), consolidatorTypes, consolidationListeners);
+  public Window(final Duration resolution, final Duration archiveDuration, final List<? extends Class<? extends Consolidator>> consolidatorTypes, final List<? extends ConsolidationListener> consolidationListeners) {
+    this(resolution, Optional.of(Preconditions.checkNotNull(archiveDuration, "null archiveDuration")), consolidatorTypes, consolidationListeners);
   }
 
-  private Window(final Duration resolution, final Optional<Duration> optionalPersistentDuration, final List<? extends Class<? extends Consolidator>> consolidatorTypes, final List<? extends ConsolidationListener> consolidationListeners) {
+  private Window(final Duration resolution, final Optional<Duration> optionalArchiveDuration, final List<? extends Class<? extends Consolidator>> consolidatorTypes, final List<? extends ConsolidationListener> consolidationListeners) {
     this.resolution = Preconditions.checkNotNull(resolution, "null resolution");
-    this.optionalPersistentDuration = Preconditions.checkNotNull(optionalPersistentDuration, "null optionalPersistentDuration");
+    this.optionalArchiveDuration = Preconditions.checkNotNull(optionalArchiveDuration, "null optionalArchiveDuration");
     this.consolidatorTypes = Collections.unmodifiableList(new ArrayList<Class<? extends Consolidator>>(Preconditions.checkNotNull(consolidatorTypes, "null consolidatorTypes")));
     this.consolidationListeners = Collections.unmodifiableList(new ArrayList<ConsolidationListener>(Preconditions.checkNotNull(consolidationListeners, "null consolidationListeners")));
+  }
+
+  public static Window.Builder of(final Duration duration) {
+    return new Window.Builder(duration);
   }
 
   public Duration getResolution() {
     return this.resolution;
   }
 
-  public Optional<Duration> getPersistentDuration() {
-    return this.optionalPersistentDuration;
+  public Optional<Duration> getArchiveDuration() {
+    return this.optionalArchiveDuration;
   }
 
   public List<? extends Class<? extends Consolidator>> getConsolidatorTypes() {

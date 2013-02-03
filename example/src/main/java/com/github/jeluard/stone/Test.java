@@ -27,7 +27,6 @@ import com.github.jeluard.stone.dispatcher.disruptor.DisruptorDispatcher;
 import com.github.jeluard.stone.storage.journalio.JournalIOStorageFactory;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Random;
 
@@ -42,8 +41,8 @@ public class Test {
         System.out.println("Got "+Arrays.toString(consolidates));
       }
     };
-    //final Window window = Window.of(Duration.standardSeconds(10)).listenedBy(consolidationListener).archivedDuring(Duration.standardMinutes(1)).consolidatedBy(MaxConsolidator.class);
-    final TimeSeries timeSeries = database.createOrOpen("timeseries", new Window(Duration.standardSeconds(10), Arrays.asList(MaxConsolidator.class), Collections.<ConsolidationListener>emptyList()));
+    final Window window = Window.of(Duration.standardSeconds(10)).listenedBy(consolidationListener).archivedDuring(Duration.standardMinutes(1)).consolidatedBy(MaxConsolidator.class);
+    final TimeSeries timeSeries = database.createOrOpen("timeseries", window);
     final Map<Window, ? extends Reader> readers = timeSeries.getReaders();
     System.out.println("TimeSeries "+timeSeries.getId());
     for (final Reader entry : readers.values()) {
