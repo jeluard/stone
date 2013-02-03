@@ -93,6 +93,11 @@ public final class Window {
 
   private Window(final Duration resolution, final Optional<Duration> optionalPersistedDuration, final List<? extends Class<? extends Consolidator>> consolidatorTypes, final List<? extends ConsolidationListener> consolidationListeners) {
     this.resolution = Preconditions.checkNotNull(resolution, "null resolution");
+    if (optionalPersistedDuration.isPresent()) {
+      final Duration persistedDuration = optionalPersistedDuration.get();
+      Preconditions.checkArgument(persistedDuration.getMillis() > resolution.getMillis(), "Persisted duration <"+persistedDuration+"> must be greater than resolution <"+resolution+">");
+      Preconditions.checkArgument(persistedDuration.getMillis() % resolution.getMillis() == 0, "Persisted duration <"+persistedDuration+"> must be a multiple of resolution <"+resolution+">");
+    }
     this.optionalPersistedDuration = Preconditions.checkNotNull(optionalPersistedDuration, "null optionalPersistedDuration");
     this.consolidatorTypes = Collections.unmodifiableList(new ArrayList<Class<? extends Consolidator>>(Preconditions.checkNotNull(consolidatorTypes, "null consolidatorTypes")));
     this.consolidationListeners = Collections.unmodifiableList(new ArrayList<ConsolidationListener>(Preconditions.checkNotNull(consolidationListeners, "null consolidationListeners")));
