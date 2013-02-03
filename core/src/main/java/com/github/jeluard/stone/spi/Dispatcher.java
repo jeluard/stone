@@ -257,11 +257,11 @@ public abstract class Dispatcher {
    * @param currentTimestamp
    * @param value
    */
-  public final void publish(final Triple<Duration, Consolidator[], ConsolidationListener[]>[] triples, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) {
+  public final void publish(final Triple<Window, Consolidator[], ConsolidationListener[]>[] triples, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) {
     //Note: triples could be factored by Duration to limit window threshold crossing checks.
     //Given the low probability several Window have same resolution but different duration this optimisation is not considered to keep implementation simple.
-    for (final Triple<Duration, Consolidator[], ConsolidationListener[]> triple : triples) {
-      final Duration resolution = triple.first;
+    for (final Triple<Window, Consolidator[], ConsolidationListener[]> triple : triples) {
+      final Duration resolution = triple.first.getResolution();
       final Consolidator[] consolidators = triple.second;
       final ConsolidationListener[] consolidationListeners = triple.third;
       if (!dispatch(resolution, consolidators, consolidationListeners, beginningTimestamp, previousTimestamp, currentTimestamp, value)) {
