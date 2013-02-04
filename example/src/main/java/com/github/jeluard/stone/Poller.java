@@ -42,9 +42,9 @@ public class Poller {
         return url.toString();
       }
       @Override
-      protected Future<Integer> metric(final URL url) throws Exception {
+      protected Future<Integer> metric(final URL url) {
         long before = System.currentTimeMillis();
-        url.openConnection().connect();
+      //  url.openConnection().connect();
         return Futures.immediateFuture((int)(System.currentTimeMillis() - before));
       }
     };
