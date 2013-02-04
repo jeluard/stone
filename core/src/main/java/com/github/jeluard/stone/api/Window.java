@@ -16,6 +16,7 @@
  */
 package com.github.jeluard.stone.api;
 
+import com.github.jeluard.stone.helper.Loggers;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
@@ -24,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -101,6 +103,12 @@ public final class Window {
     this.optionalPersistedDuration = Preconditions.checkNotNull(optionalPersistedDuration, "null optionalPersistedDuration");
     this.consolidatorTypes = Collections.unmodifiableList(new ArrayList<Class<? extends Consolidator>>(Preconditions.checkNotNull(consolidatorTypes, "null consolidatorTypes")));
     this.consolidationListeners = Collections.unmodifiableList(new ArrayList<ConsolidationListener>(Preconditions.checkNotNull(consolidationListeners, "null consolidationListeners")));
+
+    if (!optionalPersistedDuration.isPresent() && consolidationListeners.isEmpty()) {
+      if (Loggers.BASE_LOGGER.isLoggable(Level.INFO)) {
+        Loggers.BASE_LOGGER.info("No "+ConsolidationListener.class.getSimpleName()+" and not persisted: all data will be discarded");
+      }
+    }
   }
 
   public static Window.Builder of(final Duration duration) {
