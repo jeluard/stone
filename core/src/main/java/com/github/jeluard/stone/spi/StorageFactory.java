@@ -86,26 +86,6 @@ public abstract class StorageFactory<T extends Storage> implements Closeable {
   }
 
   /**
-   * Close the {@link Storage} created for this triple.
-   *
-   * @param id
-   * @param window
-   * @throws IOException 
-   */
-  @Idempotent
-  public void close(final String id, final Window window) throws IOException {
-    final T storage = this.cache.remove(new Pair<String, Window>(id, window));
-    if (storage == null) {
-      if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
-        Loggers.BASE_LOGGER.log(Level.WARNING, "{0} for <{1}, {2}> does not exist", new Object[]{Storage.class.getSimpleName(), id, window});
-      }
-      return;
-    }
-
-    close(storage);
-  }
-
-  /**
    * {@inheritDoc}
    */
   @Idempotent
@@ -123,6 +103,26 @@ public abstract class StorageFactory<T extends Storage> implements Closeable {
       }
     }
     this.cache.clear();
+  }
+
+  /**
+   * Close the {@link Storage} created for this triple.
+   *
+   * @param id
+   * @param window
+   * @throws IOException 
+   */
+  @Idempotent
+  public final void close(final String id, final Window window) throws IOException {
+    final T storage = this.cache.remove(new Pair<String, Window>(id, window));
+    if (storage == null) {
+      if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
+        Loggers.BASE_LOGGER.log(Level.WARNING, "{0} for <{1}, {2}> does not exist", new Object[]{Storage.class.getSimpleName(), id, window});
+      }
+      return;
+    }
+
+    close(storage);
   }
 
   /**
@@ -144,12 +144,13 @@ public abstract class StorageFactory<T extends Storage> implements Closeable {
   }
 
   /**
-   * Delete all {@link Storage} generated data associated to timeseries {@code id}.
+   * Optionnaly delete all {@link Storage} generated resources associated to timeseries {@code id}.
    *
    * @param id
    * @throws IOException 
    */
   @Idempotent
-  public abstract void delete(String id) throws IOException;
-  
+  public void delete(String id) throws IOException {
+  }
+
 }

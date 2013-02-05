@@ -33,13 +33,4 @@ public class MemoryStorageFactory extends StorageFactory<MemoryStorage> {
     return new MemoryStorage((int) (duration.getMillis() / window.getResolution().getMillis()), window.getConsolidatorTypes().size());
   }
 
-
-  @Override
-  public void close(final String id, final Window window) throws IOException {
-  }
-
-  @Override
-  public void delete(String id) throws IOException {
-  }
-
 }
