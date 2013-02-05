@@ -14,12 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.jeluard.stone.api;
+package com.github.jeluard.stone.pattern;
 
 import com.github.jeluard.guayaba.annotation.Idempotent;
 import com.github.jeluard.guayaba.base.Triple;
 import com.github.jeluard.guayaba.lang.Cancelable;
 import com.github.jeluard.guayaba.util.concurrent.Scheduler;
+import com.github.jeluard.stone.api.Database;
+import com.github.jeluard.stone.api.Reader;
+import com.github.jeluard.stone.api.TimeSeries;
+import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.helper.Loggers;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
