@@ -19,7 +19,7 @@ package com.github.jeluard.stone.consolidator;
 /**
  * A {@link com.github.jeluard.stone.spi.Consolidator} providing the {@code sum} of accumulated values.
  */
-public final class SumConsolidator extends BaseLiveConsolidator {
+public final class SumConsolidator extends BaseStreamingConsolidator {
 
   @Override
   public void accumulate(final long timestamp, final int value) {

@@ -19,7 +19,7 @@ package com.github.jeluard.stone.consolidator;
 /**
  * {@link com.github.jeluard.stone.spi.Consolidator} implementation using max {@code value} as result.
  */
-public final class MaxConsolidator extends BaseLiveConsolidator {
+public final class MaxConsolidator extends BaseStreamingConsolidator {
 
   @Override
   protected int initialValue() {

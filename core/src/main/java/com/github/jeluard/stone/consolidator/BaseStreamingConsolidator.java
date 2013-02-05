@@ -21,7 +21,7 @@ package com.github.jeluard.stone.consolidator;
  * <br/>
  * Live consolidators eventually compromise efficiency (as result is computed at each accumulation) for memory usage (as all elements don't have to be kept).
  */
-public abstract class BaseLiveConsolidator extends BaseConsolidator {
+public abstract class BaseStreamingConsolidator extends BaseConsolidator {
 
   private volatile int currentResult;
 

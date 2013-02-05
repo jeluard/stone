@@ -19,7 +19,7 @@ package com.github.jeluard.stone.consolidator;
 /**
  * {@link com.github.jeluard.stone.spi.Consolidator} implementation using last {@code value} as result.
  */
-public final class LastConsolidator extends BaseLiveConsolidator {
+public final class LastConsolidator extends BaseStreamingConsolidator {
 
   @Override
   public void accumulate(final long timestamp, final int value) {

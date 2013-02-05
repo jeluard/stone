@@ -19,7 +19,7 @@ package com.github.jeluard.stone.consolidator;
 /**
  * {@link com.github.jeluard.stone.spi.Consolidator} implementation using first {@code value} as result.
  */
-public final class FirstConsolidator  extends BaseLiveConsolidator {
+public final class FirstConsolidator  extends BaseStreamingConsolidator {
 
   private volatile boolean hasBeenReset;
 

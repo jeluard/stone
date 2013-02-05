@@ -19,7 +19,7 @@ package com.github.jeluard.stone.consolidator;
 /**
  * {@link com.github.jeluard.stone.spi.Consolidator} implementation using min {@code value} as result.
  */
-public final class MinConsolidator extends BaseLiveConsolidator {
+public final class MinConsolidator extends BaseStreamingConsolidator {
 
   @Override
   protected int initialValue() {
