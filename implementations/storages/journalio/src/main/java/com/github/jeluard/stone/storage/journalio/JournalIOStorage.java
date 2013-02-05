@@ -17,7 +17,7 @@
 package com.github.jeluard.stone.storage.journalio;
 
 import com.github.jeluard.guayaba.base.Pair;
-import com.github.jeluard.stone.spi.BaseBinaryStorage;
+import com.github.jeluard.stone.spi.ByteBufferStorage;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.AbstractIterator;
@@ -52,7 +52,7 @@ import org.joda.time.Duration;
  * <br>
  * This format is both easy to implement and fast to parse but waste significant space.
  */
-public final class JournalIOStorage extends BaseBinaryStorage {
+public final class JournalIOStorage extends ByteBufferStorage {
 
   private static final WriteCallback LOGGING_WRITE_CALLBACK = new WriteCallback() {
     @Override
