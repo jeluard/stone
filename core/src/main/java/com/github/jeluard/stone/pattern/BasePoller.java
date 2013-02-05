@@ -83,7 +83,7 @@ public abstract class BasePoller<T> implements Cancelable {
   }
 
   protected long initialWaitTime() {
-    return this.period.getMillis();
+    return this.period.getMillis() / 10;
   }
 
   protected long perCheckWaitTime() {
