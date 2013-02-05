@@ -107,7 +107,7 @@ public final class Window {
 
     if (!optionalPersistedDuration.isPresent() && consolidationListeners.isEmpty()) {
       if (Loggers.BASE_LOGGER.isLoggable(Level.INFO)) {
-        Loggers.BASE_LOGGER.info("No "+ConsolidationListener.class.getSimpleName()+" and not persisted: all data will be discarded");
+        Loggers.BASE_LOGGER.log(Level.INFO, "No {0} and not persisted: all data will be discarded", ConsolidationListener.class.getSimpleName());
       }
     }
   }
