@@ -16,6 +16,7 @@
  */
 package com.github.jeluard.stone.api;
 
+import com.github.jeluard.guayaba.base.Preconditions2;
 import com.github.jeluard.stone.helper.Loggers;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -101,7 +102,7 @@ public final class Window {
       Preconditions.checkArgument(persistedDuration.getMillis() % resolution.getMillis() == 0, "Persisted duration <"+persistedDuration+"> must be a multiple of resolution <"+resolution+">");
     }
     this.optionalPersistedDuration = Preconditions.checkNotNull(optionalPersistedDuration, "null optionalPersistedDuration");
-    this.consolidatorTypes = Collections.unmodifiableList(new ArrayList<Class<? extends Consolidator>>(Preconditions.checkNotNull(consolidatorTypes, "null consolidatorTypes")));
+    this.consolidatorTypes = Collections.unmodifiableList(new ArrayList<Class<? extends Consolidator>>(Preconditions2.checkNotEmpty(consolidatorTypes, "null consolidatorTypes")));
     this.consolidationListeners = Collections.unmodifiableList(new ArrayList<ConsolidationListener>(Preconditions.checkNotNull(consolidationListeners, "null consolidationListeners")));
 
     if (!optionalPersistedDuration.isPresent() && consolidationListeners.isEmpty()) {
