@@ -19,15 +19,13 @@ It also does not provide any facility to generate graphs.
 ```java
 
 //Create our main database. JournalIO will be used as storage.
-final Database database = new Database(new JournalIOStorageFactory());
+final Database database = new Database(new JournalIOStorageFactory(), new MemoryStorageFactory());
 
 //Define how published values will be consolidated: every minute using *max* algorithm and kept up to 1 hour.
-final Window window = new Window(Duration.standardMinutes(1), Duration.standardHours(1));
-final Archive archive = new Archive(Arrays.asList(MaxConsolidator.class),
-  Arrays.asList(window));
+final Window window = Window.of(Duration.standardMinutes(1)).persistedDuring(Duration.standardHours(1)).consolidatedBy(MaxConsolidator.class);
 
 //Create the TimeSeries. A new storage will be created if needed.
-final TimeSeries timeSeries = database.createOrOpen("pinger", Arrays.asList(archive));
+final TimeSeries timeSeries = database.createOrOpen("pinger", window);
 
 //Publish some values to the TimeSeries.
 timeSeries.publish(System.currentTimeMillis(), 123);
@@ -36,16 +34,18 @@ timeSeries.publish(System.currentTimeMillis(), 123);
 //You can also hook some logic at consolidation time
 final ConsolidationListener consolidationListener = new ConsolidationListener() {
   @Override
-  public void onConsolidation(final Window window, final long timestamp, final int[] consolidates) {
+  public void onConsolidation(final long timestamp, final int[] consolidates) {
     System.out.println("Got "+Arrays.toString(consolidates));
   }
 };
 
 //That will be triggered for a specific TimeSeries
-final TimeSeries monitoredTimeSeries = database.createOrOpen("pinger-monitored", Arrays.asList(archive), Arrays.asList(consolidationListener));
+final Window monitoredWindow = Window.of(Duration.standardMinutes(1)).persistedDuring(Duration.standardHours(1)).listenedBy(consolidationListener).consolidatedBy(MaxConsolidator.class);
+
+final TimeSeries monitoredTimeSeries = database.createOrOpen("pinger-monitored", monitoredWindow);
 
 //Access underlying persisted data
-final Map<Window, Reader> readers = timeSeries.getReaders();
+final Map<Window, ? extends Reader> readers = timeSeries.getReaders();
 final Reader reader = readers.get(window);
 
 //Browse everything
