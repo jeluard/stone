@@ -20,11 +20,4 @@
     <module>memory</module>
   </modules>
 
-  <repositories>
-    <repository>
-        <id>Journal.IO</id>
-        <url>https://raw.github.com/sbtourist/Journal.IO/master/m2/repo</url>
-    </repository>
-  </repositories>
-
 </project>
