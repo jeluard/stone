@@ -22,7 +22,7 @@ import java.nio.ByteBuffer;
 /**
  * Base implementation for {@link Storage} storing byte arrays.
  */
-public abstract class BaseBinaryStorage extends BaseStorage {
+public abstract class BaseBinaryStorage extends Storage {
 
   /**
    * Put {@code timestamp} into {@code buffer}.

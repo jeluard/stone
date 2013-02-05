@@ -17,28 +17,29 @@
 package com.github.jeluard.stone.storage.memory;
 
 import com.github.jeluard.stone.api.Window;
-import com.github.jeluard.stone.spi.BaseStorageFactory;
+import com.github.jeluard.stone.spi.StorageFactory;
 
 import java.io.IOException;
 
 import org.joda.time.Duration;
 
 /**
- * {@link com.github.jeluard.stone.spi.StorageFactory} creating memory based {@link com.github.jeluard.stone.spi.Storage}.
+ * {@link StorageFactory} creating memory based {@link com.github.jeluard.stone.spi.Storage}.
  */
-public class MemoryStorageFactory extends BaseStorageFactory<MemoryStorage> {
+public class MemoryStorageFactory extends StorageFactory<MemoryStorage> {
 
   @Override
   protected MemoryStorage create(final String id, final Window window, final Duration duration) throws IOException {
     return new MemoryStorage((int) (duration.getMillis() / window.getResolution().getMillis()), window.getConsolidatorTypes().size());
   }
 
-  @Override
-  public void delete(final String id) throws IOException {
-  }
 
   @Override
   public void close(final String id, final Window window) throws IOException {
+  }
+
+  @Override
+  public void delete(String id) throws IOException {
   }
 
 }

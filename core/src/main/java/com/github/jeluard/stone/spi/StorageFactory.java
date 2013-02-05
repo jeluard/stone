@@ -17,10 +17,17 @@
 package com.github.jeluard.stone.spi;
 
 import com.github.jeluard.guayaba.annotation.Idempotent;
+import com.github.jeluard.guayaba.base.Pair;
+import com.github.jeluard.guayaba.util.concurrent.ConcurrentMaps;
 import com.github.jeluard.stone.api.Window;
+import com.github.jeluard.stone.helper.Loggers;
+import com.google.common.base.Supplier;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.logging.Level;
 import javax.annotation.concurrent.ThreadSafe;
 
 import org.joda.time.Duration;
@@ -31,7 +38,9 @@ import org.joda.time.Duration;
  * Common structure can then be shared accross {@link Storage}.
  */
 @ThreadSafe
-public interface StorageFactory<T extends Storage> extends Closeable {
+public abstract class StorageFactory<T extends Storage> implements Closeable {
+
+  private final ConcurrentMap<Pair<String, Window>, T> cache = new ConcurrentHashMap<Pair<String, Window>, T>();
 
   /**
    * Create or open a {@link Storage} specific to provided {@code id}, {@link Archive} and {@link Window}.
@@ -48,7 +57,33 @@ public interface StorageFactory<T extends Storage> extends Closeable {
    * @return a fully initialized {@link Storage}
    * @throws IOException 
    */
-  T createOrGet(String id, Window window, Duration duration) throws IOException;
+  public final T createOrGet(final String id, final Window window, final Duration duration) throws IOException {
+    return ConcurrentMaps.putIfAbsentAndReturn(this.cache, new Pair<String, Window>(id, window), new Supplier<T>() {
+      @Override
+      public T get() {
+        try {
+          return create(id, window, duration);
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      }
+    });
+  }
+
+  /**
+   * @param id
+   * @param window
+   * @return an initialized {@link Storage} dedicated to {@code id}/{@code window}/{@code duration}
+   * @throws IOException 
+   */
+  protected abstract T create(String id, Window window, Duration duration) throws IOException;
+
+  /**
+   * @return all currently created {@link Storage}s
+   */
+  protected final Iterable<T> getStorages() {
+    return this.cache.values();
+  }
 
   /**
    * Close the {@link Storage} created for this triple.
@@ -58,14 +93,55 @@ public interface StorageFactory<T extends Storage> extends Closeable {
    * @throws IOException 
    */
   @Idempotent
-  void close(String id, Window window) throws IOException;
+  public void close(final String id, final Window window) throws IOException {
+    final T storage = this.cache.remove(new Pair<String, Window>(id, window));
+    if (storage == null) {
+      if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
+        Loggers.BASE_LOGGER.log(Level.WARNING, "{0} for <{1}, {2}> does not exist", new Object[]{Storage.class.getSimpleName(), id, window});
+      }
+      return;
+    }
+
+    close(storage);
+  }
 
   /**
    * {@inheritDoc}
    */
   @Idempotent
   @Override
-  void close() throws IOException;
+  public final void close() throws IOException {
+    cleanup();
+
+    for (final T storage : this.cache.values()) {
+      try {
+        close(storage);
+      } catch (IOException e) {
+        if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
+          Loggers.BASE_LOGGER.log(Level.WARNING, "Got an exception while cleaning <"+storage+">", e);
+        }
+      }
+    }
+    this.cache.clear();
+  }
+
+  /**
+   * Optionally close a {@link Storage}.
+   *
+   * @param storage
+   * @throws IOException 
+   */
+  protected void close(T storage) throws IOException {
+  }
+
+  /**
+   * Optionnally perform extra cleanup.
+   *
+   * @throws IOException 
+   * @see #close()
+   */
+  protected void cleanup() throws IOException {
+  }
 
   /**
    * Delete all {@link Storage} generated data associated to timeseries {@code id}.
@@ -74,6 +150,6 @@ public interface StorageFactory<T extends Storage> extends Closeable {
    * @throws IOException 
    */
   @Idempotent
-  void delete(String id) throws IOException;
-
+  public abstract void delete(String id) throws IOException;
+  
 }

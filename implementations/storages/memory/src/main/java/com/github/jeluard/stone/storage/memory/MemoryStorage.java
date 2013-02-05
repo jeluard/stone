@@ -16,7 +16,7 @@
 package com.github.jeluard.stone.storage.memory;
 
 import com.github.jeluard.guayaba.base.Pair;
-import com.github.jeluard.stone.spi.BaseStorage;
+import com.github.jeluard.stone.spi.Storage;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,9 +26,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 
 /**
- * An in-memory {@link BaseStorage} implementation.
+ * An in-memory {@link Storage} implementation.
  */
-public final class MemoryStorage extends BaseStorage {
+public final class MemoryStorage extends Storage {
 
   private final int maxSize;
   private final int nbConsolidators;
