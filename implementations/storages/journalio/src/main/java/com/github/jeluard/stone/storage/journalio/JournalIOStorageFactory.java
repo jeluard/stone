@@ -16,8 +16,8 @@
  */
 package com.github.jeluard.stone.storage.journalio;
 
-import com.github.jeluard.guayaba.lang.UncaughtExceptionHandlers;
 import com.github.jeluard.guayaba.util.concurrent.ExecutorServices;
+import com.github.jeluard.guayaba.util.concurrent.ThreadFactoryBuilders;
 import com.github.jeluard.stone.api.Consolidator;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.helper.Loggers;
@@ -27,7 +27,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -89,7 +88,7 @@ public class JournalIOStorageFactory extends StorageFactory<JournalIOStorage> {
       }
     }
   };
-  private final ScheduledExecutorService compactionScheduler = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setDaemon(true).setNameFormat(JournalIOStorageFactory.COMPACTOR_THREAD_NAME_FORMAT).setUncaughtExceptionHandler(UncaughtExceptionHandlers.defaultHandler(JournalIOStorageFactory.LOGGER)).build());
+  private final ScheduledExecutorService compactionScheduler = Executors.newScheduledThreadPool(1, ThreadFactoryBuilders.safeBuilder(JournalIOStorageFactory.COMPACTOR_THREAD_NAME_FORMAT, JournalIOStorageFactory.LOGGER).build());
 
   public JournalIOStorageFactory(final Executor writerExecutor, final ScheduledExecutorService disposerScheduledExecutorService) {
     this(JournalIOStorageFactory.DEFAULT_COMPACTION_INTERVAL, JournalIOStorageFactory.DEFAULT_MAX_FILE_LENGTH, writerExecutor, disposerScheduledExecutorService);
@@ -105,11 +104,11 @@ public class JournalIOStorageFactory extends StorageFactory<JournalIOStorage> {
   }
 
   public static Executor defaultWriteExecutor() {
-    return Executors.newFixedThreadPool(2*Runtime.getRuntime().availableProcessors(), new ThreadFactoryBuilder().setDaemon(true).setNameFormat(JournalIOStorageFactory.WRITERS_THREAD_NAME_FORMAT).build());
+    return Executors.newFixedThreadPool(2*Runtime.getRuntime().availableProcessors(), ThreadFactoryBuilders.safeBuilder(JournalIOStorageFactory.WRITERS_THREAD_NAME_FORMAT, JournalIOStorageFactory.LOGGER).build());
   }
 
   public static ScheduledExecutorService defaultDisposerScheduledExecutor() {
-    return Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setDaemon(true).setNameFormat(JournalIOStorageFactory.DISPOSER_THREAD_NAME_FORMAT).build());
+    return Executors.newSingleThreadScheduledExecutor(ThreadFactoryBuilders.safeBuilder(JournalIOStorageFactory.DISPOSER_THREAD_NAME_FORMAT, JournalIOStorageFactory.LOGGER).build());
   }
 
   /**

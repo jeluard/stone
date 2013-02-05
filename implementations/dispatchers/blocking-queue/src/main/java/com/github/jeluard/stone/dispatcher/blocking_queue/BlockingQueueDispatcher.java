@@ -16,14 +16,13 @@
  */
 package com.github.jeluard.stone.dispatcher.blocking_queue;
 
-import com.github.jeluard.guayaba.lang.UncaughtExceptionHandlers;
+import com.github.jeluard.guayaba.util.concurrent.ThreadFactoryBuilders;
 import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.Consolidator;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.helper.Loggers;
 import com.github.jeluard.stone.spi.Dispatcher;
 import com.google.common.base.Preconditions;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -110,7 +109,7 @@ public class BlockingQueueDispatcher extends Dispatcher {
    * @return an {@link ExecutorService} with a fixed thread pool of {@link Runtime#availableProcessors()} threads
    */
   public static ExecutorService defaultExecutorService() {
-    final ThreadFactory threadFactory = new ThreadFactoryBuilder().setDaemon(true).setNameFormat(BlockingQueueDispatcher.CONSUMERS_THREAD_NAME_FORMAT).setUncaughtExceptionHandler(UncaughtExceptionHandlers.defaultHandler(BlockingQueueDispatcher.LOGGER)).build();
+    final ThreadFactory threadFactory = ThreadFactoryBuilders.safeBuilder(BlockingQueueDispatcher.CONSUMERS_THREAD_NAME_FORMAT, BlockingQueueDispatcher.LOGGER).build();
     return Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), threadFactory);
   }
 

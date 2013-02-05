@@ -18,13 +18,12 @@ package com.github.jeluard.stone.dispatcher.disruptor;
 
 import com.github.jeluard.guayaba.base.Preconditions2;
 import com.github.jeluard.guayaba.lang.Cancelable;
-import com.github.jeluard.guayaba.lang.UncaughtExceptionHandlers;
+import com.github.jeluard.guayaba.util.concurrent.ThreadFactoryBuilders;
 import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.Consolidator;
 import com.github.jeluard.stone.helper.Loggers;
 import com.github.jeluard.stone.spi.Dispatcher;
 import com.google.common.base.Preconditions;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.lmax.disruptor.AbstractMultithreadedClaimStrategy;
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventHandler;
@@ -110,7 +109,7 @@ public class DisruptorDispatcher extends Dispatcher implements Cancelable {
    * @return an {@link ExecutorService} with a fixed thread pool of {@link Runtime#availableProcessors()} threads
    */
   public static ExecutorService defaultExecutorService() {
-    final ThreadFactory threadFactory = new ThreadFactoryBuilder().setDaemon(true).setNameFormat(DisruptorDispatcher.THREAD_NAME_FORMAT).setUncaughtExceptionHandler(UncaughtExceptionHandlers.defaultHandler(DisruptorDispatcher.LOGGER)).build();
+    final ThreadFactory threadFactory = ThreadFactoryBuilders.safeBuilder(DisruptorDispatcher.THREAD_NAME_FORMAT, DisruptorDispatcher.LOGGER).build();
     return Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), threadFactory);
   }
 
