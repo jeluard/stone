@@ -4,7 +4,7 @@
 
   <groupId>com.github.jeluard.stone</groupId>
   <artifactId>stone-parent</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.8.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Stone</name>

@@ -10,7 +10,7 @@
   <parent>
     <groupId>com.github.jeluard.stone</groupId>
     <artifactId>stone-parent</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.8.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -38,6 +38,12 @@
       <artifactId>kamikaze</artifactId>
       <version>3.0.7</version>
     </dependency-->
+    <dependency>
+      <groupId>com.github.jeluard</groupId>
+      <artifactId>guayaba</artifactId>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
