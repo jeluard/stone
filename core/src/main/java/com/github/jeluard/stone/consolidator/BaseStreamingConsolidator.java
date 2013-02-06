@@ -23,7 +23,7 @@ package com.github.jeluard.stone.consolidator;
  */
 public abstract class BaseStreamingConsolidator extends BaseConsolidator {
 
-  private volatile int currentResult;
+  private volatile int currentResult = initialValue();
 
   /**
    * @return value used as basis for {@link #getCurrentResult()}
