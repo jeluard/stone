@@ -86,17 +86,9 @@ public final class Window {
   private final List<? extends Class<? extends Consolidator>> consolidatorTypes;
   private final List<? extends ConsolidationListener> consolidationListeners;
 
-  public Window(final Duration resolution, final List<? extends Class<? extends Consolidator>> consolidatorTypes, final List<? extends ConsolidationListener> consolidationListeners) {
-    this(resolution, Optional.<Duration>absent(), consolidatorTypes, consolidationListeners);
-  }
-
-  public Window(final Duration resolution, final Duration persistedDuration, final List<? extends Class<? extends Consolidator>> consolidatorTypes, final List<? extends ConsolidationListener> consolidationListeners) {
-    this(resolution, Optional.of(Preconditions.checkNotNull(persistedDuration, "null persistedDuration")), consolidatorTypes, consolidationListeners);
-  }
-
   private Window(final Duration resolution, final Optional<Duration> optionalPersistedDuration, final List<? extends Class<? extends Consolidator>> consolidatorTypes, final List<? extends ConsolidationListener> consolidationListeners) {
-    Preconditions.checkArgument(resolution != null && resolution.getMillis() > 0, "0 or null resolution");
-    this.resolution = resolution;
+    this.resolution = Preconditions.checkNotNull(resolution, "null resolution");
+    Preconditions.checkArgument(resolution.getMillis() > 0, "resolution must be greater than 0");
     if (optionalPersistedDuration.isPresent()) {
       final Duration persistedDuration = optionalPersistedDuration.get();
       Preconditions.checkArgument(persistedDuration.getMillis() >= resolution.getMillis(), "Persisted duration <"+persistedDuration+"> must be greater than resolution <"+resolution+">");
