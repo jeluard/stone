@@ -40,11 +40,11 @@ public final class Database implements Closeable {
 
   private static final Duration DEFAULT_GRANULARITY = Duration.millis(1L);
 
-  final StorageFactory<?> storageFactory;
-  final Dispatcher dispatcher;
+  private final StorageFactory<?> storageFactory;
+  private final Dispatcher dispatcher;
   private final ConcurrentMap<String, TimeSeries> timeSeriess = new ConcurrentHashMap<String, TimeSeries>();
 
-  public Database(final Dispatcher dispatcher, final StorageFactory<?> storageFactory) throws IOException {
+  public Database(final Dispatcher dispatcher, final StorageFactory<?> storageFactory) {
     this.dispatcher = Preconditions.checkNotNull(dispatcher, "null dispatcher");
     this.storageFactory = Preconditions.checkNotNull(storageFactory, "null storageFactory");
   }
@@ -69,15 +69,24 @@ public final class Database implements Closeable {
     Preconditions.checkNotNull(granularity, "null granularity");
     Preconditions.checkNotNull(windows, "null windows");
 
-    final TimeSeries timeSeries = new TimeSeries(id, granularity, windows, this.dispatcher, this.storageFactory);
+    final TimeSeries timeSeries = new TimeSeries(id, granularity, windows, this.dispatcher, this.storageFactory) {
+      @Override
+      protected void cleanup() {
+        Database.this.timeSeriess.remove(id);
+      }
+    };
     if (this.timeSeriess.putIfAbsent(id, timeSeries) != null) {
       throw new IllegalArgumentException("A "+TimeSeries.class.getSimpleName()+" with id <"+id+"> already exists");
     }
     return timeSeries;
   }
 
+  private Optional<TimeSeries> remove(final String id) {
+    return Optional.fromNullable(this.timeSeriess.remove(id));
+  }
+
   @Idempotent
-  public void delete(final String id)throws IOException  {
+  public void delete(final String id) throws IOException  {
     final Optional<TimeSeries> optionalTimeseries = remove(id);
     if (!optionalTimeseries.isPresent()) {
       if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
@@ -90,14 +99,12 @@ public final class Database implements Closeable {
     this.storageFactory.delete(timeSeries.getId());
   }
 
-  Optional<TimeSeries> remove(final String id) {
-    return Optional.fromNullable(this.timeSeriess.remove(id));
-  }
-
   @Idempotent
   @Override
-  public void close() throws IOException {
-    this.timeSeriess.clear();
+  public void close() {
+    for (final TimeSeries timeSeries : this.timeSeriess.values()) {
+      timeSeries.close();
+    }
   }
 
 }
