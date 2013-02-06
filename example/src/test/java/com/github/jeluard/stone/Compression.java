@@ -15,6 +15,7 @@
  */
 package com.github.jeluard.stone;
 
+import com.github.jeluard.stone.storage.memory.MemoryStorage;
 import com.kamikaze.docidset.api.DocSet;
 import com.kamikaze.docidset.utils.DocSetFactory;
 import java.io.ByteArrayInputStream;
@@ -36,7 +37,22 @@ import org.iq80.snappy.Snappy;
  * @author julien
  */
 public class Compression {
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws Exception {
+    
+    
+    MemoryStorage storage = new MemoryStorage(10000, 1);
+    int[] consolidates = new int[] {1};
+    while (!Thread.currentThread().isInterrupted()) {
+      long before = System.currentTimeMillis();
+      for (int i = 0; i < 1000*1000; i++) {
+        storage.onConsolidation(before, consolidates);
+      }
+      System.out.println("time: "+(System.currentTimeMillis()-before));
+    }
+    
+    System.exit(0);
+    
+    
     ByteBuffer buffer = ByteBuffer.allocate(500);
     final Random random = new Random();
     for (int i = 0; i < 25; i++) {
@@ -63,6 +79,7 @@ public class Compression {
     System.out.println("after snappy: "+length);
     
     //http://www.java-examples.com/compress-byte-array-using-deflater-example
+    
     long before = System.currentTimeMillis();
     byte[] output = new byte[1000];
      Deflater compresser = new Deflater(Deflater.BEST_COMPRESSION);
