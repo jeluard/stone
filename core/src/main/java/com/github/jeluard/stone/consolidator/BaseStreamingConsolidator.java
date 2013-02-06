@@ -16,12 +16,14 @@
  */
 package com.github.jeluard.stone.consolidator;
 
+import com.github.jeluard.stone.api.Consolidator;
+
 /**
- * Base implementation for {@link com.github.jeluard.stone.spi.Consolidator} consolidating after each accumulation.
+ * Base implementation for {@link Consolidator} consolidating after each accumulation.
  * <br/>
  * Live consolidators eventually compromise efficiency (as result is computed at each accumulation) for memory usage (as all elements don't have to be kept).
  */
-public abstract class BaseStreamingConsolidator extends BaseConsolidator {
+public abstract class BaseStreamingConsolidator extends Consolidator {
 
   private volatile int currentResult = initialValue();
 

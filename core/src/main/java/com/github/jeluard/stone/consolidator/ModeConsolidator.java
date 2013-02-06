@@ -16,15 +16,16 @@
  */
 package com.github.jeluard.stone.consolidator;
 
+import com.github.jeluard.stone.api.Consolidator;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
 
 /**
- * A {@link com.github.jeluard.stone.spi.Consolidator} providing the {@code mode} of accumulated values.
+ * A {@link Consolidator} providing the {@code mode} of accumulated values.
  */
-public final class ModeConsolidator extends BaseConsolidator {
+public final class ModeConsolidator extends Consolidator {
 
   private final Multiset<Integer> values;
   //Inspired from guava internals

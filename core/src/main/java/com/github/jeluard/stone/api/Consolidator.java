@@ -29,9 +29,13 @@ package com.github.jeluard.stone.api;
  * <br>
  * A {@link Consolidator} will be instantiated per {@link TimeSeries} / {@link Window} couple.
  * <br>
+ * <br>
  * Different threads might be used to call successive {@link #accumulate(long, int)} and {@link #consolidateAndReset()} but <b>never</b> concurrently.
+ * <br>
+ * For a considered {@link Window} duration {@link #consolidateAndReset()} will *always* be called after all {@link #accumulate(long, int)}s. Next {@link #accumulate(long, int)} call is performed after {@link #consolidateAndReset()} is executed.
+ * {@link #accumulate(long, int)} calls can be re-ordered (i.e. {@code timestamp} is not monotonically increasing).
  */
-public interface Consolidator {
+public abstract class Consolidator {
 
   /**
    * Accumulate a new value that will be considered for the consolidation process.
@@ -39,7 +43,7 @@ public interface Consolidator {
    * @param timestamp
    * @param value 
    */
-  void accumulate(long timestamp, int value);
+  public abstract void accumulate(long timestamp, int value);
 
   /**
    * Atomically compute consolidated value and reset itself for next consolidation cycle.
@@ -48,6 +52,21 @@ public interface Consolidator {
    *
    * @return result of consolidation of all values accumulated since last call
    */
-  int consolidateAndReset();
+  public final int consolidateAndReset() {
+    final int consolidate = consolidate();
+    reset();
+    return consolidate;
+  }
+
+  /**
+   * Called right after {@link #consolidate()}.
+   */
+  protected void reset() {
+  }
+
+  /**
+   * @return final consolidated value
+   */
+  protected abstract int consolidate();
 
 }

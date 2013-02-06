@@ -17,6 +17,7 @@
 package com.github.jeluard.stone.consolidator;
 
 import com.github.jeluard.guayaba.base.Preconditions2;
+import com.github.jeluard.stone.api.Consolidator;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
 
@@ -24,13 +25,13 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 /**
- * A {@link com.github.jeluard.stone.spi.Consolidator} providing the pth {@code percentile} of accumulated values.
+ * A {@link Consolidator} providing the pth {@code percentile} of accumulated values.
  * <br>
  * <b>nearest rank</b> algorithm is used here.
  * <br>
  * A integer array of {@link com.github.jeluard.stone.api.Window#getMaxSamples()} will be allocated to limit array resizing. This leads to high memory usage.
  */
-public abstract class BasePercentileConsolidator extends BaseConsolidator {
+public abstract class BasePercentileConsolidator extends Consolidator {
 
   private final int maxSamples;
   private final float pth;

@@ -16,10 +16,12 @@
  */
 package com.github.jeluard.stone.consolidator;
 
+import com.github.jeluard.stone.api.Consolidator;
+
 /**
- * A {@link com.github.jeluard.stone.spi.Consolidator} providing the {@code mean} of accumulated values.
+ * A {@link Consolidator} providing the {@code mean} of accumulated values.
  */
-public final class MeanConsolidator extends BaseConsolidator {
+public final class MeanConsolidator extends Consolidator {
 
   private volatile int sum = 0;
   private volatile int count = 0;
