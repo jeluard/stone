@@ -21,9 +21,19 @@ package com.github.jeluard.stone.consolidator;
  */
 public final class LastConsolidator extends BaseStreamingConsolidator {
 
+  private volatile long timestamp;
+
   @Override
   public void accumulate(final long timestamp, final int value) {
-    setCurrentResult(value);
+    //Not atomic but not needed.
+    if (this.timestamp == 0L || timestamp > this.timestamp) {
+      setCurrentResult(value);
+      this.timestamp = timestamp;
+    }
   }
 
+  @Override
+  protected void afterReset() {
+    this.timestamp = 0L;
+  }
 }

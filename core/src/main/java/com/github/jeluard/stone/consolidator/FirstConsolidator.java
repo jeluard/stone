@@ -21,20 +21,20 @@ package com.github.jeluard.stone.consolidator;
  */
 public final class FirstConsolidator extends BaseStreamingConsolidator {
 
-  private volatile boolean hasBeenReset = true;
+  private volatile long timestamp;
 
   @Override
   public void accumulate(final long timestamp, final int value) {
     //Not atomic but not needed.
-    if (this.hasBeenReset) {
+    if (this.timestamp == 0L || timestamp < this.timestamp) {
       setCurrentResult(value);
-      this.hasBeenReset = false;
+      this.timestamp = timestamp;
     }
   }
 
   @Override
   protected void afterReset() {
-    this.hasBeenReset = true;
+    this.timestamp = 0L;
   }
 
 }
