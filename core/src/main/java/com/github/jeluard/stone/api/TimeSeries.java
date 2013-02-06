@@ -35,6 +35,8 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Level;
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -58,6 +60,8 @@ public class TimeSeries implements Identifiable<String> {
 
   private static final int MAX_SAMPLES_WARNING_THRESHOLD = 1000 * 1000;
 
+  private static final Set<String> IDS = new CopyOnWriteArraySet<String>();
+
   private final String id;
   private final int granularity;
   private final Dispatcher dispatcher;
@@ -69,6 +73,9 @@ public class TimeSeries implements Identifiable<String> {
 
   public TimeSeries(final String id, final Duration granularity, final Window[] windows, final Dispatcher dispatcher, final StorageFactory<?> storageFactory) throws IOException {
     this.id = Preconditions.checkNotNull(id, "null id");
+    if (!TimeSeries.IDS.add(id)) {
+      throw new IllegalArgumentException("Id <"+id+"> is already used");
+    }
     this.granularity = (int) Preconditions.checkNotNull(granularity, "null granularity").getMillis();
     this.storageFactory = Preconditions.checkNotNull(storageFactory, "null storageFactory");
     this.dispatcher = Preconditions.checkNotNull(dispatcher, "null dispatcher");
@@ -304,7 +311,11 @@ public class TimeSeries implements Identifiable<String> {
       }
     }
 
-    cleanup();
+    try {
+      cleanup();
+    } finally {
+      TimeSeries.IDS.remove(this.id);
+    }
   }
 
   /**
