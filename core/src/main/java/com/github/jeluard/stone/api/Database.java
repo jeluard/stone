@@ -98,7 +98,6 @@ public final class Database implements Closeable {
   @Override
   public void close() throws IOException {
     this.timeSeriess.clear();
-    this.storageFactory.close();
   }
 
 }
