@@ -17,11 +17,11 @@
 package com.github.jeluard.stone;
 
 import com.github.jeluard.guayaba.base.Pair;
-import com.github.jeluard.stone.api.Database;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.consolidator.Percentile95Consolidator;
 import com.github.jeluard.stone.dispatcher.sequential.SequentialDispatcher;
 import com.github.jeluard.stone.pattern.BasePoller;
+import com.github.jeluard.stone.pattern.Database;
 import com.github.jeluard.stone.storage.journalio.JournalIOStorageFactory;
 import com.google.common.util.concurrent.AbstractFuture;
 

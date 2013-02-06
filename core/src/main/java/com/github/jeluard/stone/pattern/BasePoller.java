@@ -20,7 +20,6 @@ import com.github.jeluard.guayaba.annotation.Idempotent;
 import com.github.jeluard.guayaba.base.Triple;
 import com.github.jeluard.guayaba.lang.Cancelable;
 import com.github.jeluard.guayaba.util.concurrent.Scheduler;
-import com.github.jeluard.stone.api.Database;
 import com.github.jeluard.stone.api.Reader;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.api.Window;

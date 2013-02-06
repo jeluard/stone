@@ -16,11 +16,11 @@
  */
 package com.github.jeluard.stone;
 
-import com.github.jeluard.stone.api.Database;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.consolidator.MaxConsolidator;
 import com.github.jeluard.stone.dispatcher.blocking_queue.BlockingQueueDispatcher;
+import com.github.jeluard.stone.pattern.Database;
 import com.github.jeluard.stone.storage.journalio.JournalIOStorageFactory;
 
 import java.util.ArrayList;

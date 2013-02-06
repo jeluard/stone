@@ -14,8 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.jeluard.stone.api;
+package com.github.jeluard.stone.pattern;
 
+import com.github.jeluard.stone.api.TimeSeries;
+import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.spi.Dispatcher;
 import com.github.jeluard.stone.spi.StorageFactory;
 import com.google.common.base.Optional;
