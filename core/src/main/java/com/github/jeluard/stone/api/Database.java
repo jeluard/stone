@@ -16,8 +16,6 @@
  */
 package com.github.jeluard.stone.api;
 
-import com.github.jeluard.guayaba.annotation.Idempotent;
-import com.github.jeluard.stone.helper.Loggers;
 import com.github.jeluard.stone.spi.Dispatcher;
 import com.github.jeluard.stone.spi.StorageFactory;
 import com.google.common.base.Optional;
@@ -26,7 +24,6 @@ import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Level;
 import javax.annotation.concurrent.ThreadSafe;
 
 import org.joda.time.Duration;
