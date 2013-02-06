@@ -44,6 +44,7 @@ import org.joda.time.Interval;
 
 /**
  * Main abstraction allowing to publish {@code timestamp}/{@code value} pair.
+ * <br>
  * Each published value is passed to all associated {@link Consolidator} (defined in {@link Archive#getConsolidators()}) first for accumulation (see {@link Consolidator#accumulate(long, int)})
  * then each time a {@link Window#getResolution()} threshold is crossed for consolidation (see {@link Consolidator#consolidateAndReset()}).
  * Final consolidated results are persisted in a {@link TimeSeries}/{@link Window} specific {@link Storage}.
@@ -53,7 +54,7 @@ import org.joda.time.Interval;
  * @see Database
  */
 @NotThreadSafe
-public final class TimeSeries implements Identifiable<String> {
+public class TimeSeries implements Identifiable<String> {
 
   private static final int MAX_SAMPLES_WARNING_THRESHOLD = 1000 * 1000;
 
@@ -66,7 +67,7 @@ public final class TimeSeries implements Identifiable<String> {
   private long beginning = 0L;
   private long latest = 0L;
 
-  TimeSeries(final String id, final Duration granularity, final Window[] windows, final Dispatcher dispatcher, final StorageFactory<?> storageFactory) throws IOException {
+  public TimeSeries(final String id, final Duration granularity, final Window[] windows, final Dispatcher dispatcher, final StorageFactory<?> storageFactory) throws IOException {
     this.id = Preconditions.checkNotNull(id, "null id");
     this.granularity = (int) Preconditions.checkNotNull(granularity, "null granularity").getMillis();
     this.storageFactory = Preconditions.checkNotNull(storageFactory, "null storageFactory");
@@ -93,13 +94,6 @@ public final class TimeSeries implements Identifiable<String> {
     }
     return pairs;
   }
-
-  /*private Optional<Storage> extractStorage(final ConsolidationListener[] consolidationListeners) {
-    for (final ConsolidationListener consolidationListener : consolidationListeners) {
-      
-    }
-    return (Storage) consolidationListeners[0];
-  }*/
 
   /**
    * Instantiate a {@link Consolidator} from specified {@code type}.
@@ -144,7 +138,7 @@ public final class TimeSeries implements Identifiable<String> {
    * @return all {@link Consolidator} mapping to {@link Window#getConsolidatorTypes()}
    * @see #createConsolidator(java.lang.Class)
    */
-  private Consolidator[] createConsolidators(final Window window, final int maxSamples) {
+  protected Consolidator[] createConsolidators(final Window window, final int maxSamples) {
     final List<? extends Class<? extends Consolidator>> consolidatorTypes = window.getConsolidatorTypes();
     final Consolidator[] consolidators = new Consolidator[consolidatorTypes.size()];
     for (final Iterables2.Indexed<? extends Class<? extends Consolidator>> indexed : Iterables2.withIndex(consolidatorTypes)) {
@@ -236,14 +230,14 @@ public final class TimeSeries implements Identifiable<String> {
    * @return a unique id identifying this {@link TimeSeries} in associated {@link Database}
    */
   @Override
-  public String getId() {
+  public final String getId() {
     return this.id;
   }
 
   /**
    * @return all underlying {@link Reader} ordered by {@link Window}
    */
-  public Map<Window, ? extends Reader> getReaders() {
+  public final Map<Window, ? extends Reader> getReaders() {
     return this.readers;
   }
 
@@ -282,7 +276,7 @@ public final class TimeSeries implements Identifiable<String> {
    * @param value
    * @return true if {@code value} has been considered for accumulation (i.e. it is not a value in the past)
    */
-  public boolean publish(final long timestamp, final int value) {
+  public final boolean publish(final long timestamp, final int value) {
     final long previousTimestamp = recordTimestamp(timestamp);
     final boolean isAfter = isAfterPreviousTimestamp(previousTimestamp, timestamp, this.granularity);
     if (!isAfter) {
@@ -298,7 +292,7 @@ public final class TimeSeries implements Identifiable<String> {
   }
 
   @Idempotent
-  public void close() {
+  public final void close() {
     for (final Triple<Window, ?, ?> triple : this.flattened) {
       final Window window = triple.first;
       try {
@@ -309,6 +303,15 @@ public final class TimeSeries implements Identifiable<String> {
         }
       }
     }
+
+    cleanup();
+  }
+
+  /**
+   * Extension point. Called during {@link #close()}.
+   */
+  @Idempotent
+  protected void cleanup() {
   }
 
 }
