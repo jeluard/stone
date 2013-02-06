@@ -23,7 +23,6 @@ import com.github.jeluard.stone.spi.StorageFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -36,7 +35,7 @@ import org.joda.time.Duration;
  * Main entry point to manage {@link TimeSeries} life cycle.
  */
 @ThreadSafe
-public final class Database implements Closeable {
+public final class Database {
 
   private static final Duration DEFAULT_GRANULARITY = Duration.millis(1L);
 
@@ -49,6 +48,15 @@ public final class Database implements Closeable {
     this.storageFactory = Preconditions.checkNotNull(storageFactory, "null storageFactory");
   }
 
+  /**
+   * Create a {@link TimeSeries} with a default granularity of {@code Database#DEFAULT_GRANULARITY}.
+   *
+   * @param id
+   * @param windows
+   * @return
+   * @throws IOException
+   * @see #createOrOpen(java.lang.String, org.joda.time.Duration, com.github.jeluard.stone.api.Window[])
+   */
   public TimeSeries createOrOpen(final String id, final Window ... windows) throws IOException {
     return createOrOpen(id, Database.DEFAULT_GRANULARITY, windows);
   }
@@ -75,9 +83,10 @@ public final class Database implements Closeable {
         Database.this.timeSeriess.remove(id);
       }
     };
-    if (this.timeSeriess.putIfAbsent(id, timeSeries) != null) {
-      throw new IllegalArgumentException("A "+TimeSeries.class.getSimpleName()+" with id <"+id+"> already exists");
-    }
+
+    //If We can't have two TimeSeries with same id as TimeSeries enforce this.
+    this.timeSeriess.putIfAbsent(id, timeSeries);
+
     return timeSeries;
   }
 
@@ -87,6 +96,8 @@ public final class Database implements Closeable {
 
   @Idempotent
   public void delete(final String id) throws IOException  {
+    Preconditions.checkNotNull(id, "null id");
+
     final Optional<TimeSeries> optionalTimeseries = remove(id);
     if (!optionalTimeseries.isPresent()) {
       if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
@@ -99,9 +110,12 @@ public final class Database implements Closeable {
     this.storageFactory.delete(timeSeries.getId());
   }
 
-  @Idempotent
-  @Override
-  public void close() {
+  /**
+   * Remove and close all currently used {@link TimeSeries}. Do not delete any data.
+   * <br>
+   * Any previously created {@link TimeSeries} will be unusable and will have to be re-created.
+   */
+  public void reset() {
     for (final TimeSeries timeSeries : this.timeSeriess.values()) {
       timeSeries.close();
     }
