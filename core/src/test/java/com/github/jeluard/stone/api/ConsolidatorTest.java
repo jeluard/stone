@@ -19,6 +19,7 @@ package com.github.jeluard.stone.api;
 import java.lang.reflect.Constructor;
 
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Test;
 
 public abstract class ConsolidatorTest<T extends Consolidator> {
@@ -27,22 +28,51 @@ public abstract class ConsolidatorTest<T extends Consolidator> {
 
   protected T createInstance() {
     try {
-      final Class<T> type = getType();
-      try {
-        type.getConstructor();
+      if (isIntConstructorDefined()) {
+        return createInstance(5);
+      } else {
         return getType().newInstance();
-      } catch (NoSuchMethodException e) {
-        final Constructor<T> intConstructor = type.getConstructor(int.class);
-        return intConstructor.newInstance(5);
       }
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }
 
+  protected T createInstance(final int maxSamples) {
+    try {
+      final Constructor<T> intConstructor = getType().getConstructor(int.class);
+      return intConstructor.newInstance(5);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private boolean isIntConstructorDefined() {
+    try {
+      getType().getConstructor(int.class);
+      return true;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
   @Test
   public void shouldDefineAcceptableConstructor() {
     createInstance();
+  }
+
+  @Test
+  public void shouldCreationFailWithNegativeMaxSamplesSize() {
+    Assume.assumeTrue(isIntConstructorDefined());
+
+    createInstance(-2);
+  }
+
+  @Test
+  public void shouldCreationFailWithRidiculouslyHighMaxSamplesSize() {
+    Assume.assumeTrue(isIntConstructorDefined());
+
+    createInstance(Integer.MAX_VALUE);
   }
 
   @Test
