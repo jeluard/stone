@@ -127,7 +127,7 @@ public final class Window {
 
   @Override
   public int hashCode() {
-    return this.resolution.hashCode() + this.consolidatorTypes.hashCode() + this.consolidationListeners.hashCode();
+    return this.resolution.hashCode() + this.optionalPersistedDuration.hashCode() + this.consolidatorTypes.hashCode() + this.consolidationListeners.hashCode();
   }
 
   @Override
@@ -137,12 +137,12 @@ public final class Window {
     }
 
     final Window other = (Window) object;
-    return this.resolution.equals(other.resolution) && this.consolidatorTypes.equals(other.consolidatorTypes) && this.consolidationListeners.equals(other.consolidationListeners);
+    return this.resolution.equals(other.resolution) && this.optionalPersistedDuration.equals(other.optionalPersistedDuration) && this.consolidatorTypes.equals(other.consolidatorTypes) && this.consolidationListeners.equals(other.consolidationListeners);
   }
 
   @Override
   public String toString() {
-    return "resolution <"+this.resolution+"> consolidatorTypes <"+this.consolidatorTypes+"> consolidationListeners <"+this.consolidationListeners+">";
+    return "resolution <"+this.resolution+"> persistedDuration <"+this.optionalPersistedDuration+"> consolidatorTypes <"+this.consolidatorTypes+"> consolidationListeners <"+this.consolidationListeners+">";
   }
 
 }
