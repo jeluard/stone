@@ -62,7 +62,8 @@ public final class Database {
   }
 
   /**
-   * 
+   * Create a {@link TimeSeries} using this database {@link Dispatcher} and {@link StorageFactory}.
+   * <br>
    * During the life cycle of this {@link Database} a uniquely identified {@link TimeSeries} can be opened only once.
    * Calling this method twice with a same value for {@code id} will fail.
    *
@@ -92,22 +93,6 @@ public final class Database {
 
   private Optional<TimeSeries> remove(final String id) {
     return Optional.fromNullable(this.timeSeriess.remove(id));
-  }
-
-  @Idempotent
-  public void delete(final String id) throws IOException  {
-    Preconditions.checkNotNull(id, "null id");
-
-    final Optional<TimeSeries> optionalTimeseries = remove(id);
-    if (!optionalTimeseries.isPresent()) {
-      if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
-        Loggers.BASE_LOGGER.log(Level.WARNING, "Cannot delete non-existing {0} <{1}>", new Object[]{TimeSeries.class.getSimpleName(), id});
-      }
-      return;
-    }
-
-    final TimeSeries timeSeries = optionalTimeseries.get();
-    this.storageFactory.delete(timeSeries.getId());
   }
 
   /**

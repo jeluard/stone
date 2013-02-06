@@ -325,4 +325,15 @@ public class TimeSeries implements Identifiable<String> {
   protected void cleanup() {
   }
 
+  /**
+   * Delete all resources associated to this {@link TimeSeries}. Actual work is delegated to {@link StorageFactory#delete(java.lang.String)}.
+   * @param id
+   * @return true if 
+   * @throws IOException 
+   */
+  @Idempotent
+  public void delete() throws IOException  {
+    this.storageFactory.delete(this.id);
+  }
+
 }
