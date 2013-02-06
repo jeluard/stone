@@ -22,8 +22,10 @@ import com.github.jeluard.stone.api.Database;
 import com.github.jeluard.stone.api.Reader;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.api.Window;
+import com.github.jeluard.stone.consolidator.LastConsolidator;
 import com.github.jeluard.stone.consolidator.MaxConsolidator;
 import com.github.jeluard.stone.dispatcher.disruptor.DisruptorDispatcher;
+import com.github.jeluard.stone.dispatcher.sequential.SequentialDispatcher;
 import com.github.jeluard.stone.storage.journalio.JournalIOStorageFactory;
 
 import java.util.Arrays;
@@ -34,14 +36,14 @@ import org.joda.time.Duration;
 
 public class Test {
   public static void main(String[] args) throws Exception {
-    final Database database = new Database(new DisruptorDispatcher(DisruptorDispatcher.defaultExecutorService(), 1024), new JournalIOStorageFactory(JournalIOStorageFactory.defaultWriteExecutor(), JournalIOStorageFactory.defaultDisposerScheduledExecutor()));
+    final Database database = new Database(new SequentialDispatcher(), new JournalIOStorageFactory(JournalIOStorageFactory.defaultWriteExecutor(), JournalIOStorageFactory.defaultDisposerScheduledExecutor()));
     final ConsolidationListener consolidationListener = new ConsolidationListener() {
       @Override
       public void onConsolidation(final long timestamp, final int[] consolidates) {
-        System.out.println("Got "+Arrays.toString(consolidates));
+       // System.out.println("Got "+Arrays.toString(consolidates));
       }
     };
-    final Window window = Window.of(Duration.standardSeconds(10)).listenedBy(consolidationListener).archivedDuring(Duration.standardMinutes(1)).consolidatedBy(MaxConsolidator.class);
+    final Window window = Window.of(Duration.standardSeconds(1))/*.listenedBy(consolidationListener)*/.persistedDuring(Duration.standardMinutes(1)).consolidatedBy(LastConsolidator.class);
     final TimeSeries timeSeries = database.createOrOpen("timeseries", window);
     final Map<Window, ? extends Reader> readers = timeSeries.getReaders();
     System.out.println("TimeSeries "+timeSeries.getId());
@@ -53,9 +55,11 @@ public class Test {
 
     try {
       final Random random = new Random();
-      for (int i = 0; i < 1000*1000; i++) {
+      long timestamp = 0;
+      for (int i = 0; i < 1000*1000*1000; i++) {
+        timestamp++;
         //Thread.sleep(1);//Make sure there's at least 1ms in between publication
-        timeSeries.publish(System.currentTimeMillis(), 100+random.nextInt(25));
+        timeSeries.publish(timestamp, 100);
       }
     } finally {
       database.close();

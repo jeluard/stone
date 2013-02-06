@@ -16,7 +16,6 @@
  */
 package com.github.jeluard.stone;
 
-import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.Database;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.api.Window;
@@ -25,8 +24,6 @@ import com.github.jeluard.stone.dispatcher.blocking_queue.BlockingQueueDispatche
 import com.github.jeluard.stone.storage.journalio.JournalIOStorageFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -35,8 +32,8 @@ import org.joda.time.Duration;
 public class Performance {
   public static void main(String[] args) throws Exception {
     final Database database = new Database(new BlockingQueueDispatcher(new ArrayBlockingQueue<BlockingQueueDispatcher.Entry>(1000000), BlockingQueueDispatcher.defaultExecutorService(), 2), new JournalIOStorageFactory(JournalIOStorageFactory.defaultWriteExecutor(), JournalIOStorageFactory.defaultDisposerScheduledExecutor()));
-    final Window window1 = new Window(Duration.standardMinutes(5), Duration.standardDays(1), Arrays.asList(MaxConsolidator.class), Collections.<ConsolidationListener>emptyList());
-    final Window window2 = new Window(Duration.standardMinutes(1), Duration.standardDays(7), Arrays.asList(/*Percentile90Consolidator.class, */MaxConsolidator.class), Collections.<ConsolidationListener>emptyList());
+    final Window window1 = Window.of(Duration.standardMinutes(5)).persistedDuring(Duration.standardDays(1)).consolidatedBy(MaxConsolidator.class);
+    final Window window2 = Window.of(Duration.standardMinutes(1)).persistedDuring(Duration.standardDays(7)).consolidatedBy(MaxConsolidator.class);
 
     final int nbSeries = 1;
 
