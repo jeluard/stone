@@ -98,7 +98,7 @@ public final class Window {
     this.resolution = Preconditions.checkNotNull(resolution, "null resolution");
     if (optionalPersistedDuration.isPresent()) {
       final Duration persistedDuration = optionalPersistedDuration.get();
-      Preconditions.checkArgument(persistedDuration.getMillis() > resolution.getMillis(), "Persisted duration <"+persistedDuration+"> must be greater than resolution <"+resolution+">");
+      Preconditions.checkArgument(persistedDuration.getMillis() >= resolution.getMillis(), "Persisted duration <"+persistedDuration+"> must be greater than resolution <"+resolution+">");
       Preconditions.checkArgument(persistedDuration.getMillis() % resolution.getMillis() == 0, "Persisted duration <"+persistedDuration+"> must be a multiple of resolution <"+resolution+">");
     }
     this.optionalPersistedDuration = Preconditions.checkNotNull(optionalPersistedDuration, "null optionalPersistedDuration");
