@@ -95,7 +95,8 @@ public final class Window {
   }
 
   private Window(final Duration resolution, final Optional<Duration> optionalPersistedDuration, final List<? extends Class<? extends Consolidator>> consolidatorTypes, final List<? extends ConsolidationListener> consolidationListeners) {
-    this.resolution = Preconditions.checkNotNull(resolution, "null resolution");
+    Preconditions.checkArgument(resolution != null && resolution.getMillis() > 0, "0 or null resolution");
+    this.resolution = resolution;
     if (optionalPersistedDuration.isPresent()) {
       final Duration persistedDuration = optionalPersistedDuration.get();
       Preconditions.checkArgument(persistedDuration.getMillis() >= resolution.getMillis(), "Persisted duration <"+persistedDuration+"> must be greater than resolution <"+resolution+">");
