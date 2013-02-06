@@ -57,7 +57,7 @@ public class Performance {
         System.out.println((System.currentTimeMillis()-before)+" ms");
       }
     } finally {
-      database.close();
+      database.reset();
     }
   }
 }

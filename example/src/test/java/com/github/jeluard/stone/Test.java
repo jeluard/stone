@@ -62,7 +62,7 @@ public class Test {
         timeSeries.publish(timestamp, 100);
       }
     } finally {
-      database.close();
+      database.reset();
     }
   }
 }
