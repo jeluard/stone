@@ -51,9 +51,9 @@ import org.joda.time.Interval;
  * then each time a {@link Window#getResolution()} threshold is crossed for consolidation (see {@link Consolidator#consolidateAndReset()}).
  * Final consolidated results are persisted in a {@link TimeSeries}/{@link Window} specific {@link Storage}.
  * <br>
+ * Once {@link #close()} has been called {@link #publish(long, int)} behaviour is undefined.
+ * <br>
  * {@link TimeSeries} is not threadsafe and supposed to be manipulated from a unique thread.
- *
- * @see Database
  */
 @NotThreadSafe
 public class TimeSeries implements Identifiable<String> {
@@ -327,6 +327,9 @@ public class TimeSeries implements Identifiable<String> {
 
   /**
    * Delete all resources associated to this {@link TimeSeries}. Actual work is delegated to {@link StorageFactory#delete(java.lang.String)}.
+   * <br>
+   * Should be done after {@link #close()} has been called.
+   *
    * @param id
    * @return true if 
    * @throws IOException 
