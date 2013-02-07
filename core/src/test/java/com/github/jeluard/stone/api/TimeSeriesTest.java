@@ -16,70 +16,253 @@
  */
 package com.github.jeluard.stone.api;
 
+import com.github.jeluard.guayaba.base.Pair;
+import com.github.jeluard.guayaba.test.junit.LoggerRule;
+import com.github.jeluard.stone.consolidator.MaxConsolidator;
+import com.github.jeluard.stone.consolidator.Percentile90Consolidator;
+import com.github.jeluard.stone.helper.Loggers;
+import com.github.jeluard.stone.spi.Dispatcher;
 import com.github.jeluard.stone.spi.Storage;
-import com.google.common.base.Optional;
+import com.github.jeluard.stone.spi.StorageFactory;
 
 import java.io.IOException;
+import java.util.Collections;
 
-import org.joda.time.DateTime;
+import org.joda.time.Duration;
+import org.junit.Assert;
+import org.junit.Rule;
+import org.junit.Test;
 import org.mockito.Mockito;
 
 public class TimeSeriesTest {
 
-  private Storage createStorageMock(final Optional<DateTime> date) throws IOException {
-    final Storage mock = Mockito.mock(Storage.class);
-    Mockito.when(mock.beginning()).thenReturn(date);
-    return mock;
+  static class ConsolidatorWithInvalidConstructor extends Consolidator {
+    public ConsolidatorWithInvalidConstructor(float argument) {
+    }
+    @Override
+    public void accumulate(long timestamp, int value) {
+    }
+    @Override
+    protected int consolidate() {
+      return 0;
+    }
   }
 
-  /*@Test(expected=IllegalArgumentException.class)
-  public void shouldDuplicatedTimeSeriesIDBeInvalid() throws IOException {
-    final String id = "id";
-    new TimeSeries(id, Duration.millis(1), Collections.<Archive>emptyList(), Collections.<ConsolidationListener>emptyList(), Mockito.mock(Engine.class));
-    new TimeSeries(id, Duration.millis(1), Collections.<Archive>emptyList(), Collections.<ConsolidationListener>emptyList(), Mockito.mock(Engine.class));
-  }*/
+  static class ConsolidatorWithFailingConstructor extends Consolidator {
+    public ConsolidatorWithFailingConstructor() {
+      throw new RuntimeException();
+    }
+    @Override
+    public void accumulate(long timestamp, int value) {
+    }
+    @Override
+    protected int consolidate() {
+      return 0;
+    }
+  }
 
-  /*@Test(expected=IllegalArgumentException.class)
-  public void shouldOldDataPointBeRejected() throws IOException {
-    final DateTime last = DateTime.now();
-    final TimeSeries timeSeries = new TimeSeries(Duration.ZERO, Mockito.mock(Dispatcher.class), createStorageMock(Optional.of(last)), Mockito.mock(Consolidator.class));
-    final long now = System.currentTimeMillis();
-    timeSeries.publish(now, 0);
-    timeSeries.publish(now, 0);
+  @Rule
+  public final LoggerRule loggerRule = new LoggerRule(Loggers.BASE_LOGGER);
+
+  private Window createWindow() {
+    return Window.of(Duration.standardSeconds(1)).consolidatedBy(MaxConsolidator.class);
+  }
+
+  private StorageFactory createStorageFactory() {
+    return new StorageFactory() {
+      @Override
+      protected Storage create(String id, Window window, Duration duration) throws IOException {
+        return new Storage() {
+          @Override
+          public Iterable<Pair<Long, int[]>> all() throws IOException {
+            return Collections.emptyList();
+          }
+          @Override
+          public void onConsolidation(long timestamp, int[] consolidates) throws Exception {
+          }
+        };
+      }
+    };
+  }
+
+  private StorageFactory createFailingOnCloseStorageFactory() {
+    return new StorageFactory() {
+      @Override
+      protected Storage create(String id, Window window, Duration duration) throws IOException {
+        return new Storage() {
+          @Override
+          public Iterable<Pair<Long, int[]>> all() throws IOException {
+            return Collections.emptyList();
+          }
+          @Override
+          public void onConsolidation(long timestamp, int[] consolidates) throws Exception {
+          }
+        };
+      }
+      @Override
+      protected void close(Storage storage) throws IOException {
+        throw new IOException();
+      }
+    };
+  }
+
+  @Test
+  public void shouldCreationBeSuccessful() throws IOException {
+    final TimeSeries timeSeries = new TimeSeries("id", Duration.millis(1), new Window[]{createWindow()}, Mockito.mock(Dispatcher.class), createStorageFactory());
+    timeSeries.close();
+  }
+
+  @Test
+  public void shouldCreationWithConsolidatorDefiningDefaultConstructorBeSuccessful() throws IOException {
+    final Window window = Window.of(Duration.millis(1)).persistedDuring(Duration.millis(1)).consolidatedBy(MaxConsolidator.class);
+    final TimeSeries timeSeries = new TimeSeries("id", Duration.millis(1), new Window[]{window}, Mockito.mock(Dispatcher.class), createStorageFactory());
+    timeSeries.close();
+  }
+
+  @Test
+  public void shouldCreationWithConsolidatorDefiningIntConstructorBeSuccessful() throws IOException {
+    final Window window = Window.of(Duration.standardDays(1000)).persistedDuring(Duration.standardDays(10000)).consolidatedBy(Percentile90Consolidator.class);
+    final TimeSeries timeSeries = new TimeSeries("id", Duration.millis(1), new Window[]{window}, Mockito.mock(Dispatcher.class), createStorageFactory());
+    timeSeries.close();
   }
 
   @Test(expected=IllegalArgumentException.class)
-  public void shouldDataPointWithSameDateAsStorageLastBeRejected() throws IOException {
+  public void shouldCreationWithConsolidatorDefiningInvalidConstructorBeInvalid() throws IOException {
+    final Window window = Window.of(Duration.millis(1)).persistedDuring(Duration.millis(1)).consolidatedBy(ConsolidatorWithInvalidConstructor.class);
+    final TimeSeries timeSeries = new TimeSeries("id", Duration.millis(1), new Window[]{window}, Mockito.mock(Dispatcher.class), createStorageFactory());
+    timeSeries.close();
+  }
+
+  @Test(expected=RuntimeException.class)
+  public void shouldCreationWithConsolidatorDefiningFailingConstructorBeInvalid() throws IOException {
+    final Window window = Window.of(Duration.millis(1)).persistedDuring(Duration.millis(1)).consolidatedBy(ConsolidatorWithFailingConstructor.class);
+    final TimeSeries timeSeries = new TimeSeries("id", Duration.millis(1), new Window[]{window}, Mockito.mock(Dispatcher.class), createStorageFactory());
+    timeSeries.close();
+  }
+
+  @Test
+  public void shouldIDBeAccessible() throws IOException {
+    final String id = "id";
+    final TimeSeries timeSeries = new TimeSeries(id, Duration.millis(1), new Window[]{createWindow()}, Mockito.mock(Dispatcher.class), createStorageFactory());
+    timeSeries.close();
+
+    Assert.assertEquals(id, timeSeries.getId());
+  }
+
+  @Test
+  public void shouldReadersBeEmptyWhenNoWindowIsPersisted() throws IOException {
+    final TimeSeries timeSeries = new TimeSeries("id", Duration.millis(1), new Window[]{createWindow()}, Mockito.mock(Dispatcher.class), createStorageFactory());
+    timeSeries.close();
+
+    Assert.assertTrue(timeSeries.getReaders().isEmpty());
+  }
+
+  @Test
+  public void shouldReadersNotBeEmptyWhenSomeWindowIsPersisted() throws IOException {
+    final Window window = Window.of(Duration.millis(1)).persistedDuring(Duration.millis(1)).consolidatedBy(MaxConsolidator.class);
+    final TimeSeries timeSeries = new TimeSeries("id", Duration.millis(1), new Window[]{window}, Mockito.mock(Dispatcher.class), createStorageFactory());
+    timeSeries.close();
+
+    Assert.assertFalse(timeSeries.getReaders().isEmpty());
+  }
+
+  @Test
+  public void shouldReadersBeEmptyWhenSomeWindowContainsConsolidationListener() throws IOException {
+    final Window window = Window.of(Duration.millis(1)).listenedBy(new ConsolidationListener() {
+      @Override
+      public void onConsolidation(long timestamp, int[] consolidates) throws Exception {
+      }
+    }).consolidatedBy(MaxConsolidator.class);
+    final TimeSeries timeSeries = new TimeSeries("id", Duration.millis(1), new Window[]{window}, Mockito.mock(Dispatcher.class), createStorageFactory());
+    timeSeries.close();
+
+    Assert.assertTrue(timeSeries.getReaders().isEmpty());
+  }
+
+  @Test
+  public void shouldCloseBeIdempotent() throws IOException {
+    final TimeSeries timeSeries = new TimeSeries("id", Duration.millis(1), new Window[]{createWindow()}, Mockito.mock(Dispatcher.class), createStorageFactory());
+    timeSeries.close();
+    timeSeries.close();
+  }
+
+  @Test
+  public void shouldCloseWithFailingStorageFactoryBeHandled() throws IOException {
+    final Window window = Window.of(Duration.millis(1)).persistedDuring(Duration.millis(1)).consolidatedBy(MaxConsolidator.class);
+    final TimeSeries timeSeries = new TimeSeries("id", Duration.millis(1), new Window[]{window}, Mockito.mock(Dispatcher.class), createFailingOnCloseStorageFactory());
+    timeSeries.close();
+  }
+
+  @Test
+  public void shouldDeleteBeIdempotent() throws IOException {
+    final TimeSeries timeSeries = new TimeSeries("id", Duration.millis(1), new Window[]{createWindow()}, Mockito.mock(Dispatcher.class), createStorageFactory());
+    timeSeries.close();
+    timeSeries.delete();
+    timeSeries.delete();
+  }
+
+  @Test(expected=IllegalArgumentException.class)
+  public void shouldCreationWithEmptyWindowBeInvalid() throws IOException {
+    new TimeSeries("id", Duration.millis(1), new Window[0], Mockito.mock(Dispatcher.class), createStorageFactory());
+  }
+
+  @Test(expected=IllegalArgumentException.class)
+  public void shouldCreationWithDuplicatedIDBeInvalid() throws IOException {
+    final String id = "id";
+    final TimeSeries timeSeries = new TimeSeries(id, Duration.millis(1), new Window[]{createWindow()}, Mockito.mock(Dispatcher.class), createStorageFactory());
+    try {
+      new TimeSeries(id, Duration.millis(1), new Window[]{createWindow()}, Mockito.mock(Dispatcher.class), createStorageFactory());
+    } finally {
+      timeSeries.close();
+    }
+  }
+
+  @Test
+  public void shouldCreationWithDuplicatedIDBeSuccessfulAfterClose() throws IOException {
+    final String id = "id";
+    final TimeSeries timeSeries = new TimeSeries(id, Duration.millis(1), new Window[]{createWindow()}, Mockito.mock(Dispatcher.class), createStorageFactory());
+    timeSeries.close();
+    final TimeSeries timeSeries2 = new TimeSeries(id, Duration.millis(1), new Window[]{createWindow()}, Mockito.mock(Dispatcher.class), createStorageFactory());
+    timeSeries2.close(); 
+  }
+
+  @Test
+  public void shouldPublicationBeSuccessful() throws IOException {
+    final TimeSeries timeSeries = new TimeSeries("id", Duration.millis(1), new Window[]{createWindow()}, Mockito.mock(Dispatcher.class), createStorageFactory());
+    timeSeries.publish(1, 1);
+    timeSeries.close();
+  }
+
+  @Test
+  public void shouldMonotonicPublicationBeSuccessful() throws IOException {
+    final TimeSeries timeSeries = new TimeSeries("id", Duration.millis(1), new Window[]{createWindow()}, Mockito.mock(Dispatcher.class), createStorageFactory());
+    timeSeries.publish(1, 1);
+    timeSeries.publish(2, 1);
+    timeSeries.close();
+  }
+
+  @Test
+  public void shouldZeroAsTimestampBeRejected() throws IOException {
+    final TimeSeries timeSeries = new TimeSeries("id", Duration.millis(1), new Window[]{createWindow()}, Mockito.mock(Dispatcher.class), createStorageFactory());
+    Assert.assertFalse(timeSeries.publish(0, 0));
+    timeSeries.close();
+  }
+
+  @Test
+  public void shouldTwiceSameTimestampBeRejected() throws IOException {
+    final TimeSeries timeSeries = new TimeSeries("id", Duration.millis(1), new Window[]{createWindow()}, Mockito.mock(Dispatcher.class), createStorageFactory());
     final long now = System.currentTimeMillis();
-    final TimeSeries timeSeries = new TimeSeries(Duration.standardSeconds(2), Mockito.mock(Dispatcher.class), createStorageMock(Optional.of(DateTime.now())), Mockito.mock(Consolidator.class));
-    timeSeries.publish(now, 0);
+    Assert.assertTrue(timeSeries.publish(now, 0));
+    Assert.assertFalse(timeSeries.publish(now, 0));
+    timeSeries.close();
   }
 
-  @Test
-  public void shouldStorageAppendBeInvokedOnceWhenOnePeriodIsCrossed() throws IOException {
-    final DateTime now = DateTime.now();
-    final Storage storage = createStorageMock(Optional.of(now));
-    final TimeSeries timeSeries = new TimeSeries(Duration.standardSeconds(2), Mockito.mock(Dispatcher.class), storage, Mockito.mock(Consolidator.class));
-    timeSeries.publish(now.plus(Period.seconds(1)).getMillis(), 0);
-    timeSeries.publish(now.plus(Period.seconds(2)).getMillis(), 0);
-
-    Mockito.verify(storage).append(Mockito.<int[]>any());
-  }
-
-  @Test
-  public void shouldStorageAppendBeInvokedTwiceWhenTwoPeriodIsCrossed() throws IOException {
-    final DateTime now = DateTime.now();
-    final Storage storage = createStorageMock(Optional.of(now));
-    final TimeSeries timeSeries = new TimeSeries(Duration.standardSeconds(2), Mockito.mock(Dispatcher.class), storage, Mockito.mock(Consolidator.class));
-    timeSeries.publish(now.plus(Period.seconds(1)).getMillis(), 0);
-    timeSeries.publish(now.plus(Period.seconds(2)).getMillis(), 0);
-
-    Mockito.verify(storage).append(Mockito.<int[]>any());
-
-    timeSeries.publish(now.plus(Period.seconds(3)).getMillis(), 0);
-    timeSeries.publish(now.plus(Period.seconds(4)).getMillis(), 0);
-
-    Mockito.verify(storage, Mockito.times(2)).append(Mockito.<int[]>any());
+  /*@Test
+  public void shouldTimestampEqualToStorageLastBeRejected() throws IOException {
+    final long now = System.currentTimeMillis();
+    final TimeSeries timeSeries = new TimeSeries("id", Duration.standardSeconds(2), new Window[0], Mockito.mock(Dispatcher.class), createStorageMock(Optional.of(DateTime.now())));
+    Assert.assertFalse(timeSeries.publish(now, 0));
+    timeSeries.close();
   }*/
 
 }
