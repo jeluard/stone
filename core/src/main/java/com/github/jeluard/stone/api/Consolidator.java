@@ -34,6 +34,8 @@ package com.github.jeluard.stone.api;
  * <br>
  * For a considered {@link Window} duration {@link #consolidateAndReset()} will *always* be called after all {@link #accumulate(long, int)}s. Next {@link #accumulate(long, int)} call is performed after {@link #consolidateAndReset()} is executed.
  * {@link #accumulate(long, int)} calls can be re-ordered (i.e. {@code timestamp} is not monotonically increasing).
+ * <br>
+ * A {@link Consolidator} instance will never receive the same timestamp twice.
  */
 public abstract class Consolidator {
 
