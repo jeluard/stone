@@ -121,9 +121,13 @@ public class TimeSeriesTest {
 
   @Test
   public void shouldCreationWithConsolidatorDefiningIntConstructorBeSuccessful() throws IOException {
-    final Window window = Window.of(Duration.standardDays(1000)).persistedDuring(Duration.standardDays(10000)).consolidatedBy(Percentile90Consolidator.class);
+    final Window window = Window.of(Duration.standardHours(1)).persistedDuring(Duration.standardDays(10000)).consolidatedBy(Percentile90Consolidator.class);
     final TimeSeries timeSeries = new TimeSeries("id", Duration.millis(1), new Window[]{window}, Mockito.mock(Dispatcher.class), createStorageFactory());
     timeSeries.close();
+
+    final Window window2 = Window.of(Duration.millis(1)).persistedDuring(Duration.standardDays(10000)).consolidatedBy(Percentile90Consolidator.class);
+    final TimeSeries timeSeries2 = new TimeSeries("id", Duration.millis(1), new Window[]{window2}, Mockito.mock(Dispatcher.class), createStorageFactory());
+    timeSeries2.close();
   }
 
   @Test(expected=IllegalArgumentException.class)
