@@ -47,6 +47,7 @@ public final class ModeConsolidator extends Consolidator {
 
   @Override
   public synchronized int consolidate() {
+    System.out.println(ModeConsolidator.DECREASING_COUNT_ORDERING.greatestOf(this.values.entrySet(), 1));
     return ModeConsolidator.DECREASING_COUNT_ORDERING.greatestOf(this.values.entrySet(), 1).get(0).getElement();
   }
 

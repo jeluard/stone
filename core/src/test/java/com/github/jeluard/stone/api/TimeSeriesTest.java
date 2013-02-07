@@ -46,6 +46,9 @@ public class TimeSeriesTest {
     protected int consolidate() {
       return 0;
     }
+    @Override
+    protected void reset() {
+    }
   }
 
   static class ConsolidatorWithFailingConstructor extends Consolidator {
@@ -58,6 +61,10 @@ public class TimeSeriesTest {
     @Override
     protected int consolidate() {
       return 0;
+    }
+
+    @Override
+    protected void reset() {
     }
   }
 
