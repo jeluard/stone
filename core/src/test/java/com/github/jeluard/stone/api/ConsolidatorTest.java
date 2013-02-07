@@ -90,9 +90,10 @@ public abstract class ConsolidatorTest<T extends Consolidator> {
     consolidator.accumulate(1L, 1);
     consolidator.accumulate(2L, 2);
     final int consolidate1 = consolidator.consolidateAndReset();
-    consolidator.accumulate(1L, 1);
-    consolidator.accumulate(2L, 2);
-    final int consolidate2 = consolidator.consolidateAndReset();
+    final Consolidator consolidator2 = createInstance();
+    consolidator2.accumulate(1L, 1);
+    consolidator2.accumulate(2L, 2);
+    final int consolidate2 = consolidator2.consolidateAndReset();
 
     Assert.assertEquals(consolidate1, consolidate2);
   }
@@ -104,10 +105,11 @@ public abstract class ConsolidatorTest<T extends Consolidator> {
     consolidator.accumulate(3L, 2);
     consolidator.accumulate(2L, 2);
     final int consolidate1 = consolidator.consolidateAndReset();
-    consolidator.accumulate(1L, 1);
-    consolidator.accumulate(2L, 2);
-    consolidator.accumulate(3L, 2);
-    final int consolidate2 = consolidator.consolidateAndReset();
+    final Consolidator consolidator2 = createInstance();
+    consolidator2.accumulate(1L, 1);
+    consolidator2.accumulate(2L, 2);
+    consolidator2.accumulate(3L, 2);
+    final int consolidate2 = consolidator2.consolidateAndReset();
 
     Assert.assertEquals(consolidate1, consolidate2);
   }
@@ -125,9 +127,10 @@ public abstract class ConsolidatorTest<T extends Consolidator> {
     thread.start();
     thread.join();
     final int consolidate1 = consolidator.consolidateAndReset();
-    consolidator.accumulate(1L, 1);
-    consolidator.accumulate(2L, 2);
-    final int consolidate2 = consolidator.consolidateAndReset();
+    final Consolidator consolidator2 = createInstance();
+    consolidator2.accumulate(1L, 1);
+    consolidator2.accumulate(2L, 2);
+    final int consolidate2 = consolidator2.consolidateAndReset();
 
     Assert.assertEquals(consolidate1, consolidate2);
   }
