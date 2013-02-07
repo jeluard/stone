@@ -73,9 +73,6 @@ public class TimeSeries implements Identifiable<String> {
 
   public TimeSeries(final String id, final Duration granularity, final Window[] windows, final Dispatcher dispatcher, final StorageFactory<?> storageFactory) throws IOException {
     this.id = Preconditions.checkNotNull(id, "null id");
-    if (!TimeSeries.IDS.add(id)) {
-      throw new IllegalArgumentException("Id <"+id+"> is already used");
-    }
     this.granularity = (int) Preconditions.checkNotNull(granularity, "null granularity").getMillis();
     this.storageFactory = Preconditions.checkNotNull(storageFactory, "null storageFactory");
     this.dispatcher = Preconditions.checkNotNull(dispatcher, "null dispatcher");
@@ -92,6 +89,11 @@ public class TimeSeries implements Identifiable<String> {
       final Interval initialSpan = optionalInitialSpan.get();
       this.beginning = initialSpan.getStartMillis();
       this.latest = initialSpan.getEndMillis();
+    }
+
+    //Last so that rejected timeseries due to invalid argument do not leak their id
+    if (!TimeSeries.IDS.add(id)) {
+      throw new IllegalArgumentException("Id <"+id+"> is already used");
     }
   }
 
@@ -295,9 +297,9 @@ public class TimeSeries implements Identifiable<String> {
     }
 
     //previousTimestamp == 0 if this is the first publish call and associated storage was empty (or new)
-    if (previousTimestamp != 0L) {
-      this.dispatcher.publish(this.flattened, this.beginning, previousTimestamp, timestamp, value);
-    }
+    //if (previousTimestamp != 0L) {
+    this.dispatcher.publish(this.flattened, this.beginning, previousTimestamp, timestamp, value);
+    //}
     return true;
   }
 
@@ -306,7 +308,7 @@ public class TimeSeries implements Identifiable<String> {
     for (final Triple<Window, ?, ?> triple : this.flattened) {
       final Window window = triple.first;
       try {
-        this.storageFactory.close(this.id, window);
+         this.storageFactory.close(this.id, window);
       } catch (IOException e) {
         if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
           Loggers.BASE_LOGGER.log(Level.WARNING, "Got exception while closing "+Storage.class.getSimpleName()+" for <"+this.id+"> <"+window+">", e);
