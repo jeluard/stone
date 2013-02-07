@@ -32,7 +32,7 @@ public final class ModeConsolidator extends Consolidator {
   private static final Ordering<Multiset.Entry<?>> DECREASING_COUNT_ORDERING = new Ordering<Multiset.Entry<?>>() {
     @Override
     public int compare(final Multiset.Entry<?> entry1, final Multiset.Entry<?> entry2) {
-      return Ints.compare(entry2.getCount(), entry1.getCount());
+      return Ints.compare(entry1.getCount(), entry2.getCount());
     }
   };
 
@@ -47,7 +47,6 @@ public final class ModeConsolidator extends Consolidator {
 
   @Override
   public synchronized int consolidate() {
-    System.out.println(ModeConsolidator.DECREASING_COUNT_ORDERING.greatestOf(this.values.entrySet(), 1));
     return ModeConsolidator.DECREASING_COUNT_ORDERING.greatestOf(this.values.entrySet(), 1).get(0).getElement();
   }
 
