@@ -63,8 +63,7 @@ public abstract class Consolidator {
   /**
    * Called right after {@link #consolidate()}.
    */
-  protected void reset() {
-  }
+  protected abstract void reset();
 
   /**
    * @return final consolidated value
