@@ -18,7 +18,6 @@ package com.github.jeluard.stone.dispatcher.sequential;
 
 import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.Consolidator;
-import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.spi.Dispatcher;
 
 import org.joda.time.Duration;
