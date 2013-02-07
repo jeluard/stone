@@ -79,6 +79,9 @@ public class TimeSeries implements Identifiable<String> {
     this.granularity = (int) Preconditions.checkNotNull(granularity, "null granularity").getMillis();
     this.storageFactory = Preconditions.checkNotNull(storageFactory, "null storageFactory");
     this.dispatcher = Preconditions.checkNotNull(dispatcher, "null dispatcher");
+    if (windows.length == 0) {
+      throw new IllegalArgumentException("empty windows");
+    }
     final Collection<Triple<Window, Consolidator[], ConsolidationListener[]>> flattenedList = createFlatten(storageFactory, id, Preconditions.checkNotNull(windows, "null windows"));
     this.flattened = flattenedList.toArray(new Triple[flattenedList.size()]);
     final Collection<Pair<Window, Storage>> storagePerWindow = filterTripleWithStorage(this.flattened);
