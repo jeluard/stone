@@ -26,14 +26,10 @@ public final class LastConsolidator extends BaseStreamingConsolidator {
   @Override
   public void accumulate(final long timestamp, final int value) {
     //Not atomic but not needed.
-    if (this.timestamp == 0L || timestamp > this.timestamp) {
+    if (timestamp > this.timestamp) {
       setCurrentResult(value);
       this.timestamp = timestamp;
     }
   }
 
-  @Override
-  protected void afterReset() {
-    this.timestamp = 0L;
-  }
 }
