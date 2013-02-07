@@ -19,7 +19,6 @@ package com.github.jeluard.stone.dispatcher.blocking_queue;
 import com.github.jeluard.guayaba.util.concurrent.ThreadFactoryBuilders;
 import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.Consolidator;
-import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.helper.Loggers;
 import com.github.jeluard.stone.spi.Dispatcher;
 import com.google.common.base.Preconditions;
