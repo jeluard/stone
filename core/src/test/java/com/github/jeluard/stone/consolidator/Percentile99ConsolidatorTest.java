@@ -17,12 +17,24 @@
 package com.github.jeluard.stone.consolidator;
 
 import com.github.jeluard.stone.api.ConsolidatorTest;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class Percentile99ConsolidatorTest extends ConsolidatorTest<Percentile99Consolidator> {
 
   @Override
   protected Class<Percentile99Consolidator> getType() {
     return Percentile99Consolidator.class;
+  }
+
+  @Test
+  public void shouldResultBeCorrect() {
+    final Percentile99Consolidator consolidator = new Percentile99Consolidator(100);
+    for (int i = 0; i < 100; i++) {
+      consolidator.accumulate(i, i);
+    }
+
+    Assert.assertEquals(99, consolidator.consolidateAndReset());
   }
 
 }

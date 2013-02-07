@@ -18,11 +18,26 @@ package com.github.jeluard.stone.consolidator;
 
 import com.github.jeluard.stone.api.ConsolidatorTest;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 public class MeanConsolidatorTest extends ConsolidatorTest<MeanConsolidator> {
 
   @Override
   protected Class<MeanConsolidator> getType() {
     return MeanConsolidator.class;
+  }
+
+  @Test
+  public void shouldResultBeCorrect() {
+    final MeanConsolidator consolidator = new MeanConsolidator();
+    consolidator.accumulate(2L, 2);
+    consolidator.accumulate(1L, 1);
+    consolidator.accumulate(4L, 4);
+    consolidator.accumulate(3L, 3);
+    consolidator.accumulate(5L, 5);
+
+    Assert.assertEquals(3, consolidator.consolidateAndReset());
   }
 
 }
