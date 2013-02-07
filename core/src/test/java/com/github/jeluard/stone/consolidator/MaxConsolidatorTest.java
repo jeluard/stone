@@ -18,11 +18,25 @@ package com.github.jeluard.stone.consolidator;
 
 import com.github.jeluard.stone.api.ConsolidatorTest;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 public class MaxConsolidatorTest extends ConsolidatorTest<MaxConsolidator> {
 
   @Override
   protected Class<MaxConsolidator> getType() {
     return MaxConsolidator.class;
+  }
+
+  @Test
+  public void shouldResultBeCorrect() {
+    final MaxConsolidator consolidator = new MaxConsolidator();
+    consolidator.accumulate(2L, 1);
+    consolidator.accumulate(1L, 2);
+    consolidator.accumulate(4L, 3);
+    consolidator.accumulate(3L, 4);
+
+    Assert.assertEquals(4, consolidator.consolidateAndReset());
   }
 
 }

@@ -18,11 +18,25 @@ package com.github.jeluard.stone.consolidator;
 
 import com.github.jeluard.stone.api.ConsolidatorTest;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 public class ModeConsolidatorTest extends ConsolidatorTest<ModeConsolidator> {
 
   @Override
   protected Class<ModeConsolidator> getType() {
     return ModeConsolidator.class;
+  }
+
+  @Test
+  public void shouldResultBeCorrect() {
+    final ModeConsolidator consolidator = new ModeConsolidator(10);
+    consolidator.accumulate(2L, 1);
+    consolidator.accumulate(1L, 2);
+    consolidator.accumulate(4L, 3);
+    consolidator.accumulate(3L, 2);
+
+    Assert.assertEquals(2, consolidator.consolidateAndReset());
   }
 
 }
