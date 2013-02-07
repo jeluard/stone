@@ -98,6 +98,21 @@ public abstract class ConsolidatorTest<T extends Consolidator> {
   }
 
   @Test
+  public void shouldConsolidationNotInOrderBeReproducible() {
+    final Consolidator consolidator = createInstance();
+    consolidator.accumulate(1L, 1);
+    consolidator.accumulate(3L, 2);
+    consolidator.accumulate(2L, 2);
+    final int consolidate1 = consolidator.consolidateAndReset();
+    consolidator.accumulate(1L, 1);
+    consolidator.accumulate(2L, 2);
+    consolidator.accumulate(3L, 2);
+    final int consolidate2 = consolidator.consolidateAndReset();
+
+    Assert.assertEquals(consolidate1, consolidate2);
+  }
+
+  @Test
   public void shouldBeThreadSafe() throws InterruptedException {
     final Consolidator consolidator = createInstance();
     final Thread thread = new Thread(new Runnable() {

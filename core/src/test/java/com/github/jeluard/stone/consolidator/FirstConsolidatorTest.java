@@ -18,11 +18,25 @@ package com.github.jeluard.stone.consolidator;
 
 import com.github.jeluard.stone.api.ConsolidatorTest;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 public class FirstConsolidatorTest extends ConsolidatorTest<FirstConsolidator> {
 
   @Override
   protected Class<FirstConsolidator> getType() {
     return FirstConsolidator.class;
+  }
+
+  @Test
+  public void shouldResultBeCorrect() {
+    final FirstConsolidator consolidator = new FirstConsolidator();
+    consolidator.accumulate(2L, 2);
+    consolidator.accumulate(1L, 1);
+    consolidator.accumulate(4L, 4);
+    consolidator.accumulate(3L, 3);
+
+    Assert.assertEquals(1, consolidator.consolidateAndReset());
   }
 
 }
