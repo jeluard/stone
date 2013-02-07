@@ -296,10 +296,8 @@ public class TimeSeries implements Identifiable<String> {
       return false;
     }
 
-    //previousTimestamp == 0 if this is the first publish call and associated storage was empty (or new)
-    //if (previousTimestamp != 0L) {
     this.dispatcher.publish(this.flattened, this.beginning, previousTimestamp, timestamp, value);
-    //}
+
     return true;
   }
 
