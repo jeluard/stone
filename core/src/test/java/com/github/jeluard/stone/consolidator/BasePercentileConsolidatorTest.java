@@ -16,27 +16,18 @@
  */
 package com.github.jeluard.stone.consolidator;
 
-import com.github.jeluard.stone.api.ConsolidatorTest;
-
-import org.junit.Assert;
 import org.junit.Test;
 
-public class LastConsolidatorTest extends ConsolidatorTest<LastConsolidator> {
+public class BasePercentileConsolidatorTest {
 
-  @Override
-  protected Class<LastConsolidator> getType() {
-    return LastConsolidator.class;
+  @Test(expected=IllegalArgumentException.class)
+  public void shouldNegativePercentileBeInvalid() {
+     new BasePercentileConsolidator(1, -2) {};
   }
 
-  @Test
-  public void shouldResultBeCorrect() {
-    final LastConsolidator consolidator = new LastConsolidator();
-    consolidator.accumulate(2L, 2);
-    consolidator.accumulate(1L, 1);
-    consolidator.accumulate(4L, 4);
-    consolidator.accumulate(3L, 3);
-
-    Assert.assertEquals(4, consolidator.consolidateAndReset());
+  @Test(expected=IllegalArgumentException.class)
+  public void shouldPercentileGreaterThan100BeInvalid() {
+     new BasePercentileConsolidator(1, 200) {};
   }
 
 }
