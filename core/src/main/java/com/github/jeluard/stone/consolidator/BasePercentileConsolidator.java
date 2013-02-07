@@ -21,7 +21,6 @@ import com.github.jeluard.stone.api.Consolidator;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
 
-import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 /**
