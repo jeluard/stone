@@ -65,8 +65,8 @@ public abstract class BaseStorageTest<T extends Storage> {
     final long timestamp = 12345L;
     storage.onConsolidation(timestamp, new int[]{1, 2});
 
-    Assert.assertEquals(timestamp, storage.end().get());
-    Assert.assertEquals(timestamp, Iterables.getLast(storage.all()));
+    Assert.assertEquals(timestamp, storage.end().get().getMillis());
+    Assert.assertEquals(timestamp, (long) Iterables.getLast(storage.all()).first);
   }
 
 }
