@@ -16,46 +16,57 @@
  */
 package com.github.jeluard.stone.spi;
 
-import com.github.jeluard.guayaba.base.Pair;
+import com.google.common.base.Optional;
+import com.google.common.collect.Iterables;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.LinkedList;
 
 import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class BaseStorageTest {
+public abstract class BaseStorageTest<T extends Storage> {
 
-  /*@Test
-  public void shouldLastReturnAbsentWhenAllIsEmpty() throws IOException {
-    final BaseStorage storage = new BaseStorage() {
-      @Override
-      public void append(long timestamp, int[] data) throws IOException {
-      }
-      @Override
-      public Iterable<Pair<Long, int[]>> all() throws IOException {
-        return new LinkedList<Pair<Long, int[]>>();
-      }
-    };
+  protected abstract T createStorage() throws IOException;
 
-    Assert.assertFalse(storage.beginning().isPresent());
+  @Test
+  public void shouldEndBeAfterBeginningWhenDefined() throws IOException {
+    final T storage = createStorage();
+    final Optional<DateTime> beginning = storage.beginning();
+    final Optional<DateTime> end = storage.end();
+    if (beginning.isPresent() && end.isPresent()) {
+      Assert.assertTrue(end.get().isAfter(beginning.get()));
+    }
   }
 
   @Test
-  public void shouldLastReturnPresentWhenAllReturnsOneElement() throws IOException {
-    final BaseStorage storage = new BaseStorage() {
-      @Override
-      public void append(long timestamp, int[] data) throws IOException {
-      }
-      @Override
-      public Iterable<Pair<Long, int[]>> all() throws IOException {
-        return Arrays.asList(new Pair<Long, int[]>(DateTime.now().getMillis(), new int[0]));
-      }
-    };
+  public void shouldBeginningAndEndBeUndefinedWhenAllIsEmpty() throws IOException {
+    final T storage = createStorage();
+    final Iterable<?> iterable = storage.all();
+    if (Iterables.isEmpty(iterable)) {
+      Assert.assertFalse(storage.beginning().isPresent());
+      Assert.assertFalse(storage.end().isPresent());
+    }
+  }
 
-    Assert.assertTrue(storage.beginning().isPresent());
-  }*/
+  @Test
+  public void shouldBeginningAndEndReflectAll() throws IOException {
+    final T storage = createStorage();
+    final Optional<DateTime> beginning = storage.beginning();
+    final Optional<DateTime> end = storage.end();
+    if (beginning.isPresent() && end.isPresent()) {
+      Assert.assertTrue(end.get().isAfter(beginning.get()));
+    }
+  }
+
+  @Test
+  public void shouldNewConsolidatesBeLatestFromAll() throws Exception {
+    final T storage = createStorage();
+    final long timestamp = 12345L;
+    storage.onConsolidation(timestamp, new int[]{1, 2});
+
+    Assert.assertEquals(timestamp, storage.end().get());
+    Assert.assertEquals(timestamp, Iterables.getLast(storage.all()));
+  }
 
 }

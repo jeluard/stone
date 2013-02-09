@@ -35,6 +35,19 @@
       <artifactId>guayaba</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.github.jeluard</groupId>
+      <artifactId>guayaba</artifactId>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.github.jeluard.stone</groupId>
+      <artifactId>stone-core</artifactId>
+      <version>${project.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
