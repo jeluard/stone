@@ -23,10 +23,12 @@ public interface ConsolidationListener {
 
   /**
    * Invoked each time a newly published value cross a {@link Window} boundary triggering the consolidation process.
+   * <br>
+   * Different thread might invoke this method but never concurrently. Consecutive {@code timestamp} values are guaranteed to be monotonically increasing.
    *
    * @param timestamp
    * @param consolidates 
    */
-  void onConsolidation(final long timestamp, final int[] consolidates) throws Exception;
+  void onConsolidation(long timestamp, int[] consolidates) throws Exception;
 
 }
