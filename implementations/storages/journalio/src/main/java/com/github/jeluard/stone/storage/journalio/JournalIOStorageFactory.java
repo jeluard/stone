@@ -151,16 +151,6 @@ public class JournalIOStorageFactory extends StorageFactory<JournalIOStorage> {
    * @param id
    * @param window
    * @param duration 
-   * @return an optional suffix used when creating file names
-   */
-  protected Optional<String> fileSuffix(final String id, final Window window, final Duration duration) {
-    return Optional.absent();
-  }
-
-  /**
-   * @param id
-   * @param window
-   * @param duration 
    * @return an initialized {@link Journal} dedicated to this {@code id} / {@code window} / {@code duration} tuple
    * @throws IOException 
    */
@@ -184,10 +174,6 @@ public class JournalIOStorageFactory extends StorageFactory<JournalIOStorage> {
     final Optional<String> filePrefix = filePrefix(id, window, duration);
     if (filePrefix.isPresent()) {
       journal.setFilePrefix(filePrefix.get());
-    }
-    final Optional<String> fileSuffix = fileSuffix(id, window, duration);
-    if (fileSuffix.isPresent()) {
-      journal.setFileSuffix(fileSuffix.get());
     }
     //Do not archive deleted entries
     journal.setArchiveFiles(false);
