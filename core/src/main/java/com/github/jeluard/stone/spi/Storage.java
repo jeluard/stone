@@ -84,15 +84,16 @@ public abstract class Storage implements Reader, ConsolidationListener {
   public Iterable<Pair<Long, int[]>> during(final Interval interval) throws IOException {
     Preconditions.checkNotNull(interval, "null interval");
 
-    final Iterator<Pair<Long, int[]>> all = all().iterator();
     return new Iterable<Pair<Long, int[]>>() {
+      final Iterable<Pair<Long, int[]>> all = all();
       @Override 
       public Iterator<Pair<Long, int[]>> iterator() {
         return new AbstractIterator<Pair<Long, int[]>>() {
+          final Iterator<Pair<Long, int[]>> iterator = all.iterator();
           @Override
           protected Pair<Long, int[]> computeNext() {
-            while (all.hasNext()) {
-              final Pair<Long, int[]> consolidates = all.next();
+            while (this.iterator.hasNext()) {
+              final Pair<Long, int[]> consolidates = this.iterator.next();
               final long timestamp = consolidates.first;
               if (timestamp < interval.getStartMillis()) {
                 //Before the beginning
