@@ -19,11 +19,14 @@ package com.github.jeluard.stone.storage.journalio;
 import com.github.jeluard.guayaba.test.junit.LoggerRule;
 import com.github.jeluard.stone.spi.BaseStorageTest;
 
+import java.io.File;
 import java.io.IOException;
 
 import journal.io.api.Journal;
 
 import org.joda.time.Duration;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 
 public class JournalIOStorageTest extends BaseStorageTest<JournalIOStorage> {
@@ -31,10 +34,30 @@ public class JournalIOStorageTest extends BaseStorageTest<JournalIOStorage> {
   @Rule
   public LoggerRule loggerRule = new LoggerRule(JournalIOStorageFactory.LOGGER);
 
+  private static final File DIRECTORY = new File("empty");
+
+  @Before
+  public void createDirectory() {
+    JournalIOStorageTest.DIRECTORY.mkdirs();
+  }
+
   @Override
-  protected JournalIOStorage createStorage() throws IOException {
+  protected JournalIOStorage createStorage(final Duration duration, final int maxElements, final int consolidators) throws IOException {
     final Journal journal = new Journal();
-    return new JournalIOStorage(journal, Duration.standardMinutes(1));
+    journal.setDirectory(JournalIOStorageTest.DIRECTORY);
+    journal.open();
+    return new JournalIOStorage(journal, duration);
+  }
+
+  @After
+  public void cleanup() {
+    final File[] children = JournalIOStorageTest.DIRECTORY.listFiles();
+    if (children != null) {
+      for (final File file : children) {
+        file.delete();
+      }
+    }
+    JournalIOStorageTest.DIRECTORY.delete();
   }
 
 }
