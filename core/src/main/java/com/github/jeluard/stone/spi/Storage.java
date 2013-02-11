@@ -19,9 +19,11 @@ package com.github.jeluard.stone.spi;
 import com.github.jeluard.guayaba.base.Pair;
 import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.Reader;
+import com.github.jeluard.stone.api.Window;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.AbstractIterator;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 
 import java.io.IOException;
@@ -41,10 +43,46 @@ import org.joda.time.Interval;
 @ThreadSafe
 public abstract class Storage implements Reader, ConsolidationListener {
 
+  protected final Window window;
+  private final long duration;
+  private final int maximumSize;
+
+  public Storage(final Window window) {
+    this.window = window;
+    this.duration = window.getPersistedDuration().get().getMillis();
+    this.maximumSize = (int) (this.duration / window.getResolution().getMillis());
+  }
+
+  protected final long getDuration() {
+    return this.duration;
+  }
+
+  protected final int getMaximumSize() {
+    return this.maximumSize;
+  }
+
+  protected final Optional<DateTime> minimum() throws IOException {
+    final Optional<DateTime> end = end();
+    if (!end.isPresent()) {
+      return Optional.absent();
+    }
+
+    return Optional.<DateTime>of(end.get().minus(this.duration));
+  }
+
+  protected final Optional<DateTime> maximum() throws IOException {
+    final Optional<DateTime> beginning = beginning();
+    if (!beginning.isPresent()) {
+      return Optional.absent();
+    }
+
+    return Optional.<DateTime>of(beginning.get().plus(this.duration));
+  }
+
   /**
    * Default implementation relying on {@link #all()}.
    *
-   * {@inheritDoc}
+   * @return 
    */
   @Override
   public Optional<DateTime> beginning() throws IOException {
@@ -59,8 +97,7 @@ public abstract class Storage implements Reader, ConsolidationListener {
   /**
    * Default implementation relying on {@link #all()}: it iterates over {@link Storage#all()} elements to access the last one.
    *
-   * {@inheritDoc}
-   *
+   * @return 
    * @see Iterables#getLast(java.lang.Iterable)
    */
   @Override
@@ -76,8 +113,8 @@ public abstract class Storage implements Reader, ConsolidationListener {
   /**
    * Default implementation relying on {@link #all()}: it iterates over all elements while they are parts of specified `beginning`.
    *
-   * {@inheritDoc}
-   *
+   * @param interval 
+   * @return 
    * @see AbstractIterator
    */
   @Override
@@ -111,6 +148,23 @@ public abstract class Storage implements Reader, ConsolidationListener {
         };
       }
     };
+  }
+
+  /**
+   * @return currently number of contained elements. Default implementation relies on {@link #all()}
+   * @throws IOException 
+   */
+  @Override
+  public int size() throws IOException {
+    return Iterables.size(all());
+  }
+
+  /**
+   * @return true if {@code maxSize} elements are contained. Default implementation relies on {@link #size()}
+   * @throws IOException 
+   */
+  protected boolean isFull() throws IOException {
+    return size() == getMaximumSize();
   }
 
 }

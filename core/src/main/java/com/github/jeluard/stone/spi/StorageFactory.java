@@ -53,16 +53,15 @@ public abstract class StorageFactory<T extends Storage> implements Closeable {
    *
    * @param id unique id of associated {@link com.github.jeluard.stone.api.TimeSeries}
    * @param window associated {@link Window}
-   * @param duration
    * @return a fully initialized {@link Storage}
    * @throws IOException 
    */
-  public final T createOrGet(final String id, final Window window, final Duration duration) throws IOException {
+  public final T createOrGet(final String id, final Window window) throws IOException {
     return ConcurrentMaps.putIfAbsentAndReturn(this.cache, new Pair<String, Window>(id, window), new Supplier<T>() {
       @Override
       public T get() {
         try {
-          return create(id, window, duration);
+          return create(id, window);
         } catch (IOException e) {
           throw new RuntimeException(e);
         }
@@ -76,7 +75,7 @@ public abstract class StorageFactory<T extends Storage> implements Closeable {
    * @return an initialized {@link Storage} dedicated to {@code id}/{@code window}/{@code duration}
    * @throws IOException 
    */
-  protected abstract T create(String id, Window window, Duration duration) throws IOException;
+  protected abstract T create(String id, Window window) throws IOException;
 
   /**
    * @return all currently created {@link Storage}s

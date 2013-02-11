@@ -17,6 +17,7 @@
 package com.github.jeluard.stone.storage.journalio;
 
 import com.github.jeluard.guayaba.test.junit.LoggerRule;
+import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.spi.BaseStorageTest;
 
 import java.io.File;
@@ -42,11 +43,11 @@ public class JournalIOStorageTest extends BaseStorageTest<JournalIOStorage> {
   }
 
   @Override
-  protected JournalIOStorage createStorage(final Duration duration, final int maxElements, final int consolidators) throws IOException {
+  protected JournalIOStorage createStorage(final Window window) throws IOException {
     final Journal journal = new Journal();
     journal.setDirectory(JournalIOStorageTest.DIRECTORY);
     journal.open();
-    return new JournalIOStorage(journal, duration);
+    return new JournalIOStorage(window, journal);
   }
 
   @After

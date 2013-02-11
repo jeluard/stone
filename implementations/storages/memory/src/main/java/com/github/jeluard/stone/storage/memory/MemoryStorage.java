@@ -17,6 +17,7 @@
 package com.github.jeluard.stone.storage.memory;
 
 import com.github.jeluard.guayaba.base.Pair;
+import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.spi.Storage;
 
 import java.io.IOException;
@@ -26,32 +27,29 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 
-import org.joda.time.Duration;
-
 /**
  * An in-memory {@link Storage} implementation.
  */
 public final class MemoryStorage extends Storage {
 
-  private final int maxSize;
-  private final int nbValues;
   private final AtomicLong index = new AtomicLong(0);
+  private final int nbValues;
   private final AtomicLongArray timestamps;
   private final AtomicIntegerArray values;
 
-  public MemoryStorage(final Duration duration, final int maxSize, final int nbValues) {
-    super(duration, maxSize, nbValues);
+  public MemoryStorage(final Window window) {
+    super(window);
 
-    this.maxSize = maxSize;
-    this.nbValues = nbValues;
-    this.timestamps = new AtomicLongArray(maxSize);
-    this.values = new AtomicIntegerArray(maxSize*nbValues);
+    this.nbValues = window.getConsolidatorTypes().size();
+    this.timestamps = new AtomicLongArray(getMaximumSize());
+    this.values = new AtomicIntegerArray(getMaximumSize()*nbValues);
   }
 
   @Override
   public Iterable<Pair<Long, int[]>> all() throws IOException {
-    final List<Pair<Long, int[]>> all = new ArrayList<Pair<Long, int[]>>(this.maxSize);
-    for (int i = 0; i < this.maxSize; i++) {
+    final int maxSize = getMaximumSize();
+    final List<Pair<Long, int[]>> all = new ArrayList<Pair<Long, int[]>>(maxSize);
+    for (int i = 0; i < maxSize; i++) {
       final long timestamp = this.timestamps.get(i);
       if (timestamp == 0L) {
         break;
@@ -66,7 +64,7 @@ public final class MemoryStorage extends Storage {
   }
 
   private int index() {
-    return (int) (this.index.getAndIncrement() % this.maxSize);
+    return (int) (this.index.getAndIncrement() % getMaximumSize());
   }
 
   @Override

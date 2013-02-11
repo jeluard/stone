@@ -72,14 +72,14 @@ public class TimeSeriesTest {
   public final LoggerRule loggerRule = new LoggerRule(Loggers.BASE_LOGGER);
 
   private Window createWindow() {
-    return Window.of(Duration.standardSeconds(1)).consolidatedBy(MaxConsolidator.class);
+    return Window.of(Duration.standardSeconds(1)).persistedDuring(Duration.standardSeconds(10)).consolidatedBy(MaxConsolidator.class);
   }
 
   private StorageFactory createStorageFactory() {
     return new StorageFactory() {
       @Override
-      protected Storage create(String id, Window window, Duration duration) throws IOException {
-        return new Storage() {
+      protected Storage create(String id, Window window) throws IOException {
+        return new Storage(createWindow()) {
           @Override
           public Iterable<Pair<Long, int[]>> all() throws IOException {
             return Collections.emptyList();
@@ -95,8 +95,8 @@ public class TimeSeriesTest {
   private StorageFactory createFailingOnCloseStorageFactory() {
     return new StorageFactory() {
       @Override
-      protected Storage create(String id, Window window, Duration duration) throws IOException {
-        return new Storage() {
+      protected Storage create(String id, Window window) throws IOException {
+        return new Storage(createWindow()) {
           @Override
           public Iterable<Pair<Long, int[]>> all() throws IOException {
             return Collections.emptyList();
@@ -162,7 +162,8 @@ public class TimeSeriesTest {
 
   @Test
   public void shouldReadersBeEmptyWhenNoWindowIsPersisted() throws IOException {
-    final TimeSeries timeSeries = new TimeSeries("id", Duration.millis(1), new Window[]{createWindow()}, Mockito.mock(Dispatcher.class), createStorageFactory());
+    final Window window = Window.of(Duration.millis(1)).consolidatedBy(MaxConsolidator.class);
+    final TimeSeries timeSeries = new TimeSeries("id", Duration.millis(1), new Window[]{window}, Mockito.mock(Dispatcher.class), createStorageFactory());
     timeSeries.close();
 
     Assert.assertTrue(timeSeries.getReaders().isEmpty());

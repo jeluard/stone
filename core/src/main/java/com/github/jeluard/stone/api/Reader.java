@@ -45,6 +45,8 @@ public interface Reader {
    */
   Optional<DateTime> end() throws IOException;
 
+  int size() throws IOException;
+
   /**
    * @return all data stored
    * @throws IOException 

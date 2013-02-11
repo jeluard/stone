@@ -16,16 +16,17 @@
  */
 package com.github.jeluard.stone.storage.journalio;
 
+import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.spi.BaseStorageTest;
 import com.github.jeluard.stone.storage.memory.MemoryStorage;
 
-import java.io.IOException;
+import org.joda.time.Duration;
 
 public class MemoryStorageTest extends BaseStorageTest<MemoryStorage> {
 
   @Override
-  protected MemoryStorage createStorage() throws IOException {
-    return new MemoryStorage(10, 10);
+  protected MemoryStorage createStorage(final Window window) {
+    return new MemoryStorage(window);
   }
 
 }

@@ -17,6 +17,7 @@
 package com.github.jeluard.stone.storage.journalio;
 
 import com.github.jeluard.guayaba.base.Pair;
+import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.spi.ByteBufferStorage;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -70,15 +71,15 @@ public final class JournalIOStorage extends ByteBufferStorage {
   };
 
   private final Journal journal;
-  private final long duration;
 
   /**
+   * @param window 
    * @param journal life-cycle is not handled here, expect a fully {@link Journal#open()} {@code journal}
-   * @param duration
    */
-  public JournalIOStorage(final Journal journal, final Duration duration) throws IOException {
+  public JournalIOStorage(final Window window, final Journal journal) throws IOException {
+    super(window);
+
     this.journal = Preconditions.checkNotNull(journal, "null journal");
-    this.duration = Preconditions.checkNotNull(duration, "null duration").getMillis();
   }
 
   /**
@@ -105,7 +106,7 @@ public final class JournalIOStorage extends ByteBufferStorage {
   @Override
   protected void append(final long timestamp, final ByteBuffer buffer) throws IOException {
     //Calculate current window beginning then deletes all values outside of it.
-    final long beginning = timestamp - this.duration;
+    final long beginning = timestamp - getDuration();
     removeUntil(beginning);
 
     this.journal.write(buffer.array(), Journal.WriteType.SYNC, JournalIOStorage.LOGGING_WRITE_CALLBACK);

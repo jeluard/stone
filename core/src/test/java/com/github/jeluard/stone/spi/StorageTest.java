@@ -17,6 +17,8 @@
 package com.github.jeluard.stone.spi;
 
 import com.github.jeluard.guayaba.base.Pair;
+import com.github.jeluard.stone.api.Window;
+import com.github.jeluard.stone.consolidator.MaxConsolidator;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -24,15 +26,20 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.joda.time.DateTime;
+import org.joda.time.Duration;
 import org.joda.time.Interval;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class StorageTest {
 
+  private Window createWindow() {
+    return Window.of(Duration.standardSeconds(1)).persistedDuring(Duration.standardSeconds(10)).consolidatedBy(MaxConsolidator.class);
+  }
+
   @Test
   public void shouldBeginningReturnAbsentWhenAllIsEmpty() throws IOException {
-    final Storage storage = new Storage() {
+    final Storage storage = new Storage(createWindow()) {
       @Override
       public void onConsolidation(long timestamp, int[] data) throws IOException {
       }
@@ -49,7 +56,7 @@ public class StorageTest {
   public void shouldBeginningReturnFirstFromAll() throws IOException {
     final long millis = DateTime.now().getMillis();
     final long millis2 = DateTime.now().plus(1).getMillis();
-    final Storage storage = new Storage() {
+    final Storage storage = new Storage(createWindow()) {
       @Override
       public void onConsolidation(long timestamp, int[] data) throws IOException {
       }
@@ -65,7 +72,7 @@ public class StorageTest {
 
   @Test
   public void shouldEndReturnAbsentWhenAllIsEmpty() throws IOException {
-    final Storage storage = new Storage() {
+    final Storage storage = new Storage(createWindow()) {
       @Override
       public void onConsolidation(long timestamp, int[] data) throws IOException {
       }
@@ -82,7 +89,7 @@ public class StorageTest {
   public void shouldEndReturnLastFromAll() throws IOException {
     final long millis = DateTime.now().getMillis();
     final long millis2 = DateTime.now().plus(1).getMillis();
-    final Storage storage = new Storage() {
+    final Storage storage = new Storage(createWindow()) {
       @Override
       public void onConsolidation(long timestamp, int[] data) throws IOException {
       }
@@ -102,7 +109,7 @@ public class StorageTest {
     final long millis2 = DateTime.now().plus(1).getMillis();
     final long millis3 = DateTime.now().plus(2).getMillis();
     final long millis4 = DateTime.now().plus(3).getMillis();
-    final Storage storage = new Storage() {
+    final Storage storage = new Storage(createWindow()) {
       @Override
       public void onConsolidation(long timestamp, int[] data) throws IOException {
       }
@@ -129,7 +136,7 @@ public class StorageTest {
     final long millis3 = DateTime.now().plus(2).getMillis();
     final long millis4 = DateTime.now().plus(3).getMillis();
     final long millis5 = DateTime.now().plus(4).getMillis();
-    final Storage storage = new Storage() {
+    final Storage storage = new Storage(createWindow()) {
       @Override
       public void onConsolidation(long timestamp, int[] data) throws IOException {
       }
@@ -155,7 +162,7 @@ public class StorageTest {
     final long millis2 = DateTime.now().plus(1).getMillis();
     final long millis3 = DateTime.now().plus(2).getMillis();
     final long millis4 = DateTime.now().plus(3).getMillis();
-    final Storage storage = new Storage() {
+    final Storage storage = new Storage(createWindow()) {
       @Override
       public void onConsolidation(long timestamp, int[] data) throws IOException {
       }

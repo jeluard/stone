@@ -139,22 +139,20 @@ public class JournalIOStorageFactory extends StorageFactory<JournalIOStorage> {
   /**
    * @param id
    * @param window
-   * @param duration 
    * @return an optional prefix used when creating file names
    */
-  protected Optional<String> filePrefix(final String id, final Window window, final Duration duration) {
+  protected Optional<String> filePrefix(final String id, final Window window) {
     final Collection<String> consolidatorIdentifiers = extractConsolidatorIdentifiers(window.getConsolidatorTypes());
-    return Optional.of(Joiner.on("-").join(consolidatorIdentifiers)+"-"+duration+"@"+window.getResolution()+"-");
+    return Optional.of(Joiner.on("-").join(consolidatorIdentifiers)+"-"+window.getPersistedDuration().get()+"@"+window.getResolution()+"-");
   }
 
   /**
    * @param id
    * @param window
-   * @param duration 
    * @return an initialized {@link Journal} dedicated to this {@code id} / {@code window} / {@code duration} tuple
    * @throws IOException 
    */
-  protected Journal createJournal(final String id, final Window window, final Duration duration) throws IOException {
+  protected Journal createJournal(final String id, final Window window) throws IOException {
     final Journal journal = new Journal();
     final String mainDirectory = rootDirectoryPath(id);
     final File file = new File(mainDirectory);
@@ -171,7 +169,7 @@ public class JournalIOStorageFactory extends StorageFactory<JournalIOStorage> {
       throw new IllegalArgumentException("Cannot write to main directory <"+mainDirectory+">");
     }
     journal.setDirectory(file);
-    final Optional<String> filePrefix = filePrefix(id, window, duration);
+    final Optional<String> filePrefix = filePrefix(id, window);
     if (filePrefix.isPresent()) {
       journal.setFilePrefix(filePrefix.get());
     }
@@ -189,12 +187,8 @@ public class JournalIOStorageFactory extends StorageFactory<JournalIOStorage> {
   }
 
   @Override
-  public final JournalIOStorage create(final String id, final Window window, final Duration duration) throws IOException {
-    Preconditions.checkNotNull(id, "null id");
-    Preconditions.checkNotNull(window, "null window");
-    Preconditions.checkNotNull(duration, "null duration");
-
-    return new JournalIOStorage(createJournal(id, window, duration), duration);
+  public final JournalIOStorage create(final String id, final Window window) throws IOException {
+    return new JournalIOStorage(window, createJournal(id, window));
   }
 
   @Override

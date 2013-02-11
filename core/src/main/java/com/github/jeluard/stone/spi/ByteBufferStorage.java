@@ -16,6 +16,8 @@
  */
 package com.github.jeluard.stone.spi;
 
+import com.github.jeluard.stone.api.Window;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -23,6 +25,10 @@ import java.nio.ByteBuffer;
  * Base implementation for {@link Storage} storing byte arrays.
  */
 public abstract class ByteBufferStorage extends Storage {
+
+  public ByteBufferStorage(final Window window) {
+    super(window);
+  }
 
   /**
    * Put {@code timestamp} into {@code buffer}.

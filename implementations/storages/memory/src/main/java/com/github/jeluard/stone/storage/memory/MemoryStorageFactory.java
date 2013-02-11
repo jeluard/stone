@@ -19,18 +19,14 @@ package com.github.jeluard.stone.storage.memory;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.spi.StorageFactory;
 
-import java.io.IOException;
-
-import org.joda.time.Duration;
-
 /**
  * {@link StorageFactory} creating memory based {@link com.github.jeluard.stone.spi.Storage}.
  */
 public class MemoryStorageFactory extends StorageFactory<MemoryStorage> {
 
   @Override
-  protected MemoryStorage create(final String id, final Window window, final Duration duration) throws IOException {
-    return new MemoryStorage((int) (duration.getMillis() / window.getResolution().getMillis()), window.getConsolidatorTypes().size());
+  protected MemoryStorage create(final String id, final Window window) {
+    return new MemoryStorage(window);
   }
 
 }
