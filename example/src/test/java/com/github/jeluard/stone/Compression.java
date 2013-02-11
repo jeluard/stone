@@ -15,6 +15,8 @@
  */
 package com.github.jeluard.stone;
 
+import com.github.jeluard.stone.api.Window;
+import com.github.jeluard.stone.consolidator.MaxConsolidator;
 import com.github.jeluard.stone.storage.memory.MemoryStorage;
 import com.kamikaze.docidset.api.DocSet;
 import com.kamikaze.docidset.utils.DocSetFactory;
@@ -31,6 +33,7 @@ import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Decompressor;
 import net.jpountz.lz4.LZ4Factory;
 import org.iq80.snappy.Snappy;
+import org.joda.time.Duration;
 
 /**
  *
@@ -40,7 +43,7 @@ public class Compression {
   public static void main(String[] args) throws Exception {
     
     
-    MemoryStorage storage = new MemoryStorage(10000, 1);
+    MemoryStorage storage = new MemoryStorage(Window.of(Duration.standardMinutes(1)).persistedDuring(Duration.standardMinutes(1)).consolidatedBy(MaxConsolidator.class));
     int[] consolidates = new int[] {1};
     while (!Thread.currentThread().isInterrupted()) {
       long before = System.currentTimeMillis();
