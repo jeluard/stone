@@ -20,8 +20,6 @@ import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.spi.BaseStorageTest;
 import com.github.jeluard.stone.storage.memory.MemoryStorage;
 
-import org.joda.time.Duration;
-
 public class MemoryStorageTest extends BaseStorageTest<MemoryStorage> {
 
   @Override
