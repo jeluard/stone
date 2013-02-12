@@ -53,30 +53,20 @@ public abstract class Storage implements Reader, ConsolidationListener {
     this.maximumSize = (int) (this.duration / window.getResolution().getMillis());
   }
 
-  protected final long getDuration() {
-    return this.duration;
-  }
-
+  /**
+   * @return 
+   */
   protected final int getMaximumSize() {
     return this.maximumSize;
   }
 
-  protected final Optional<DateTime> minimum() throws IOException {
-    final Optional<DateTime> end = end();
-    if (!end.isPresent()) {
-      return Optional.absent();
-    }
-
-    return Optional.<DateTime>of(end.get().minus(this.duration));
-  }
-
-  protected final Optional<DateTime> maximum() throws IOException {
-    final Optional<DateTime> beginning = beginning();
-    if (!beginning.isPresent()) {
-      return Optional.absent();
-    }
-
-    return Optional.<DateTime>of(beginning.get().plus(this.duration));
+  /**
+   * @param timestamp
+   * @return the lower bound that can be retained based on {@code timestamp}
+   * @throws IOException 
+   */
+  protected final long lowerBound(final long timestamp) throws IOException {
+    return timestamp - this.duration;
   }
 
   /**
@@ -148,23 +138,6 @@ public abstract class Storage implements Reader, ConsolidationListener {
         };
       }
     };
-  }
-
-  /**
-   * @return currently number of contained elements. Default implementation relies on {@link #all()}
-   * @throws IOException 
-   */
-  @Override
-  public int size() throws IOException {
-    return Iterables.size(all());
-  }
-
-  /**
-   * @return true if {@code maxSize} elements are contained. Default implementation relies on {@link #size()}
-   * @throws IOException 
-   */
-  protected boolean isFull() throws IOException {
-    return size() == getMaximumSize();
   }
 
 }

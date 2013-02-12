@@ -102,8 +102,7 @@ public final class JournalIOStorage extends ByteBufferStorage implements Closeab
   @Override
   protected void append(final long timestamp, final ByteBuffer buffer) throws IOException {
     //Calculate current window beginning then deletes all values outside of it.
-    final long beginning = timestamp - getDuration();
-    removeUntil(beginning);
+    removeUntil(lowerBound(timestamp));
 
     this.journal.write(buffer.array(), Journal.WriteType.SYNC, this.writeCallback);
   }
