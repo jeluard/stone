@@ -17,9 +17,7 @@
 package com.github.jeluard.stone.spi;
 
 import com.carrotsearch.junitbenchmarks.AbstractBenchmark;
-import com.carrotsearch.junitbenchmarks.annotation.BenchmarkHistoryChart;
-import com.carrotsearch.junitbenchmarks.annotation.BenchmarkMethodChart;
-import com.carrotsearch.junitbenchmarks.annotation.LabelType;
+import com.carrotsearch.junitbenchmarks.BenchmarkOptions;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.consolidator.MaxConsolidator;
 import com.github.jeluard.stone.consolidator.MinConsolidator;
@@ -29,7 +27,7 @@ import java.io.IOException;
 import org.joda.time.Duration;
 import org.junit.Test;
 
-//@BenchmarkMethodChart(filePrefix = "benchmark-lists")
+@BenchmarkOptions(callgc = false, benchmarkRounds = 5, warmupRounds = 3)
 public abstract class BaseStorageBenchmark<T extends Storage> extends AbstractBenchmark {
 
   protected abstract T createStorage(Window window) throws IOException;
@@ -39,7 +37,6 @@ public abstract class BaseStorageBenchmark<T extends Storage> extends AbstractBe
   }
 
   @Test
-  //@BenchmarkHistoryChart(labelWith = LabelType.CUSTOM_KEY, maxRuns = 20)
   public void bench100Consolidation() throws Exception {
     final T storage = createStorage(createWindow(10));
     final long now = System.currentTimeMillis();
@@ -49,7 +46,6 @@ public abstract class BaseStorageBenchmark<T extends Storage> extends AbstractBe
   }
 
   @Test
-  @BenchmarkHistoryChart(labelWith = LabelType.CUSTOM_KEY, maxRuns = 20)
   public void bench100ConsolidationNoRoll() throws Exception {
     final T storage = createStorage(createWindow(101));
     final long now = System.currentTimeMillis();
@@ -59,7 +55,6 @@ public abstract class BaseStorageBenchmark<T extends Storage> extends AbstractBe
   }
 
   @Test
-  @BenchmarkHistoryChart(labelWith = LabelType.CUSTOM_KEY, maxRuns = 20)
   public void bench1KConsolidationNoRoll() throws Exception {
     final T storage = createStorage(createWindow(1001));
     for (int i = 0; i < 1000; i++) {

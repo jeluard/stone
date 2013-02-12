@@ -120,12 +120,12 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
               <includes>
-                <include>**/Benchmark.java</include>
+                <include>**/*Benchmark.java</include>
               </includes>
               <systemPropertyVariables>
                 <jub.consumers>CONSOLE, H2</jub.consumers>
-                <jub.db.file>.benchmarks</jub.db.file>
-                <jub.charts.dir>target</jub.charts.dir>
+                <jub.db.file>${user.dir}/benchmarks/.benchmarks</jub.db.file>
+                <jub.charts.dir>${user.dir}/benchmarks</jub.charts.dir>
               </systemPropertyVariables>
             </configuration>
           </plugin>
