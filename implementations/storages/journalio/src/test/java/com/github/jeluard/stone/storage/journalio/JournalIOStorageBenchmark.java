@@ -41,7 +41,7 @@ public class JournalIOStorageBenchmark extends BaseStorageBenchmark<JournalIOSto
     final Journal journal = new Journal();
     journal.setDirectory(JournalIOStorageBenchmark.DIRECTORY);
     journal.open();
-    return new JournalIOStorage(window, journal);
+    return new JournalIOStorage(window, journal, JournalIOStorage.DEFAULT_WRITE_CALLBACK);
   }
 
   @After

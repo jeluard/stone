@@ -187,8 +187,8 @@ public class JournalIOStorageFactory extends StorageFactory<JournalIOStorage> {
   }
 
   @Override
-  public final JournalIOStorage create(final String id, final Window window) throws IOException {
-    return new JournalIOStorage(window, createJournal(id, window));
+  public JournalIOStorage create(final String id, final Window window) throws IOException {
+    return new JournalIOStorage(window, createJournal(id, window), JournalIOStorage.DEFAULT_WRITE_CALLBACK);
   }
 
   @Override

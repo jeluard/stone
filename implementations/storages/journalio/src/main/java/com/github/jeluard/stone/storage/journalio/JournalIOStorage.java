@@ -54,7 +54,7 @@ import org.joda.time.DateTime;
  */
 public final class JournalIOStorage extends ByteBufferStorage {
 
-  private static final WriteCallback LOGGING_WRITE_CALLBACK = new WriteCallback() {
+  public static final WriteCallback DEFAULT_WRITE_CALLBACK = new WriteCallback() {
     @Override
     public void onSync(final Location location) {
       if (JournalIOStorageFactory.LOGGER.isLoggable(Level.FINEST)) {
@@ -70,15 +70,18 @@ public final class JournalIOStorage extends ByteBufferStorage {
   };
 
   private final Journal journal;
+  private final WriteCallback writeCallback;
 
   /**
    * @param window 
    * @param journal life-cycle is not handled here, expect a fully {@link Journal#open()} {@code journal}
+   * @param writeCallback
    */
-  public JournalIOStorage(final Window window, final Journal journal) throws IOException {
+  public JournalIOStorage(final Window window, final Journal journal, final WriteCallback writeCallback) throws IOException {
     super(window);
 
     this.journal = Preconditions.checkNotNull(journal, "null journal");
+    this.writeCallback = Preconditions.checkNotNull(writeCallback, "null writeCallback");
   }
 
   /**
@@ -108,7 +111,7 @@ public final class JournalIOStorage extends ByteBufferStorage {
     final long beginning = timestamp - getDuration();
     removeUntil(beginning);
 
-    this.journal.write(buffer.array(), Journal.WriteType.SYNC, JournalIOStorage.LOGGING_WRITE_CALLBACK);
+    this.journal.write(buffer.array(), Journal.WriteType.SYNC, this.writeCallback);
   }
 
   /**

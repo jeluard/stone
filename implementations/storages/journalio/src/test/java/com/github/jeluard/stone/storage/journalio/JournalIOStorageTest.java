@@ -24,10 +24,12 @@ import java.io.File;
 import java.io.IOException;
 
 import journal.io.api.Journal;
+import journal.io.api.Location;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
+import org.junit.Test;
 
 public class JournalIOStorageTest extends BaseStorageTest<JournalIOStorage> {
 
@@ -36,17 +38,17 @@ public class JournalIOStorageTest extends BaseStorageTest<JournalIOStorage> {
 
   private static final File DIRECTORY = new File("empty");
 
-  @Before
-  public void createDirectory() {
-    JournalIOStorageTest.DIRECTORY.mkdirs();
-  }
-
   @Override
   protected JournalIOStorage createStorage(final Window window) throws IOException {
     final Journal journal = new Journal();
     journal.setDirectory(JournalIOStorageTest.DIRECTORY);
     journal.open();
-    return new JournalIOStorage(window, journal);
+    return new JournalIOStorage(window, journal, JournalIOStorage.DEFAULT_WRITE_CALLBACK);
+  }
+
+  @Before
+  public void createDirectory() {
+    JournalIOStorageTest.DIRECTORY.mkdirs();
   }
 
   @After
@@ -58,6 +60,12 @@ public class JournalIOStorageTest extends BaseStorageTest<JournalIOStorage> {
       }
     }
     JournalIOStorageTest.DIRECTORY.delete();
+  }
+
+  @Test
+  public void shouldDefaultWriteCallbackBeSafe() {
+    JournalIOStorage.DEFAULT_WRITE_CALLBACK.onSync(new Location());
+    JournalIOStorage.DEFAULT_WRITE_CALLBACK.onError(new Location(), new Exception());
   }
 
 }
