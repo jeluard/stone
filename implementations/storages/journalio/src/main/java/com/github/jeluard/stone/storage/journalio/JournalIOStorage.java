@@ -33,7 +33,6 @@ import journal.io.api.Location;
 import journal.io.api.WriteCallback;
 
 import org.joda.time.DateTime;
-import org.joda.time.Duration;
 
 /**
  * A {@link Storage} implementation relying on <a href="https://github.com/sbtourist/Journal.IO">Journal.IO</a>.
