@@ -30,8 +30,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import javax.annotation.concurrent.ThreadSafe;
 
-import org.joda.time.Duration;
-
 /**
  * Abstract creation of {@link Storage} backend per persistent {@link Window}.
  * <br />
@@ -125,12 +123,15 @@ public abstract class StorageFactory<T extends Storage> implements Closeable {
   }
 
   /**
-   * Optionally close a {@link Storage}.
+   * {@link Closeable#close()} a {@link Storage} if it's an instance of {@link Closeable}.
    *
    * @param storage
    * @throws IOException 
    */
-  protected void close(T storage) throws IOException {
+  protected final void close(T storage) throws IOException {
+    if (storage instanceof Closeable) {
+      Closeable.class.cast(storage).close();
+    }
   }
 
   /**
