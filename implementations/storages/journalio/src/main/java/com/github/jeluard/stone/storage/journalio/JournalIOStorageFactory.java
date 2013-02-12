@@ -191,11 +191,6 @@ public class JournalIOStorageFactory extends StorageFactory<JournalIOStorage> {
     return new JournalIOStorage(window, createJournal(id, window), JournalIOStorage.DEFAULT_WRITE_CALLBACK);
   }
 
-  @Override
-  protected void close(final JournalIOStorage storage) throws IOException {
-    storage.getJournal().close();
-  }
-
   private void delete(final File directory) {
     final File[] files = directory.listFiles();
     if (files!=null) {

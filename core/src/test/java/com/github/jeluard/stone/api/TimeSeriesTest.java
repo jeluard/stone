@@ -25,6 +25,7 @@ import com.github.jeluard.stone.spi.Dispatcher;
 import com.github.jeluard.stone.spi.Storage;
 import com.github.jeluard.stone.spi.StorageFactory;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collections;
 
@@ -92,23 +93,27 @@ public class TimeSeriesTest {
     };
   }
 
-  private StorageFactory createFailingOnCloseStorageFactory() {
+  private StorageFactory createFailingOnCloseStorage() {
+    class CloseFailingStorage extends Storage implements Closeable {
+      public CloseFailingStorage() {
+        super(createWindow());
+      }
+      @Override
+      public Iterable<Pair<Long, int[]>> all() throws IOException {
+        return Collections.emptyList();
+      }
+      @Override
+      public void onConsolidation(long timestamp, int[] consolidates) throws Exception {
+      }
+      @Override
+      public void close() throws IOException {
+        throw new IOException();
+      }
+    }
     return new StorageFactory() {
       @Override
       protected Storage create(String id, Window window) throws IOException {
-        return new Storage(createWindow()) {
-          @Override
-          public Iterable<Pair<Long, int[]>> all() throws IOException {
-            return Collections.emptyList();
-          }
-          @Override
-          public void onConsolidation(long timestamp, int[] consolidates) throws Exception {
-          }
-        };
-      }
-      @Override
-      protected void close(Storage storage) throws IOException {
-        throw new IOException();
+        return new CloseFailingStorage();
       }
     };
   }
@@ -199,9 +204,9 @@ public class TimeSeriesTest {
   }
 
   @Test
-  public void shouldCloseWithFailingStorageFactoryBeHandled() throws IOException {
+  public void shouldCloseWithFailingStorageBeHandled() throws IOException {
     final Window window = Window.of(Duration.millis(1)).persistedDuring(Duration.millis(1)).consolidatedBy(MaxConsolidator.class);
-    final TimeSeries timeSeries = new TimeSeries("id", Duration.millis(1), new Window[]{window}, Mockito.mock(Dispatcher.class), createFailingOnCloseStorageFactory());
+    final TimeSeries timeSeries = new TimeSeries("id", Duration.millis(1), new Window[]{window}, Mockito.mock(Dispatcher.class), createFailingOnCloseStorage());
     timeSeries.close();
   }
 

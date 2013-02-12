@@ -22,6 +22,7 @@ import com.github.jeluard.stone.spi.ByteBufferStorage;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.AbstractIterator;
+import java.io.Closeable;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -52,7 +53,7 @@ import org.joda.time.DateTime;
  * <br>
  * This format is both easy to implement and fast to parse but waste significant space.
  */
-public final class JournalIOStorage extends ByteBufferStorage {
+public final class JournalIOStorage extends ByteBufferStorage implements Closeable {
 
   public static final WriteCallback DEFAULT_WRITE_CALLBACK = new WriteCallback() {
     @Override
@@ -82,13 +83,6 @@ public final class JournalIOStorage extends ByteBufferStorage {
 
     this.journal = Preconditions.checkNotNull(journal, "null journal");
     this.writeCallback = Preconditions.checkNotNull(writeCallback, "null writeCallback");
-  }
-
-  /**
-   * @return underlying {@link Journal} used
-   */
-  Journal getJournal() {
-    return this.journal;
   }
 
   private void removeUntil(final long until) throws IOException {
@@ -181,6 +175,11 @@ public final class JournalIOStorage extends ByteBufferStorage {
    */
   void compact() throws IOException {
     this.journal.compact();
+  }
+
+  @Override
+  public final void close() throws IOException {
+    this.journal.close();
   }
 
 }
