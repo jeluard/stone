@@ -30,6 +30,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class JournalIOStorageTest extends BaseStorageTest<JournalIOStorage> {
 
@@ -66,6 +67,24 @@ public class JournalIOStorageTest extends BaseStorageTest<JournalIOStorage> {
   public void shouldDefaultWriteCallbackBeSafe() {
     JournalIOStorage.DEFAULT_WRITE_CALLBACK.onSync(new Location());
     JournalIOStorage.DEFAULT_WRITE_CALLBACK.onError(new Location(), new Exception());
+  }
+
+  @Test
+  public void shouldCloseBeDelegatedToUnderlyingJournal() throws IOException {
+    final Journal mock = Mockito.mock(Journal.class);
+    final JournalIOStorage storage = new JournalIOStorage(createWindow(), mock, JournalIOStorage.DEFAULT_WRITE_CALLBACK);
+    storage.close();
+
+    Mockito.verify(mock).close();
+  }
+
+  @Test
+  public void shouldCompactBeDelegatedToUnderlyingJournal() throws IOException {
+    final Journal mock = Mockito.mock(Journal.class);
+    final JournalIOStorage storage = new JournalIOStorage(createWindow(), mock, JournalIOStorage.DEFAULT_WRITE_CALLBACK);
+    storage.compact();
+
+    Mockito.verify(mock).compact();
   }
 
 }
