@@ -16,6 +16,7 @@
  */
 package com.github.jeluard.stone.spi;
 
+import com.github.jeluard.guayaba.base.Pair;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.consolidator.MaxConsolidator;
 import com.github.jeluard.stone.consolidator.MinConsolidator;
@@ -31,19 +32,19 @@ import org.junit.Test;
 
 public abstract class BaseStorageTest<T extends Storage> {
 
-  private Window createWindow() {
+  protected final Window createWindow() {
     return createWindow(10);
   }
 
-  private Window createWindow(final int maxSize) {
+  protected final Window createWindow(final int maxSize) {
     return Window.of(Duration.standardSeconds(1)).persistedDuring(Duration.standardSeconds(maxSize)).consolidatedBy(MaxConsolidator.class, MinConsolidator.class);
   }
 
-  private T createStorage() throws IOException {
+  protected final T createStorage() throws IOException {
     return createStorage(createWindow());
   }
 
-  private T createStorage(final int maxSize) throws IOException {
+  protected final T createStorage(final int maxSize) throws IOException {
     return createStorage(createWindow(maxSize));
   }
 
@@ -113,10 +114,31 @@ public abstract class BaseStorageTest<T extends Storage> {
 
   @Test
   public void shouldValuesBeInOrderAfterACycle() throws Exception {
+    final int maxSize = 10;
+    final T storage = createStorage(maxSize);
+    for (int i = 0; i < 3*maxSize; i++) {
+      storage.onConsolidation(i+1, new int[]{1, 2});
+    }
+
+    final long first = storage.beginning().get().getMillis();
+    long previous = first;
+    for (final Pair<Long, int[]> pair : storage.all()) {
+      if (pair.first < previous) {
+        Assert.fail();
+      }
+      previous = pair.first;
+    }
   }
 
   @Test
-  public void shouldLastValuesBeBeLastFromAllAfterACycle() throws Exception {
+  public void shouldLastValueBeLastFromAllAfterACycle() throws Exception {
+    final int maxSize = 10;
+    final T storage = createStorage(maxSize);
+    for (int i = 0; i < 3*maxSize; i++) {
+      storage.onConsolidation(i+1, new int[]{1, 2});
+    }
+
+    Assert.assertEquals(3*maxSize, (long) Iterables.getLast(storage.all()).first);
   }
 
 }
