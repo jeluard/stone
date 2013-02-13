@@ -38,4 +38,9 @@ public class JournalIOStorageFactoryTest extends BaseStorageFactoryTest<JournalI
     new JournalIOStorageFactory(Duration.standardMinutes(1), -1, JournalIOStorageFactory.defaultWriteExecutor(), JournalIOStorageFactory.defaultDisposerScheduledExecutor());
   }
 
+  @Test
+  public void shouldConstructorBeSafe() {
+    new JournalIOStorageFactory(JournalIOStorageFactory.defaultWriteExecutor(), JournalIOStorageFactory.defaultDisposerScheduledExecutor());
+  }
+
 }

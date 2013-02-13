@@ -47,4 +47,22 @@ public abstract class BaseStorageFactoryTest<U extends StorageFactory<V>, V exte
     storageFactory.close(id, window);
   }
 
+  @Test
+  public void shouldCloseBeSuccessful() throws IOException {
+    final U storageFactory = createStorageFactory();
+    final String id = "id";
+    final Window window = createWindow();
+    storageFactory.createOrGet(id, window);
+    storageFactory.close();
+  }
+
+  @Test
+  public void shouldDeleteBeSuccessful() throws IOException {
+    final U storageFactory = createStorageFactory();
+    final String id = "id";
+    final Window window = createWindow();
+    storageFactory.createOrGet(id, window);
+    storageFactory.delete(id);
+  }
+
 }
