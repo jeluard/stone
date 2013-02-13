@@ -22,7 +22,6 @@ import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.consolidator.MaxConsolidator;
 import com.github.jeluard.stone.helper.Loggers;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
 import java.io.Closeable;
 
 import java.io.IOException;
@@ -121,8 +120,8 @@ public class StorageFactoryTest {
   @Test
   public void shouldCloseDelegateCloseToStorage() throws IOException {
     final AtomicInteger count = new AtomicInteger();
-    class FailingStorage extends Storage implements Closeable {
-      public FailingStorage() {
+    class InstrumentedStorage extends Storage implements Closeable {
+      public InstrumentedStorage() {
         super(createWindow());
       }
       @Override
@@ -140,7 +139,7 @@ public class StorageFactoryTest {
     final StorageFactory storageFactory = new StorageFactory() {
       @Override
       protected Storage create(final String id, final Window window) throws IOException {
-        return new FailingStorage();
+        return new InstrumentedStorage();
       }
     };
 
@@ -150,6 +149,37 @@ public class StorageFactoryTest {
     storageFactory.close();
 
     Assert.assertEquals(1, count.get());
+  }
+
+  @Test
+  public void shouldFailingCloseBeHandled() throws IOException {
+    class FailingStorage extends Storage implements Closeable {
+      public FailingStorage() {
+        super(createWindow());
+      }
+      @Override
+      public Iterable<Pair<Long, int[]>> all() throws IOException {
+        throw new UnsupportedOperationException("Not supported yet.");
+      }
+      @Override
+      public void onConsolidation(long timestamp, int[] consolidates) throws Exception {
+      }
+      @Override
+      public void close() throws IOException {
+        throw new IOException();
+      }
+    }
+    final StorageFactory storageFactory = new StorageFactory() {
+      @Override
+      protected Storage create(final String id, final Window window) throws IOException {
+        return new FailingStorage();
+      }
+    };
+
+    final String id = "id";
+    final Window window = createWindow();
+    storageFactory.createOrGet(id, window);
+    storageFactory.close();
   }
 
   @Test
