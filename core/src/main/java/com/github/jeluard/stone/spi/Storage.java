@@ -63,9 +63,8 @@ public abstract class Storage implements Reader, ConsolidationListener {
   /**
    * @param timestamp
    * @return the lower bound that can be retained based on {@code timestamp}
-   * @throws IOException 
    */
-  protected final long lowerBound(final long timestamp) throws IOException {
+  protected final long lowerBound(final long timestamp) {
     return timestamp - this.duration;
   }
 
