@@ -18,12 +18,8 @@ package com.github.jeluard.stone.storage.journalio;
 
 import com.github.jeluard.guayaba.test.junit.LoggerRule;
 import com.github.jeluard.stone.spi.BaseStorageFactoryTest;
-import com.github.jeluard.stone.spi.Storage;
-import com.github.jeluard.stone.spi.StorageFactory;
-import java.io.IOException;
 
 import org.joda.time.Duration;
-
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -34,7 +30,7 @@ public class JournalIOStorageFactoryTest extends BaseStorageFactoryTest<JournalI
 
   @Override
   protected JournalIOStorageFactory createStorageFactory() {
-    return new JournalIOStorageFactory(Duration.standardMinutes(1), 10, JournalIOStorageFactory.defaultWriteExecutor(), JournalIOStorageFactory.defaultDisposerScheduledExecutor());
+    return new JournalIOStorageFactory(Duration.standardMinutes(1), 1024, JournalIOStorageFactory.defaultWriteExecutor(), JournalIOStorageFactory.defaultDisposerScheduledExecutor());
   }
 
   @Test(expected=IllegalArgumentException.class)
