@@ -37,17 +37,21 @@ public class StorageTest {
     return Window.of(Duration.standardSeconds(1)).persistedDuring(Duration.standardSeconds(10)).consolidatedBy(MaxConsolidator.class);
   }
 
-  @Test
-  public void shouldBeginningReturnAbsentWhenAllIsEmpty() throws IOException {
-    final Storage storage = new Storage(createWindow()) {
+  private Storage createStorage(final Window window, final Iterable<Pair<Long, int[]>> all) {
+    return new Storage(window) {
       @Override
       public void onConsolidation(long timestamp, int[] data) throws IOException {
       }
       @Override
       public Iterable<Pair<Long, int[]>> all() throws IOException {
-        return new LinkedList<Pair<Long, int[]>>();
+        return all;
       }
     };
+  }
+
+  @Test
+  public void shouldBeginningReturnAbsentWhenAllIsEmpty() throws IOException {
+    final Storage storage = createStorage(createWindow(), new LinkedList<Pair<Long, int[]>>());
 
     Assert.assertFalse(storage.beginning().isPresent());
   }
@@ -56,15 +60,7 @@ public class StorageTest {
   public void shouldBeginningReturnFirstFromAll() throws IOException {
     final long millis = DateTime.now().getMillis();
     final long millis2 = DateTime.now().plus(1).getMillis();
-    final Storage storage = new Storage(createWindow()) {
-      @Override
-      public void onConsolidation(long timestamp, int[] data) throws IOException {
-      }
-      @Override
-      public Iterable<Pair<Long, int[]>> all() throws IOException {
-        return Arrays.asList(new Pair<Long, int[]>(millis, new int[0]), new Pair<Long, int[]>(millis2, new int[0]));
-      }
-    };
+    final Storage storage = createStorage(createWindow(), Arrays.asList(new Pair<Long, int[]>(millis, new int[0]), new Pair<Long, int[]>(millis2, new int[0])));
 
     Assert.assertTrue(storage.end().isPresent());
     Assert.assertEquals(millis, storage.beginning().get().getMillis());
@@ -72,15 +68,7 @@ public class StorageTest {
 
   @Test
   public void shouldEndReturnAbsentWhenAllIsEmpty() throws IOException {
-    final Storage storage = new Storage(createWindow()) {
-      @Override
-      public void onConsolidation(long timestamp, int[] data) throws IOException {
-      }
-      @Override
-      public Iterable<Pair<Long, int[]>> all() throws IOException {
-        return new LinkedList<Pair<Long, int[]>>();
-      }
-    };
+    final Storage storage = createStorage(createWindow(), new LinkedList<Pair<Long, int[]>>());
 
     Assert.assertFalse(storage.end().isPresent());
   }
@@ -89,15 +77,7 @@ public class StorageTest {
   public void shouldEndReturnLastFromAll() throws IOException {
     final long millis = DateTime.now().getMillis();
     final long millis2 = DateTime.now().plus(1).getMillis();
-    final Storage storage = new Storage(createWindow()) {
-      @Override
-      public void onConsolidation(long timestamp, int[] data) throws IOException {
-      }
-      @Override
-      public Iterable<Pair<Long, int[]>> all() throws IOException {
-        return Arrays.asList(new Pair<Long, int[]>(millis, new int[0]), new Pair<Long, int[]>(millis2, new int[0]));
-      }
-    };
+    final Storage storage = createStorage(createWindow(), Arrays.asList(new Pair<Long, int[]>(millis, new int[0]), new Pair<Long, int[]>(millis2, new int[0])));
 
     Assert.assertTrue(storage.end().isPresent());
     Assert.assertEquals(millis2, storage.end().get().getMillis());
@@ -109,18 +89,10 @@ public class StorageTest {
     final long millis2 = DateTime.now().plus(1).getMillis();
     final long millis3 = DateTime.now().plus(2).getMillis();
     final long millis4 = DateTime.now().plus(3).getMillis();
-    final Storage storage = new Storage(createWindow()) {
-      @Override
-      public void onConsolidation(long timestamp, int[] data) throws IOException {
-      }
-      @Override
-      public Iterable<Pair<Long, int[]>> all() throws IOException {
-        return Arrays.asList(new Pair<Long, int[]>(millis, new int[0]), 
+    final Storage storage = createStorage(createWindow(), Arrays.asList(new Pair<Long, int[]>(millis, new int[0]), 
                 new Pair<Long, int[]>(millis2, new int[0]),
                 new Pair<Long, int[]>(millis3, new int[0]),
-                new Pair<Long, int[]>(millis4, new int[0]));
-      }
-    };
+                new Pair<Long, int[]>(millis4, new int[0])));
 
     final Iterable<Pair<Long, int[]>> iterable = storage.during(new Interval(millis2, millis3));
     final Iterator<Pair<Long, int[]>> result = iterable.iterator();
@@ -136,18 +108,10 @@ public class StorageTest {
     final long millis3 = DateTime.now().plus(2).getMillis();
     final long millis4 = DateTime.now().plus(3).getMillis();
     final long millis5 = DateTime.now().plus(4).getMillis();
-    final Storage storage = new Storage(createWindow()) {
-      @Override
-      public void onConsolidation(long timestamp, int[] data) throws IOException {
-      }
-      @Override
-      public Iterable<Pair<Long, int[]>> all() throws IOException {
-        return Arrays.asList(new Pair<Long, int[]>(millis, new int[0]), 
+    final Storage storage = createStorage(createWindow(), Arrays.asList(new Pair<Long, int[]>(millis, new int[0]), 
                 new Pair<Long, int[]>(millis2, new int[0]),
                 new Pair<Long, int[]>(millis3, new int[0]),
-                new Pair<Long, int[]>(millis4, new int[0]));
-      }
-    };
+                new Pair<Long, int[]>(millis4, new int[0])));
 
     final Iterable<Pair<Long, int[]>> iterable = storage.during(new Interval(millis3, millis5));
     final Iterator<Pair<Long, int[]>> result = iterable.iterator();
@@ -162,18 +126,10 @@ public class StorageTest {
     final long millis2 = DateTime.now().plus(1).getMillis();
     final long millis3 = DateTime.now().plus(2).getMillis();
     final long millis4 = DateTime.now().plus(3).getMillis();
-    final Storage storage = new Storage(createWindow()) {
-      @Override
-      public void onConsolidation(long timestamp, int[] data) throws IOException {
-      }
-      @Override
-      public Iterable<Pair<Long, int[]>> all() throws IOException {
-        return Arrays.asList(new Pair<Long, int[]>(millis, new int[0]), 
+    final Storage storage = createStorage(createWindow(), Arrays.asList(new Pair<Long, int[]>(millis, new int[0]), 
                 new Pair<Long, int[]>(millis2, new int[0]),
                 new Pair<Long, int[]>(millis3, new int[0]),
-                new Pair<Long, int[]>(millis4, new int[0]));
-      }
-    };
+                new Pair<Long, int[]>(millis4, new int[0])));
 
     final Iterable<Pair<Long, int[]>> iterable = storage.during(new Interval(millis2, millis3));
     final Iterator<Pair<Long, int[]>> result = iterable.iterator();
@@ -185,6 +141,22 @@ public class StorageTest {
     Assert.assertEquals(millis2, (long) result2.next().first);
     Assert.assertEquals(millis3, (long) result2.next().first);
     Assert.assertFalse(result.hasNext());
+  }
+
+  @Test
+  public void shouldMaximumSizeBeInferredFromWindow() {
+    final Window window = Window.of(Duration.standardSeconds(1)).persistedDuring(Duration.standardSeconds(100)).consolidatedBy(MaxConsolidator.class);
+    final Storage storage = createStorage(window, new LinkedList<Pair<Long, int[]>>());
+
+    Assert.assertEquals(100, storage.getMaximumSize());
+  }
+
+  @Test
+  public void shouldLowerBoundInferredFromWindow() {
+    final Window window = Window.of(Duration.standardSeconds(1)).persistedDuring(Duration.standardSeconds(100)).consolidatedBy(MaxConsolidator.class);
+    final Storage storage = createStorage(window, new LinkedList<Pair<Long, int[]>>());
+
+    Assert.assertEquals(Duration.standardSeconds(1).getMillis(), storage.lowerBound(Duration.standardSeconds(101).getMillis()));
   }
 
 }
