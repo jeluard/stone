@@ -22,8 +22,8 @@ import com.github.jeluard.stone.spi.ByteBufferStorage;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.AbstractIterator;
-import java.io.Closeable;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;

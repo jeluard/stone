@@ -153,37 +153,26 @@ public class JournalIOStorageFactory extends StorageFactory<JournalIOStorage> {
    * @throws IOException 
    */
   protected Journal createJournal(final String id, final Window window) throws IOException {
-    final Journal journal = new Journal();
     final String mainDirectory = rootDirectoryPath(id);
     final File file = new File(mainDirectory);
     //If main directory path exists check its a directory
     //If it does not exists create it
     //Also ensures current user has write access
-    if (file.exists() && !file.isDirectory()) {
-      throw new IllegalArgumentException("Main directory <"+mainDirectory+"> is not a directory");
-    }
+
     if (!file.exists() && !file.mkdirs()) {
       throw new IllegalArgumentException("Failed to create main directory <"+mainDirectory+">");
     }
-    if (!file.canWrite()) {
-      throw new IllegalArgumentException("Cannot write to main directory <"+mainDirectory+">");
-    }
-    journal.setDirectory(file);
+    final ExtendedJournal.Builder builder = ExtendedJournal.of(file);
     final Optional<String> filePrefix = filePrefix(id, window);
     if (filePrefix.isPresent()) {
-      journal.setFilePrefix(filePrefix.get());
+      builder.setFilePrefix(filePrefix.get());
     }
-    //Do not archive deleted entries
-    journal.setArchiveFiles(false);
-    journal.setChecksum(true);
-    journal.setRecoveryErrorHandler(RecoveryErrorHandler.ABORT);
-    journal.setPhysicalSync(true);
-    journal.setMaxFileLength(this.maxFileLength);
-    journal.setMaxWriteBatchSize(this.maxFileLength);
-    journal.setWriter(this.writerExecutor);
-    journal.setDisposer(this.disposerScheduledExecutorService);
-    journal.open();
-    return journal;
+    builder.setChecksum(true);
+    builder.setRecoveryErrorHandler(RecoveryErrorHandler.ABORT);
+    builder.setPhysicalSync(true);
+    builder.setMaxFileLength(this.maxFileLength).setMaxWriteBatchSize(this.maxFileLength);
+    builder.setWriter(this.writerExecutor).setDisposer(this.disposerScheduledExecutorService);
+    return builder.open();
   }
 
   @Override
