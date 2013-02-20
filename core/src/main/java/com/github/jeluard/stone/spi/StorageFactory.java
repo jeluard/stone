@@ -128,7 +128,7 @@ public abstract class StorageFactory<T extends Storage> implements Closeable {
    * @param storage
    * @throws IOException 
    */
-  private void close(T storage) throws IOException {
+  private void close(final T storage) throws IOException {
     if (storage instanceof Closeable) {
       Closeable.class.cast(storage).close();
     }
