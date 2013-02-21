@@ -3,22 +3,23 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.github.jeluard.stone.implementations.storages</groupId>
-  <artifactId>stone-storages-parent</artifactId>
-  <packaging>pom</packaging>
+  <artifactId>stone-storage-journalio</artifactId>
 
-  <name>Stone storages</name>
+  <name>Stone Chronicle storage</name>
 
   <parent>
-    <groupId>com.github.jeluard.stone.implementations</groupId>
-    <artifactId>stone-implementations-parent</artifactId>
+    <groupId>com.github.jeluard.stone.implementations.storages</groupId>
+    <artifactId>stone-storages-parent</artifactId>
     <version>0.8.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <modules>
-    <module>chronicle</module>
-    <module>journalio</module>
-    <module>memory</module>
-  </modules>
+  <dependencies>
+    <dependency>
+      <groupId>com.higherfrequencytrading</groupId>
+      <artifactId>chronicle</artifactId>
+      <version>1.6</version>
+    </dependency>
+  </dependencies>
 
 </project>
