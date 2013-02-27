@@ -13,7 +13,7 @@
   <parent>
     <groupId>com.github.jeluard</groupId>
     <artifactId>oss-parent</artifactId>
-    <version>5</version>
+    <version>6</version>
   </parent>
 
   <modules>
@@ -23,7 +23,7 @@
   </modules>
 
   <properties>
-    <guayabaVersion>0.9.1-SNAPSHOT</guayabaVersion>
+    <guayabaVersion>0.9.1</guayabaVersion>
   </properties>
 
   <dependencies>
