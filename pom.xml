@@ -19,7 +19,7 @@
   <modules>
     <module>core</module>
     <module>implementations</module>
-    <module>example</module>
+    <module>examples</module>
   </modules>
 
   <properties>

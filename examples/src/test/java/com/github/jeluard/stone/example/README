@@ -25,6 +25,7 @@
 </dependency>
 
 <!--
+http://yow.eventer.com/yow-2012-1012/lock-free-algorithms-for-ultimate-performance-by-martin-thompson-1250
 http://www.cyclesresearchinstitute.org/cycles/cycles-data.shtml
 
 http://hawtdispatch.fusesource.org/
@@ -50,6 +51,8 @@ http://stackoverflow.com/questions/11227809/why-is-processing-a-sorted-array-fas
 http://mentaaffinity.soliveirajr.com/
 
 https://github.com/bulldog2011/bigqueue
+https://gist.github.com/simbo1905/4968112
+https://github.com/jimfcarroll/Dempsy/tree/high-performance/lib-dempsyimpl/src/main/java/com/nokia/dempsy/util
 
 #Packing/Compression
 
@@ -64,6 +67,12 @@ https://issues.apache.org/jira/browse/LUCENE-2189
 http://mg4j.di.unimi.it/
 http://www.insightfullogic.com/blog/2013/jan/3/slab-guaranteed-heap-alignment-jvm/
 
+# Cassandra
+https://github.com/datastax/java-driver
+https://github.com/Netflix/astyanax
+http://hector-client.github.com/hector/
+https://openshift.redhat.com/community/blogs/cassandra-on-openshift
+https://openshift.redhat.com/community/blogs/announcing-openshift-pricing-beyond-free-php-and-java-hosting-in-the-cloud
 
 # Analysis
 
@@ -71,4 +80,42 @@ https://github.com/jolby/rincanter
 http://jblas.org/
 http://www.cs.waikato.ac.nz/ml/weka/
 https://github.com/kovasb/session
+
+## Bitmap indexes
+
+http://en.wikipedia.org/wiki/Bitmap_index
+http://lemire.me/blog/archives/2008/08/20/the-mythical-bitmap-index/
+http://code.google.com/p/javaewah/
+http://lemire.me/blog/archives/2012/10/23/when-is-a-bitmap-faster-than-an-integer-list/
+https://github.com/lemire/simplebitmapbenchmark/
+
+http://clj-me.cgrand.net/2013/02/12/decaying-lists-log-scale-for-lists/
+http://blog.bigml.com/2013/02/11/streaming-histograms-for-clojure-and-java/
+https://github.com/bigmlcom/histogram
+https://github.com/bigmlcom/sampling
+http://blog.bigml.com/2013/01/22/a-random-sampling-library-for-clojure/
+
+http://www.abs.gov.au/websitedbs/D3310114.nsf/home/Time+Series+Analysis:+The+Basics
+https://wiki.palantir.com/metropolis/working-with-time-series-data.html
+
+http://labs.carrotsearch.com/randomizedtesting-shortexample.html
+http://labs.carrotsearch.com/hppc-api-and-code-examples.html
+
+http://blog.bigml.com/2012/06/18/bigmls-fancy-histograms/
+
+http://fastmpj.com/
+http://javafastsockets.com/
+http://javolution.org/target/site/apidocs/javolution/io/Struct.html
+http://javarevisited.blogspot.com.ar/2012/01/memorymapped-file-and-io-in-java.html
+
+http://szegedi.github.com/dynalink/
+http://pitest.org/quickstart/maven/
+
+https://github.com/daveray/rx-clj
+http://bl.ocks.org/benjchristensen/2657838
+
+# Clojure
+
+https://github.com/dgrnbrg/vim-redl
+https://github.com/guns/vim-clojure-static
 -->
