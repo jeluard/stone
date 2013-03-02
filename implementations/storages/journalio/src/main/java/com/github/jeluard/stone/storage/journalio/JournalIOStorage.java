@@ -97,7 +97,7 @@ public final class JournalIOStorage extends ByteBufferStorage implements Closeab
   }
 
   @Override
-  protected void append(final long timestamp, final ByteBuffer buffer) throws IOException {
+  protected void append(final ByteBuffer buffer) throws IOException {
     //Calculate current window beginning then deletes all values outside of it.
     //removeUntil(lowerBound(timestamp));
 
