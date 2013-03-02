@@ -19,8 +19,7 @@ package com.github.jeluard.stone.dispatcher.disruptor;
 import com.github.jeluard.guayaba.base.Preconditions2;
 import com.github.jeluard.guayaba.lang.Cancelable;
 import com.github.jeluard.guayaba.util.concurrent.ThreadFactoryBuilders;
-import com.github.jeluard.stone.api.ConsolidationListener;
-import com.github.jeluard.stone.api.Consolidator;
+import com.github.jeluard.stone.api.Listener;
 import com.github.jeluard.stone.helper.Loggers;
 import com.github.jeluard.stone.spi.Dispatcher;
 import com.google.common.base.Preconditions;
@@ -39,8 +38,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.logging.Logger;
 
-import org.joda.time.Duration;
-
 public class DisruptorDispatcher extends Dispatcher implements Cancelable {
 
   /**
@@ -48,13 +45,10 @@ public class DisruptorDispatcher extends Dispatcher implements Cancelable {
    */
   private static final class Event {
 
-    private volatile Duration resolution;
-    private volatile Consolidator[] consolidators;
-    private volatile ConsolidationListener[] consolidationListeners;
-    private volatile long beginningTimestamp;
     private volatile long previousTimestamp;
     private volatile long currentTimestamp;
     private volatile int value;
+    private volatile Listener listener;
 
     /**
      * Unique {@link EventFactory} instance for all published arguments.
@@ -74,11 +68,11 @@ public class DisruptorDispatcher extends Dispatcher implements Cancelable {
   private static final String THREAD_NAME_FORMAT = "DisruptorDispatcher #%d";
 
   public DisruptorDispatcher(final Executor executor, final int bufferSize) {
-    this(executor, new MultiThreadedLowContentionClaimStrategy(Preconditions2.checkSize(bufferSize)), new SleepingWaitStrategy(), Dispatcher.DEFAULT_REJECTION_HANDLER, Dispatcher.DEFAULT_EXCEPTION_HANDLER);
+    this(executor, new MultiThreadedLowContentionClaimStrategy(Preconditions2.checkSize(bufferSize)), new SleepingWaitStrategy(), Dispatcher.DEFAULT_EXCEPTION_HANDLER);
   }
 
-  public DisruptorDispatcher(final Executor executor, final AbstractMultithreadedClaimStrategy claimStrategy, final WaitStrategy waitStrategy, final RejectionHandler rejectionHandler, final ExceptionHandler exceptionHandler) {
-    super(rejectionHandler, exceptionHandler);
+  public DisruptorDispatcher(final Executor executor, final AbstractMultithreadedClaimStrategy claimStrategy, final WaitStrategy waitStrategy, final ExceptionHandler exceptionHandler) {
+    super(exceptionHandler);
 
     Preconditions.checkNotNull(executor, "null executor");
     Preconditions.checkNotNull(claimStrategy, "null claimStrategy");
@@ -99,7 +93,7 @@ public class DisruptorDispatcher extends Dispatcher implements Cancelable {
     this.disruptor.handleEventsWith(new EventHandler<Event>() {
       @Override
       public void onEvent(final Event event, final long sequence, final boolean endOfBatch) throws Exception {
-        persistAndAccumulate(event.resolution, event.consolidators, event.consolidationListeners, event.beginningTimestamp, event.previousTimestamp, event.currentTimestamp, event.value);
+        event.listener.onPublication(event.previousTimestamp, event.currentTimestamp, event.value);
       }
     });
     this.disruptor.start();
@@ -114,19 +108,19 @@ public class DisruptorDispatcher extends Dispatcher implements Cancelable {
   }
 
   @Override
-  protected boolean dispatch(final Duration resolution, final Consolidator[] consolidators, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) {
+  public boolean dispatch(final long previousTimestamp, final long currentTimestamp, final int value, final Listener[] listeners) {
     final RingBuffer<Event> ringBuffer = this.disruptor.getRingBuffer();
-    final long sequence = ringBuffer.next();
-    final Event event = ringBuffer.get(sequence);
-    event.resolution = resolution;
-    event.consolidators = consolidators;
-    event.consolidationListeners = consolidationListeners;
-    event.beginningTimestamp = beginningTimestamp;
-    event.previousTimestamp = previousTimestamp;
-    event.currentTimestamp = currentTimestamp;
-    event.value = value;
 
-    ringBuffer.publish(sequence);
+    for (final Listener listener : listeners) {
+      final long sequence = ringBuffer.next();
+      final Event event = ringBuffer.get(sequence);
+      event.previousTimestamp = previousTimestamp;
+      event.currentTimestamp = currentTimestamp;
+      event.value = value;
+      event.listener = listener;
+
+      ringBuffer.publish(sequence);
+    }
 
     return true;
   }

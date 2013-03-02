@@ -17,7 +17,6 @@
 package com.github.jeluard.stone.storage.journalio;
 
 import com.github.jeluard.guayaba.base.Pair;
-import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.spi.ByteBufferStorage;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -32,8 +31,6 @@ import java.util.logging.Level;
 import journal.io.api.Journal;
 import journal.io.api.Location;
 import journal.io.api.WriteCallback;
-
-import org.joda.time.DateTime;
 
 /**
  * A {@link Storage} implementation relying on <a href="https://github.com/sbtourist/Journal.IO">Journal.IO</a>.
@@ -74,12 +71,12 @@ public final class JournalIOStorage extends ByteBufferStorage implements Closeab
   private final WriteCallback writeCallback;
 
   /**
-   * @param window 
+   * @param maximumSize 
    * @param journal life-cycle is not handled here, expect a fully {@link Journal#open()} {@code journal}
    * @param writeCallback
    */
-  public JournalIOStorage(final Window window, final Journal journal, final WriteCallback writeCallback) throws IOException {
-    super(window);
+  public JournalIOStorage(final int maximumSize, final Journal journal, final WriteCallback writeCallback) throws IOException {
+    super(maximumSize);
 
     this.journal = Preconditions.checkNotNull(journal, "null journal");
     this.writeCallback = Preconditions.checkNotNull(writeCallback, "null writeCallback");
@@ -102,7 +99,7 @@ public final class JournalIOStorage extends ByteBufferStorage implements Closeab
   @Override
   protected void append(final long timestamp, final ByteBuffer buffer) throws IOException {
     //Calculate current window beginning then deletes all values outside of it.
-    removeUntil(lowerBound(timestamp));
+    //removeUntil(lowerBound(timestamp));
 
     this.journal.write(buffer.array(), Journal.WriteType.SYNC, this.writeCallback);
   }
@@ -121,21 +118,21 @@ public final class JournalIOStorage extends ByteBufferStorage implements Closeab
    * @return the next timestamp among {@link locations} if any
    * @throws IOException 
    */
-  private Optional<DateTime> nextTimestampIfAny(final Iterator<Location> locations) throws IOException {
+  private Optional<Long> nextTimestampIfAny(final Iterator<Location> locations) throws IOException {
     if (!locations.hasNext()) {
       return Optional.absent();
     }
 
-    return Optional.of(new DateTime(getTimestamp(readNextLocation(locations))));
+    return Optional.of(getTimestamp(readNextLocation(locations)));
   }
 
   @Override
-  public Optional<DateTime> beginning() throws IOException {
+  public Optional<Long> beginning() throws IOException {
     return nextTimestampIfAny(this.journal.redo().iterator());
   }
 
   @Override
-  public Optional<DateTime> end() throws IOException {
+  public Optional<Long> end() throws IOException {
     return nextTimestampIfAny(this.journal.undo().iterator());
   }
 

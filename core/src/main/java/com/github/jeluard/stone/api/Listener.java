@@ -14,15 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.jeluard.stone.storage.memory;
+package com.github.jeluard.stone.api;
 
-import com.github.jeluard.stone.spi.BaseStorageBenchmark;
+/**
+ * A listener to hook the publication process.
+ */
+public interface Listener {
 
-public class MemoryStorageBenchmark extends BaseStorageBenchmark<MemoryStorage> {
-
-  @Override
-  protected MemoryStorage createStorage(final int maximumSize) {
-    return new MemoryStorage(maximumSize);
-  }
+  /**
+   * Invoked each time a {@code value} is published.
+   *
+   * @param previousTimestamp
+   * @param currentTimestamp
+   * @param value 
+   */
+  void onPublication(long previousTimestamp, long currentTimestamp, int value);
 
 }

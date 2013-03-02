@@ -16,14 +16,13 @@
  */
 package com.github.jeluard.stone.storage.memory;
 
-import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.spi.BaseStorageTest;
 
 public class MemoryStorageTest extends BaseStorageTest<MemoryStorage> {
 
   @Override
-  protected MemoryStorage createStorage(final Window window) {
-    return new MemoryStorage(window);
+  protected MemoryStorage createStorage(final int maximumSize) {
+    return new MemoryStorage(maximumSize);
   }
 
 }

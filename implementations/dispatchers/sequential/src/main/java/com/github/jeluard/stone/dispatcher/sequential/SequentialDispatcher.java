@@ -16,31 +16,30 @@
  */
 package com.github.jeluard.stone.dispatcher.sequential;
 
-import com.github.jeluard.stone.api.ConsolidationListener;
-import com.github.jeluard.stone.api.Consolidator;
+import com.github.jeluard.stone.api.Listener;
 import com.github.jeluard.stone.spi.Dispatcher;
 
-import org.joda.time.Duration;
-
 /**
- * {@link Dispatcher} implementation executing {@link Dispatcher#accumulateAndPersist(com.github.jeluard.stone.api.Window, com.github.jeluard.stone.api.Consolidator[], long, long, long, int)} in the caller thread.
+ * {@link Dispatcher} implementation executing {@link Listener} one by one using caller thread.
  */
 public class SequentialDispatcher extends Dispatcher {
 
   public SequentialDispatcher() {
-    this(Dispatcher.DEFAULT_REJECTION_HANDLER, Dispatcher.DEFAULT_EXCEPTION_HANDLER);
+    this(Dispatcher.DEFAULT_EXCEPTION_HANDLER);
   }
 
-  public SequentialDispatcher(final RejectionHandler rejectionHandler, final ExceptionHandler exceptionHandler) {
-    super(rejectionHandler, exceptionHandler);
+  public SequentialDispatcher(final ExceptionHandler exceptionHandler) {
+    super(exceptionHandler);
   }
 
   @Override
-  public final boolean dispatch(final Duration resolution, final Consolidator[] consolidators, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) {
-    try {
-      persistAndAccumulate(resolution, consolidators, consolidationListeners, beginningTimestamp, previousTimestamp, currentTimestamp, value);
-    } catch (Exception e) {
-      notifyExceptionHandler(e);
+  public boolean dispatch(final long previousTimestamp, final long currentTimestamp, final int value, final Listener[] listeners) {
+    for (final Listener listener : listeners) {
+      try {
+        listener.onPublication(previousTimestamp, currentTimestamp, value);
+      } catch (Exception e) {
+        notifyExceptionHandler(e);
+      }
     }
     return true;
   }

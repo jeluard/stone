@@ -24,7 +24,6 @@ import com.github.jeluard.stone.helper.Loggers;
 
 import java.util.Collections;
 
-import org.joda.time.Duration;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,7 +31,8 @@ import org.mockito.Mockito;
 
 public class WindowTest extends AbstractTest<Window> {
 
-  private static final Duration DURATION_ONE = Duration.standardSeconds(1);
+  private static final int DURATION_ONE = 1;
+  private static final int DURATION_TWO = 2;
 
   @Rule
   public LoggerRule loggerRule = new LoggerRule(Loggers.BASE_LOGGER);
@@ -49,12 +49,12 @@ public class WindowTest extends AbstractTest<Window> {
 
   @Test(expected=IllegalArgumentException.class)
   public void shouldZeroAsDurationBeInvalid() {
-    Window.of(Duration.ZERO).consolidatedBy(MaxConsolidator.class);
+    Window.of(0).consolidatedBy(MaxConsolidator.class);
   }
 
   @Test
   public void shouldWindowBeCorrectlyCreated() {
-    Assert.assertEquals(WindowTest.DURATION_ONE, Window.of(WindowTest.DURATION_ONE).consolidatedBy(MaxConsolidator.class).getResolution());
+    Assert.assertEquals(WindowTest.DURATION_ONE, Window.of(WindowTest.DURATION_ONE).consolidatedBy(MaxConsolidator.class));
     Assert.assertEquals(Collections.singletonList(MaxConsolidator.class), Window.of(WindowTest.DURATION_ONE).consolidatedBy(MaxConsolidator.class).getConsolidatorTypes());
   }
 
@@ -64,26 +64,10 @@ public class WindowTest extends AbstractTest<Window> {
   }
 
   @Test
-  public void shouldPersistencyDurationBeAccessibleIfProvided() {
-    Assert.assertEquals(WindowTest.DURATION_ONE, Window.of(WindowTest.DURATION_ONE).persistedDuring(WindowTest.DURATION_ONE).consolidatedBy(MaxConsolidator.class).getPersistedDuration().get());
-  }
-
-  @Test(expected=IllegalArgumentException.class)
-  public void shouldPersistencyDurationSmallerThanWindowDurationBeInvalid() {
-    Window.of(WindowTest.DURATION_ONE.plus(1)).persistedDuring(WindowTest.DURATION_ONE).consolidatedBy(MaxConsolidator.class);
-  }
-
-  @Test(expected=IllegalArgumentException.class)
-  public void shouldPersistencyDurationNotMultipleOfWindowDurationBeInvalid() {
-    Window.of(WindowTest.DURATION_ONE).persistedDuring(WindowTest.DURATION_ONE.plus(1)).consolidatedBy(MaxConsolidator.class);
-  }
-
-  @Test
   public void shouldEqualsRelyOnAllArgument() {
-    Assert.assertFalse(Window.of(WindowTest.DURATION_ONE).consolidatedBy(MaxConsolidator.class).equals(Window.of(WindowTest.DURATION_ONE.plus(1)).consolidatedBy(MaxConsolidator.class)));
+    Assert.assertFalse(Window.of(WindowTest.DURATION_ONE).consolidatedBy(MaxConsolidator.class).equals(Window.of(WindowTest.DURATION_TWO).consolidatedBy(MaxConsolidator.class)));
     Assert.assertFalse(Window.of(WindowTest.DURATION_ONE).consolidatedBy(MaxConsolidator.class).equals(Window.of(WindowTest.DURATION_ONE).consolidatedBy(MinConsolidator.class)));
     Assert.assertFalse(Window.of(WindowTest.DURATION_ONE).listenedBy(Mockito.mock(ConsolidationListener.class)).consolidatedBy(MaxConsolidator.class).equals(Window.of(WindowTest.DURATION_ONE).consolidatedBy(MaxConsolidator.class)));
-    Assert.assertFalse(Window.of(WindowTest.DURATION_ONE).persistedDuring(DURATION_ONE).consolidatedBy(MaxConsolidator.class).equals(Window.of(WindowTest.DURATION_ONE).consolidatedBy(MaxConsolidator.class)));
   }
 
 }

@@ -18,19 +18,12 @@ package com.github.jeluard.stone.storage.journalio;
 
 import com.github.jeluard.guayaba.util.concurrent.ExecutorServices;
 import com.github.jeluard.guayaba.util.concurrent.ThreadFactoryBuilders;
-import com.github.jeluard.stone.api.Consolidator;
-import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.helper.Loggers;
 import com.github.jeluard.stone.spi.StorageFactory;
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Collections2;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -40,8 +33,6 @@ import java.util.logging.Logger;
 
 import journal.io.api.Journal;
 import journal.io.api.RecoveryErrorHandler;
-
-import org.joda.time.Duration;
 
 /**
  * {@link StorageFactory} implementation creating {@link JournalIOStorage}.
@@ -55,9 +46,8 @@ public class JournalIOStorageFactory extends StorageFactory<JournalIOStorage> {
   private static final String DEFAULT_ROOT_DIRECTORY = "stone-journal";
   private static final String WRITERS_THREAD_NAME_FORMAT = "Stone JournalIO-Writer #%d";
   private static final String DISPOSER_THREAD_NAME_FORMAT = "Stone JournalIO-Disposer";
-  private static final Duration DEFAULT_COMPACTION_INTERVAL = Duration.standardMinutes(10);
+  private static final long DEFAULT_COMPACTION_INTERVAL = 10*60*1000;
   private static final String COMPACTOR_THREAD_NAME_FORMAT = "Stone JournalIO-Compactor";
-  private static final String CONSOLIDATOR_SUFFIX = "Consolidator";
 
   //42 bytes = size of timestamp/value with 1 consolidate
   private static final int DEFAULT_MAX_FILE_LENGTH = 42*512;
@@ -94,8 +84,8 @@ public class JournalIOStorageFactory extends StorageFactory<JournalIOStorage> {
     this(JournalIOStorageFactory.DEFAULT_COMPACTION_INTERVAL, JournalIOStorageFactory.DEFAULT_MAX_FILE_LENGTH, writerExecutor, disposerScheduledExecutorService);
   }
 
-  public JournalIOStorageFactory(final Duration compactionInterval, final int maxFileLength, final Executor writerExecutor, final ScheduledExecutorService disposerScheduledExecutorService) {
-    this.compactionInterval = Preconditions.checkNotNull(compactionInterval, "null compactionInterval").getMillis();
+  public JournalIOStorageFactory(final long compactionInterval, final int maxFileLength, final Executor writerExecutor, final ScheduledExecutorService disposerScheduledExecutorService) {
+    this.compactionInterval = Preconditions.checkNotNull(compactionInterval, "null compactionInterval");
     Preconditions.checkArgument(maxFileLength > 0, "maxFileLength must be > 0");
     this.maxFileLength = maxFileLength;
     this.writerExecutor = Preconditions.checkNotNull(writerExecutor, "null writerExecutor");
@@ -120,53 +110,28 @@ public class JournalIOStorageFactory extends StorageFactory<JournalIOStorage> {
   }
 
   /**
-   * @param consolidators
-   * @return all consolidators identifiers (MaxConsolidator => max)
+   * @param id
+   * @return a prefix used when creating file names
    */
-  protected final Collection<String> extractConsolidatorIdentifiers(final Collection<? extends Class<? extends Consolidator>> consolidators) {
-    return Collections2.transform(consolidators, new Function<Class<? extends Consolidator>, String>() {
-      @Override
-      public String apply(final Class<? extends Consolidator> input) {
-        final String simpleName = input.getSimpleName();
-        if (simpleName.endsWith(JournalIOStorageFactory.CONSOLIDATOR_SUFFIX)) {
-          return simpleName.substring(0, simpleName.length()-JournalIOStorageFactory.CONSOLIDATOR_SUFFIX.length()).toLowerCase();
-        }
-        return simpleName;
-      }
-    });
+  protected String filePrefix(final String id) {
+    return id+"-";
   }
 
   /**
    * @param id
-   * @param window
-   * @return an optional prefix used when creating file names
-   */
-  protected Optional<String> filePrefix(final String id, final Window window) {
-    final Collection<String> consolidatorIdentifiers = extractConsolidatorIdentifiers(window.getConsolidatorTypes());
-    return Optional.of(Joiner.on("-").join(consolidatorIdentifiers)+"-"+window.getPersistedDuration().get()+"@"+window.getResolution()+"-");
-  }
-
-  /**
-   * @param id
-   * @param window
-   * @return an initialized {@link Journal} dedicated to this {@code id} / {@code window} / {@code duration} tuple
+   * @return an initialized {@link Journal} dedicated to this {@code id}
    * @throws IOException 
    */
-  protected Journal createJournal(final String id, final Window window) throws IOException {
+  protected Journal createJournal(final String id) throws IOException {
     final String mainDirectory = rootDirectoryPath(id);
     final File file = new File(mainDirectory);
-    //If main directory path exists check its a directory
     //If it does not exists create it
-    //Also ensures current user has write access
-
     if (!file.exists() && !file.mkdirs()) {
       throw new IllegalArgumentException("Failed to create main directory <"+mainDirectory+">");
     }
     final ExtendedJournal.Builder builder = ExtendedJournal.of(file);
-    final Optional<String> filePrefix = filePrefix(id, window);
-    if (filePrefix.isPresent()) {
-      builder.setFilePrefix(filePrefix.get());
-    }
+    final String filePrefix = filePrefix(id);
+    builder.setFilePrefix(filePrefix);
     builder.setChecksum(true);
     builder.setRecoveryErrorHandler(RecoveryErrorHandler.ABORT);
     builder.setPhysicalSync(true);
@@ -176,8 +141,8 @@ public class JournalIOStorageFactory extends StorageFactory<JournalIOStorage> {
   }
 
   @Override
-  public JournalIOStorage create(final String id, final Window window) throws IOException {
-    return new JournalIOStorage(window, createJournal(id, window), JournalIOStorage.DEFAULT_WRITE_CALLBACK);
+  public JournalIOStorage create(final String id, final int maximumSize) throws IOException {
+    return new JournalIOStorage(maximumSize, createJournal(id), JournalIOStorage.DEFAULT_WRITE_CALLBACK);
   }
 
   private void delete(final File directory) {

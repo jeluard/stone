@@ -40,11 +40,11 @@ public class JournalIOStorageTest extends BaseStorageTest<JournalIOStorage> {
   private static final File DIRECTORY = new File("empty");
 
   @Override
-  protected JournalIOStorage createStorage(final Window window) throws IOException {
+  protected JournalIOStorage createStorage(final int maximumSize) throws IOException {
     final Journal journal = new Journal();
     journal.setDirectory(JournalIOStorageTest.DIRECTORY);
     journal.open();
-    return new JournalIOStorage(window, journal, JournalIOStorage.DEFAULT_WRITE_CALLBACK);
+    return new JournalIOStorage(maximumSize, journal, JournalIOStorage.DEFAULT_WRITE_CALLBACK);
   }
 
   @Before
@@ -72,7 +72,7 @@ public class JournalIOStorageTest extends BaseStorageTest<JournalIOStorage> {
   @Test
   public void shouldCloseBeDelegatedToUnderlyingJournal() throws IOException {
     final Journal mock = Mockito.mock(Journal.class);
-    final JournalIOStorage storage = new JournalIOStorage(createWindow(), mock, JournalIOStorage.DEFAULT_WRITE_CALLBACK);
+    final JournalIOStorage storage = new JournalIOStorage(10, mock, JournalIOStorage.DEFAULT_WRITE_CALLBACK);
     storage.close();
 
     Mockito.verify(mock).close();
@@ -81,7 +81,7 @@ public class JournalIOStorageTest extends BaseStorageTest<JournalIOStorage> {
   @Test
   public void shouldCompactBeDelegatedToUnderlyingJournal() throws IOException {
     final Journal mock = Mockito.mock(Journal.class);
-    final JournalIOStorage storage = new JournalIOStorage(createWindow(), mock, JournalIOStorage.DEFAULT_WRITE_CALLBACK);
+    final JournalIOStorage storage = new JournalIOStorage(10, mock, JournalIOStorage.DEFAULT_WRITE_CALLBACK);
     storage.compact();
 
     Mockito.verify(mock).compact();

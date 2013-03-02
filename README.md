@@ -5,6 +5,11 @@ Stone is a [timeseries database](http://en.wikipedia.org/wiki/Time_series_databa
 Contrary to most other timeseries database a consolidation process pre-calculates what will be stored at publication time (inspired from [RRD](http://oss.oetiker.ch/rrdtool/) and [OLAP](http://en.wikipedia.org/wiki/Online_Analytical_Processing) databases).
 This greatly reduce the amount of data to store and remove the processing phase at read time. It also implies you must know in advance your consolidation logic.
 
+## Principles
+http://spray.io/introduction/#what-is-spray
+
+## Philosophy
+
 ## Getting started
 
 Necessary jars are available in maven central:

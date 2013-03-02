@@ -17,7 +17,6 @@
 package com.github.jeluard.stone.storage.memory;
 
 import com.github.jeluard.guayaba.base.Pair;
-import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.spi.Storage;
 
 import java.io.IOException;
@@ -37,10 +36,10 @@ public final class MemoryStorage extends Storage {
   private final AtomicLongArray timestamps;
   private final AtomicIntegerArray values;
 
-  public MemoryStorage(final Window window) {
-    super(window);
+  public MemoryStorage(final int maximumSize) {
+    super(maximumSize);
 
-    this.nbValues = window.getConsolidatorTypes().size();
+    this.nbValues = 1;//TODO
     this.timestamps = new AtomicLongArray(getMaximumSize());
     this.values = new AtomicIntegerArray(getMaximumSize()*nbValues);
   }
@@ -68,11 +67,11 @@ public final class MemoryStorage extends Storage {
   }
 
   @Override
-  public void onConsolidation(final long timestamp, final int[] consolidates) throws Exception {
+  public void append(final long timestamp, final int[] values) {
     final int currentIndex = index();
     this.timestamps.set(currentIndex, timestamp);
-    for (int i = 0; i < consolidates.length; i++) {
-      this.values.set(currentIndex + i, consolidates[i]);
+    for (int i = 0; i < values.length; i++) {
+      this.values.set(currentIndex + i, values[i]);
     }
   }
 

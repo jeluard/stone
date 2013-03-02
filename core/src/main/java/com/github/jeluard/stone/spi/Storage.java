@@ -17,13 +17,9 @@
 package com.github.jeluard.stone.spi;
 
 import com.github.jeluard.guayaba.base.Pair;
-import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.Reader;
-import com.github.jeluard.stone.api.Window;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.AbstractIterator;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 
 import java.io.IOException;
@@ -32,40 +28,23 @@ import java.util.NoSuchElementException;
 
 import javax.annotation.concurrent.ThreadSafe;
 
-import org.joda.time.DateTime;
-import org.joda.time.Interval;
-
 /**
  * Abstraction dealing with {@link TimeSeries} persistency.
- * <br>
- * A {@link Storage} is specific to a single {@link Window} of a {@link TimeSeries}.
  */
 @ThreadSafe
-public abstract class Storage implements Reader, ConsolidationListener {
+public abstract class Storage implements Reader {
 
-  protected final Window window;
-  private final long duration;
   private final int maximumSize;
 
-  public Storage(final Window window) {
-    this.window = window;
-    this.duration = window.getPersistedDuration().get().getMillis();
-    this.maximumSize = (int) (this.duration / window.getResolution().getMillis());
+  public Storage(final int maximumSize) {
+    this.maximumSize = maximumSize;
   }
 
   /**
-   * @return 
+   * @return
    */
   protected final int getMaximumSize() {
     return this.maximumSize;
-  }
-
-  /**
-   * @param timestamp
-   * @return the lower bound that can be retained based on {@code timestamp}
-   */
-  protected final long lowerBound(final long timestamp) {
-    return timestamp - this.duration;
   }
 
   /**
@@ -74,42 +53,41 @@ public abstract class Storage implements Reader, ConsolidationListener {
    * @return 
    */
   @Override
-  public Optional<DateTime> beginning() throws IOException {
+  public Optional<Long> beginning() throws IOException {
     try {
       final Iterator<Pair<Long, int[]>> consolidates = all().iterator();
-      return Optional.of(new DateTime(consolidates.next().first));
+      return Optional.of(consolidates.next().first);
     } catch (NoSuchElementException e) {
       return Optional.absent();
     }
   }
 
   /**
-   * Default implementation relying on {@link #all()}: it iterates over {@link Storage#all()} elements to access the last one.
+   * Default implementation relying on {@link #all()}: it iterates over {@link #all()} elements to access the last one.
    *
    * @return 
    * @see Iterables#getLast(java.lang.Iterable)
    */
   @Override
-  public Optional<DateTime> end() throws IOException {
+  public Optional<Long> end() throws IOException {
     try {
       final Iterator<Pair<Long, int[]>> consolidates = all().iterator();
-      return Optional.of(new DateTime(Iterators.getLast(consolidates).first));
+      return Optional.of(Iterators.getLast(consolidates).first);
     } catch (NoSuchElementException e) {
       return Optional.absent();
     }
   }
 
   /**
-   * Default implementation relying on {@link #all()}: it iterates over all elements while they are parts of specified `beginning`.
+   * Default implementation relying on {@link #all()}: it iterates over all elements while they are parts of specified {@code interval}.
    *
-   * @param interval 
+   * @param beginning
+   * @param end
    * @return 
    * @see AbstractIterator
    */
   @Override
-  public Iterable<Pair<Long, int[]>> during(final Interval interval) throws IOException {
-    Preconditions.checkNotNull(interval, "null interval");
-
+  public Iterable<Pair<Long, int[]>> during(final long beginning, final long end) throws IOException {
     return new Iterable<Pair<Long, int[]>>() {
       final Iterable<Pair<Long, int[]>> all = all();
       @Override 
@@ -121,11 +99,11 @@ public abstract class Storage implements Reader, ConsolidationListener {
             while (this.iterator.hasNext()) {
               final Pair<Long, int[]> consolidates = this.iterator.next();
               final long timestamp = consolidates.first;
-              if (timestamp < interval.getStartMillis()) {
+              if (timestamp < beginning) {
                 //Before the beginning
                 continue;
               }
-              if (timestamp > interval.getEndMillis()) {
+              if (timestamp > end) {
                 //After the beginning
                 break;
               }
@@ -138,5 +116,14 @@ public abstract class Storage implements Reader, ConsolidationListener {
       }
     };
   }
+
+  /**
+   * Append {@code values} associated to {@code timestamp}.
+   *
+   * @param timestamp
+   * @param values
+   * @throws IOException 
+   */
+  public abstract void append(long timestamp, int[] values) throws IOException;
 
 }

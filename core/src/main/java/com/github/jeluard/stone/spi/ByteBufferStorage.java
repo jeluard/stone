@@ -16,8 +16,6 @@
  */
 package com.github.jeluard.stone.spi;
 
-import com.github.jeluard.stone.api.Window;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -26,8 +24,8 @@ import java.nio.ByteBuffer;
  */
 public abstract class ByteBufferStorage extends Storage {
 
-  public ByteBufferStorage(final Window window) {
-    super(window);
+  public ByteBufferStorage(final int maximumSize) {
+    super(maximumSize);
   }
 
   /**
@@ -94,7 +92,7 @@ public abstract class ByteBufferStorage extends Storage {
   }
 
   @Override
-  public final void onConsolidation(final long timestamp, final int[] consolidates) throws IOException {
+  public final void append(final long timestamp, final int[] consolidates) throws IOException {
     final int capacity = bits2Bytes(Long.SIZE) + bits2Bytes(Integer.SIZE) * consolidates.length;
     final ByteBuffer buffer = createByteBuffer(capacity);
     put(timestamp, buffer);

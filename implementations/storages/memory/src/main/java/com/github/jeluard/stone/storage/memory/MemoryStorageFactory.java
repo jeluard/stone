@@ -16,7 +16,6 @@
  */
 package com.github.jeluard.stone.storage.memory;
 
-import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.spi.StorageFactory;
 
 /**
@@ -25,8 +24,8 @@ import com.github.jeluard.stone.spi.StorageFactory;
 public class MemoryStorageFactory extends StorageFactory<MemoryStorage> {
 
   @Override
-  protected MemoryStorage create(final String id, final Window window) {
-    return new MemoryStorage(window);
+  protected MemoryStorage create(final String id, final int maximumSize) {
+    return new MemoryStorage(maximumSize);
   }
 
 }

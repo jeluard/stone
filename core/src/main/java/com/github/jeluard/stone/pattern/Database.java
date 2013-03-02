@@ -28,15 +28,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import javax.annotation.concurrent.ThreadSafe;
 
-import org.joda.time.Duration;
-
 /**
  * Main entry point to manage {@link TimeSeries} life cycle.
  */
 @ThreadSafe
 public final class Database {
 
-  private static final Duration DEFAULT_GRANULARITY = Duration.millis(1L);
+  private static final int DEFAULT_GRANULARITY = 1;
 
   private final StorageFactory<?> storageFactory;
   private final Dispatcher dispatcher;
@@ -57,7 +55,7 @@ public final class Database {
    * @see #createOrOpen(java.lang.String, org.joda.time.Duration, com.github.jeluard.stone.api.Window[])
    */
   public TimeSeries createOrOpen(final String id, final Window ... windows) throws IOException {
-    return createOrOpen(id, Database.DEFAULT_GRANULARITY, windows);
+    return null;//createOrOpen(id, Database.DEFAULT_GRANULARITY, windows);
   }
 
   /**
@@ -72,12 +70,12 @@ public final class Database {
    * @return
    * @throws IOException 
    */
-  public TimeSeries createOrOpen(final String id, final Duration granularity, final Window ... windows) throws IOException {
+  /*public TimeSeries createOrOpen(final String id, final int granularity, final Window ... windows) throws IOException {
     Preconditions.checkNotNull(id, "null id");
     Preconditions.checkNotNull(granularity, "null granularity");
     Preconditions.checkNotNull(windows, "null windows");
 
-    final TimeSeries timeSeries = new TimeSeries(id, granularity, windows, this.dispatcher, this.storageFactory) {
+    final WindowedTimeSeries timeSeries = new WindowedTimeSeries(id, granularity, Arrays.asList(windows), this.dispatcher) {
       @Override
       protected void cleanup() {
         Database.this.timeSeriess.remove(id);
@@ -88,7 +86,7 @@ public final class Database {
     this.timeSeriess.putIfAbsent(id, timeSeries);
 
     return timeSeries;
-  }
+  }*/
 
   private Optional<TimeSeries> remove(final String id) {
     return Optional.fromNullable(this.timeSeriess.remove(id));

@@ -19,8 +19,8 @@ package com.github.jeluard.stone.spi;
 import com.github.jeluard.guayaba.annotation.Idempotent;
 import com.github.jeluard.guayaba.base.Pair;
 import com.github.jeluard.guayaba.util.concurrent.ConcurrentMaps;
-import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.helper.Loggers;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 
 import java.io.Closeable;
@@ -31,35 +31,40 @@ import java.util.logging.Level;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
- * Abstract creation of {@link Storage} backend per persistent {@link Window}.
+ * Abstract creation of {@link Storage} backend.
  * <br />
  * Common structure can then be shared accross {@link Storage}.
  */
 @ThreadSafe
 public abstract class StorageFactory<T extends Storage> implements Closeable {
 
-  private final ConcurrentMap<Pair<String, Window>, T> cache = new ConcurrentHashMap<Pair<String, Window>, T>();
+  private final ConcurrentMap<String, T> cache = new ConcurrentHashMap<String, T>();
 
   /**
-   * Create or open a {@link Storage} specific to provided {@code id}, {@link Archive} and {@link Window}.
+   * Create or open a {@link Storage} specific to provided {@code id}.
    * This {@link Storage} will then only be used to persist associated data.
-   * Internal resources can be shared but {@link Storage} methods should be isolated to others {@code id}, {@link Archive} and {@link Window}.
+   * Internal resources can be shared but {@link Storage} methods should be isolated to others {@code id}.
    * <br>
    * At this stage {@link Storage} is initialized and ready to be used.
    * <br>
    * No caching should be done here as this is done by the caller.
    *
-   * @param id unique id of associated {@link com.github.jeluard.stone.api.TimeSeries}
-   * @param window associated {@link Window}
+   * @param id unique id
+   * @param granularity 
+   * @param duration
    * @return a fully initialized {@link Storage}
    * @throws IOException 
    */
-  public final T createOrGet(final String id, final Window window) throws IOException {
-    return ConcurrentMaps.putIfAbsentAndReturn(this.cache, new Pair<String, Window>(id, window), new Supplier<T>() {
+  public final T createOrGet(final String id, final int granularity, final long duration) throws IOException {
+    Preconditions.checkNotNull(id, "null id");
+    Preconditions.checkArgument(duration % granularity == 0, "duration must be a multiple of granularity");
+
+    final int maximumSize = (int) (duration / granularity);
+    return ConcurrentMaps.putIfAbsentAndReturn(this.cache, id, new Supplier<T>() {
       @Override
       public T get() {
         try {
-          return create(id, window);
+          return create(id, maximumSize);
         } catch (IOException e) {
           throw new RuntimeException(e);
         }
@@ -69,11 +74,11 @@ public abstract class StorageFactory<T extends Storage> implements Closeable {
 
   /**
    * @param id
-   * @param window
-   * @return an initialized {@link Storage} dedicated to {@code id}/{@code window}/{@code duration}
+   * @param maximumSize
+   * @return an initialized {@link Storage} unique for this {@code id}
    * @throws IOException 
    */
-  protected abstract T create(String id, Window window) throws IOException;
+  protected abstract T create(String id, int maximumSize) throws IOException;
 
   /**
    * @return all currently created {@link Storage}s
@@ -103,18 +108,18 @@ public abstract class StorageFactory<T extends Storage> implements Closeable {
   }
 
   /**
-   * Close the {@link Storage} created for this triple.
+   * Close the {@link Storage} created for {@code id}.
    *
    * @param id
    * @param window
    * @throws IOException 
    */
   @Idempotent
-  public final void close(final String id, final Window window) throws IOException {
-    final T storage = this.cache.remove(new Pair<String, Window>(id, window));
+  public final void close(final String id) throws IOException {
+    final T storage = this.cache.remove(id);
     if (storage == null) {
       if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
-        Loggers.BASE_LOGGER.log(Level.WARNING, "{0} for <{1}, {2}> does not exist", new Object[]{Storage.class.getSimpleName(), id, window});
+        Loggers.BASE_LOGGER.log(Level.WARNING, "{0} for {1} does not exist", new Object[]{Storage.class.getSimpleName(), id});
       }
       return;
     }
@@ -144,7 +149,7 @@ public abstract class StorageFactory<T extends Storage> implements Closeable {
   }
 
   /**
-   * Optionnaly delete all {@link Storage} generated resources associated to timeseries {@code id}.
+   * Optionnaly delete all {@link Storage} generated resources associated to this {@code id}.
    *
    * @param id
    * @throws IOException 

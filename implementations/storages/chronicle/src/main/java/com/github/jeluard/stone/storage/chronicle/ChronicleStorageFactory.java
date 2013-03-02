@@ -16,7 +16,6 @@
  */
 package com.github.jeluard.stone.storage.chronicle;
 
-import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.helper.Loggers;
 import com.github.jeluard.stone.spi.StorageFactory;
 import com.google.common.base.Preconditions;
@@ -45,11 +44,8 @@ public class ChronicleStorageFactory extends StorageFactory<ChronicleStorage> {
   }
 
   @Override
-  public final ChronicleStorage create(final String id, final Window window) throws IOException {
-    Preconditions.checkNotNull(id, "null id");
-    Preconditions.checkNotNull(window, "null window");
-
-    return new ChronicleStorage(window, createChronicle(createBasePath(id)));
+  public final ChronicleStorage create(final String id, final int maximumSize) throws IOException {
+    return new ChronicleStorage(maximumSize, createChronicle(createBasePath(id)));
   }
 
   @Override

@@ -18,7 +18,6 @@ package com.github.jeluard.stone.api;
 
 import com.github.jeluard.guayaba.base.Preconditions2;
 import com.github.jeluard.stone.helper.Loggers;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
@@ -29,8 +28,6 @@ import java.util.List;
 import java.util.logging.Level;
 
 import javax.annotation.concurrent.Immutable;
-
-import org.joda.time.Duration;
 
 /**
  * Encapsulate details about how published data will be kept.
@@ -43,12 +40,11 @@ public final class Window {
    */
   public static final class Builder {
 
-    private final Duration resolution;
-    private Duration persistedDuration;
+    private final int size;
     private final List<ConsolidationListener> consolidationListeners = new LinkedList<ConsolidationListener>();
 
-    private Builder(final Duration resolution) {
-      this.resolution = Preconditions.checkNotNull(resolution, "null resolution");
+    private Builder(final int size) {
+      this.size = Preconditions2.checkSize(size);
     }
 
     /**
@@ -62,59 +58,34 @@ public final class Window {
       return this;
     }
 
-    /**
-     * Set the persisted {@link Duration}. If not set {@link Window} won't be persisted.
-     * <br>
-     * Last call win (i.e. override previous value).
-     *
-     * @param persistedDuration
-     * @return this
-     */
-    public Window.Builder persistedDuring(final Duration persistedDuration) {
-      this.persistedDuration = Preconditions.checkNotNull(persistedDuration, "null persistedDuration");
-      return this;
-    }
-
     public Window consolidatedBy(final Class<? extends Consolidator> ... consolidatorTypes) {
-      return new Window(this.resolution, Optional.fromNullable(this.persistedDuration), Arrays.asList(consolidatorTypes), this.consolidationListeners);
+      return new Window(this.size, Arrays.asList(consolidatorTypes), this.consolidationListeners);
     }
 
   }
 
-  private final Duration resolution;
-  private final Optional<Duration> optionalPersistedDuration;
+  private final int size;
   private final List<? extends Class<? extends Consolidator>> consolidatorTypes;
   private final List<? extends ConsolidationListener> consolidationListeners;
 
-  private Window(final Duration resolution, final Optional<Duration> optionalPersistedDuration, final List<? extends Class<? extends Consolidator>> consolidatorTypes, final List<? extends ConsolidationListener> consolidationListeners) {
-    this.resolution = Preconditions.checkNotNull(resolution, "null resolution");
-    Preconditions.checkArgument(resolution.getMillis() > 0, "resolution must be greater than 0");
-    if (optionalPersistedDuration.isPresent()) {
-      final Duration persistedDuration = optionalPersistedDuration.get();
-      Preconditions.checkArgument(persistedDuration.getMillis() >= resolution.getMillis(), "Persisted duration <"+persistedDuration+"> must be greater than resolution <"+resolution+">");
-      Preconditions.checkArgument(persistedDuration.getMillis() % resolution.getMillis() == 0, "Persisted duration <"+persistedDuration+"> must be a multiple of resolution <"+resolution+">");
-    }
-    this.optionalPersistedDuration = Preconditions.checkNotNull(optionalPersistedDuration, "null optionalPersistedDuration");
+  private Window(final int size, final List<? extends Class<? extends Consolidator>> consolidatorTypes, final List<? extends ConsolidationListener> consolidationListeners) {
+    this.size = size;
     this.consolidatorTypes = Collections.unmodifiableList(new ArrayList<Class<? extends Consolidator>>(Preconditions2.checkNotEmpty(consolidatorTypes, "null consolidatorTypes")));
     this.consolidationListeners = Collections.unmodifiableList(new ArrayList<ConsolidationListener>(Preconditions.checkNotNull(consolidationListeners, "null consolidationListeners")));
 
-    if (!optionalPersistedDuration.isPresent() && consolidationListeners.isEmpty()) {
+    if (consolidationListeners.isEmpty()) {
       if (Loggers.BASE_LOGGER.isLoggable(Level.INFO)) {
-        Loggers.BASE_LOGGER.log(Level.INFO, "No {0} and not persisted: all data will be discarded", ConsolidationListener.class.getSimpleName());
+        Loggers.BASE_LOGGER.log(Level.INFO, "No {0}: all data will be discarded", ConsolidationListener.class.getSimpleName());
       }
     }
   }
 
-  public static Window.Builder of(final Duration duration) {
-    return new Window.Builder(duration);
+  public static Window.Builder of(final int size) {
+    return new Window.Builder(size);
   }
 
-  public Duration getResolution() {
-    return this.resolution;
-  }
-
-  public Optional<Duration> getPersistedDuration() {
-    return this.optionalPersistedDuration;
+  public int getSize() {
+    return this.size;
   }
 
   public List<? extends Class<? extends Consolidator>> getConsolidatorTypes() {
@@ -123,26 +94,6 @@ public final class Window {
 
   public List<? extends ConsolidationListener> getConsolidationListeners() {
     return this.consolidationListeners;
-  }
-
-  @Override
-  public int hashCode() {
-    return this.resolution.hashCode() + this.optionalPersistedDuration.hashCode() + this.consolidatorTypes.hashCode() + this.consolidationListeners.hashCode();
-  }
-
-  @Override
-  public boolean equals(final Object object) {
-    if (!(object instanceof Window)) {
-      return false;
-    }
-
-    final Window other = (Window) object;
-    return this.resolution.equals(other.resolution) && this.optionalPersistedDuration.equals(other.optionalPersistedDuration) && this.consolidatorTypes.equals(other.consolidatorTypes) && this.consolidationListeners.equals(other.consolidationListeners);
-  }
-
-  @Override
-  public String toString() {
-    return "resolution <"+this.resolution+"> persistedDuration <"+this.optionalPersistedDuration+"> consolidatorTypes <"+this.consolidatorTypes+"> consolidationListeners <"+this.consolidationListeners+">";
   }
 
 }

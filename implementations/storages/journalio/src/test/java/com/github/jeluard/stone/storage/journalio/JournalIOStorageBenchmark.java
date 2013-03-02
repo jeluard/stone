@@ -16,7 +16,6 @@
  */
 package com.github.jeluard.stone.storage.journalio;
 
-import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.spi.BaseStorageBenchmark;
 
 import java.io.File;
@@ -37,11 +36,11 @@ public class JournalIOStorageBenchmark extends BaseStorageBenchmark<JournalIOSto
   }
 
   @Override
-  protected JournalIOStorage createStorage(final Window window) throws IOException {
+  protected JournalIOStorage createStorage(final int maximumSize) throws IOException {
     final Journal journal = new Journal();
     journal.setDirectory(JournalIOStorageBenchmark.DIRECTORY);
     journal.open();
-    return new JournalIOStorage(window, journal, JournalIOStorage.DEFAULT_WRITE_CALLBACK);
+    return new JournalIOStorage(maximumSize, journal, JournalIOStorage.DEFAULT_WRITE_CALLBACK);
   }
 
   @After

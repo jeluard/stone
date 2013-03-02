@@ -32,7 +32,6 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -43,8 +42,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.joda.time.Duration;
-
 /**
  * Base implementation tracking a metric for a collection of resources <T> periodically.
  */
@@ -53,36 +50,36 @@ public abstract class BasePoller<T> implements Cancelable {
   private static final Logger LOGGER = Loggers.create("poller");
 
   private final Database database;
-  private final Duration period;
+  private final Long period;
   private final Collection<T> ts;
   private final Window[] windows;
-  private final Map<T, TimeSeries> timeseriess;
+  private /*final*/ Map<T, TimeSeries> timeseriess;
   private final Scheduler scheduler;
 
-  public BasePoller(final Database database, final Collection<T> ts, final Duration period, final Collection<Window> windows, final ExecutorService schedulerExecutorService) throws IOException {
+  public BasePoller(final Database database, final Collection<T> ts, final long period, final Collection<Window> windows, final ExecutorService schedulerExecutorService) throws IOException {
     this.database = Preconditions.checkNotNull(database, "null database");
     this.period = Preconditions.checkNotNull(period, "null period");
     this.ts = Preconditions.checkNotNull(ts, "null ts");
     this.windows = Preconditions.checkNotNull(windows, "null windows").toArray(new Window[windows.size()]);
-    this.timeseriess = createTimeSeries(ts);
-    this.scheduler = new Scheduler(period.getMillis(), TimeUnit.MILLISECONDS, schedulerExecutorService, Loggers.BASE_LOGGER);
+//    this.timeseriess = createTimeSeries(ts);
+    this.scheduler = new Scheduler(period, TimeUnit.MILLISECONDS, schedulerExecutorService, Loggers.BASE_LOGGER);
   }
 
-  public BasePoller(final Database database, final Collection<T> ts, final Duration period, final Collection<Window> windows) throws IOException {
+  public BasePoller(final Database database, final Collection<T> ts, final long period, final Collection<Window> windows) throws IOException {
     this(database, ts, period, windows, Scheduler.defaultExecutorService(10, Loggers.BASE_LOGGER));
   }
 
-  private Map<T, TimeSeries> createTimeSeries(final Iterable<T> ts) throws IOException {
+  /*private Map<T, TimeSeries> createTimeSeries(final Iterable<T> ts) throws IOException {
     final Map<T, TimeSeries> map = new HashMap<T, TimeSeries>();
     for (final T t : ts) {
       final String id = id(t);
-      map.put(t, this.database.createOrOpen(id, this.period, this.windows));
+      map.put(t, this.database.createOrOpen(id, (int) this.period.getMillis(), this.windows));
     }
     return map;
-  }
+  }*/
 
   protected long initialWaitTime() {
-    return this.period.getMillis() / 10;
+    return this.period / 10;
   }
 
   protected long perCheckWaitTime() {
@@ -181,7 +178,7 @@ public abstract class BasePoller<T> implements Cancelable {
   public final Map<String, Map<Window, ? extends Reader>> getReaders() {
     final Builder<String, Map<Window, ? extends Reader>> builder = ImmutableMap.builder();
     for (final TimeSeries timeSeries : this.timeseriess.values()) {
-      builder.put(timeSeries.getId(), timeSeries.getReaders());
+//      builder.put(timeSeries.getId(), timeSeries.getReaders());
     }
     return builder.build();
   }

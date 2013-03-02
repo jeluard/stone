@@ -17,8 +17,8 @@
 package com.github.jeluard.stone.dispatcher.blocking_queue;
 
 import com.github.jeluard.guayaba.util.concurrent.ThreadFactoryBuilders;
-import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.Consolidator;
+import com.github.jeluard.stone.api.Listener;
 import com.github.jeluard.stone.helper.Loggers;
 import com.github.jeluard.stone.spi.Dispatcher;
 import com.google.common.base.Preconditions;
@@ -30,8 +30,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.joda.time.Duration;
-
 /**
  * {@link Dispatcher} implementation executing {@link Dispatcher#accumulateAndPersist(com.github.jeluard.stone.api.Window, com.github.jeluard.stone.api.Consolidator[], long, long, long, int)}
  * through a {@link ExecutorService} waiting for new execution to be available via a {@link BlockingQueue}.
@@ -39,26 +37,20 @@ import org.joda.time.Duration;
 public class BlockingQueueDispatcher extends Dispatcher {
 
   /**
-   * Holder for {@link Dispatcher#accumulateAndPersist(com.github.jeluard.stone.api.Window, com.github.jeluard.stone.api.Consolidator[], long, long, long, int)} arguments.
+   * Holder for {@link Listener#onPublication(long, long, int)} invocation details.
    */
   public static final class Entry {
 
-    public final Duration resolution;
-    public final Consolidator[] consolidators;
-    public final ConsolidationListener[] consolidationListeners;
-    public final long beginningTimestamp;
     public final long previousTimestamp;
     public final long currentTimestamp;
     public final int value;
+    public final Listener listener;
 
-    public Entry(final Duration resolution, final Consolidator[] consolidators, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) {
-      this.resolution = resolution;
-      this.consolidators = consolidators;
-      this.consolidationListeners = consolidationListeners;
-      this.beginningTimestamp = beginningTimestamp;
+    public Entry(final long previousTimestamp, final long currentTimestamp, final int value, final Listener listener) {
       this.previousTimestamp = previousTimestamp;
       this.currentTimestamp = currentTimestamp;
       this.value = value;
+      this.listener = listener;
     }
 
   }
@@ -70,7 +62,7 @@ public class BlockingQueueDispatcher extends Dispatcher {
         while (true) {
           final Entry entry = BlockingQueueDispatcher.this.queue.take();
           try {
-            persistAndAccumulate(entry.resolution, entry.consolidators, entry.consolidationListeners, entry.beginningTimestamp, entry.previousTimestamp, entry.currentTimestamp, entry.value);
+            entry.listener.onPublication(entry.previousTimestamp, entry.currentTimestamp, entry.value);
           } catch (Exception e) {
             notifyExceptionHandler(e);
           }
@@ -90,11 +82,11 @@ public class BlockingQueueDispatcher extends Dispatcher {
   private static final String CONSUMERS_THREAD_NAME_FORMAT = "BlockingQueueDispatcher-Consumers #%d";
 
   public BlockingQueueDispatcher(final BlockingQueue<Entry> queue, final ExecutorService executorService, final int consumers) {
-    this(queue, executorService, consumers, Dispatcher.DEFAULT_REJECTION_HANDLER, Dispatcher.DEFAULT_EXCEPTION_HANDLER);
+    this(queue, executorService, consumers, Dispatcher.DEFAULT_EXCEPTION_HANDLER);
   }
 
-  public BlockingQueueDispatcher(final BlockingQueue<Entry> queue, final ExecutorService executorService, final int consumers, final RejectionHandler rejectionHandler, final ExceptionHandler exceptionHandler) {
-    super(rejectionHandler, exceptionHandler);
+  public BlockingQueueDispatcher(final BlockingQueue<Entry> queue, final ExecutorService executorService, final int consumers, final ExceptionHandler exceptionHandler) {
+    super(exceptionHandler);
 
     this.queue = Preconditions.checkNotNull(queue, "null queue");
     this.executorService = Preconditions.checkNotNull(executorService, "null executorService");
@@ -113,8 +105,14 @@ public class BlockingQueueDispatcher extends Dispatcher {
   }
 
   @Override
-  public final boolean dispatch(final Duration resolution, final Consolidator[] consolidators, final ConsolidationListener[] consolidationListeners, final long beginningTimestamp, final long previousTimestamp, final long currentTimestamp, final int value) {
-    return this.queue.offer(new Entry(resolution, consolidators, consolidationListeners, beginningTimestamp, previousTimestamp, currentTimestamp, value));
+  public boolean dispatch(final long previousTimestamp, final long currentTimestamp, final int value, final Listener[] listeners) {
+    for (final Listener listener : listeners) {
+      final boolean added = this.queue.offer(new Entry(previousTimestamp, currentTimestamp, value, listener));
+      if (!added) {
+        return false;
+      }
+    }
+    return true;
   }
 
 }

@@ -16,7 +16,6 @@
  */
 package com.github.jeluard.stone.storage.chronicle;
 
-import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.spi.BaseStorageTest;
 import com.higherfrequencytrading.chronicle.impl.IndexedChronicle;
 
@@ -36,8 +35,8 @@ public class ChronicleStorageTest extends BaseStorageTest<ChronicleStorage> {
   }
 
   @Override
-  protected ChronicleStorage createStorage(final Window window) throws IOException {
-    return new ChronicleStorage(window, new IndexedChronicle(ChronicleStorageTest.BASE_PATH));
+  protected ChronicleStorage createStorage(final int maximumSize) throws IOException {
+    return new ChronicleStorage(maximumSize, new IndexedChronicle(ChronicleStorageTest.BASE_PATH));
   }
 
 }

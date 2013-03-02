@@ -21,6 +21,15 @@ package com.github.jeluard.stone.api;
  */
 public interface ConsolidationListener {
 
+  public interface Persistent extends ConsolidationListener {
+
+    /**
+     * @return latest (most recent) timestamp persisted
+     */
+    long getLatestTimestamp();
+
+  }
+
   /**
    * Invoked each time a newly published value cross a {@link Window} boundary triggering the consolidation process.
    * <br>
@@ -29,6 +38,6 @@ public interface ConsolidationListener {
    * @param timestamp
    * @param consolidates 
    */
-  void onConsolidation(long timestamp, int[] consolidates) throws Exception;
+  void onConsolidation(long timestamp, int[] consolidates);
 
 }

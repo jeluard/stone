@@ -18,17 +18,14 @@ package com.github.jeluard.stone.spi;
 
 import com.github.jeluard.guayaba.base.Pair;
 import com.github.jeluard.guayaba.test.junit.LoggerRule;
-import com.github.jeluard.stone.api.Window;
-import com.github.jeluard.stone.consolidator.MaxConsolidator;
 import com.github.jeluard.stone.helper.Loggers;
 import com.google.common.collect.Iterables;
-import java.io.Closeable;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.joda.time.Duration;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -38,14 +35,10 @@ public class StorageFactoryTest {
   @Rule
   public final LoggerRule loggerRule = new LoggerRule(Loggers.BASE_LOGGER);
 
-  private Window createWindow() {
-    return Window.of(Duration.standardSeconds(1)).persistedDuring(Duration.standardSeconds(10)).consolidatedBy(MaxConsolidator.class);
-  }
-
   private Storage createStorage() {
-    return new Storage(createWindow()) {
+    return new Storage(1) {
       @Override
-      public void onConsolidation(long timestamp, int[] data) throws IOException {
+      public void append(long timestamp, int[] data) throws IOException {
       }
       @Override
       public Iterable<Pair<Long, int[]>> all() throws IOException {
@@ -58,12 +51,12 @@ public class StorageFactoryTest {
   public void shouldCreatedStorageBeAccessible() throws IOException {
     final StorageFactory storageFactory = new StorageFactory() {
       @Override
-      protected Storage create(final String id, final Window window) throws IOException {
+      protected Storage create(final String id, final int maximumSize) throws IOException {
         return createStorage();
       }
     };
 
-    final Storage storage = storageFactory.createOrGet("id", createWindow());
+    final Storage storage = storageFactory.createOrGet("id", 1, 1);
 
     Assert.assertTrue(Iterables.contains(storageFactory.getStorages(), storage));
   }
@@ -73,16 +66,15 @@ public class StorageFactoryTest {
     final AtomicInteger count = new AtomicInteger();
     final StorageFactory storageFactory = new StorageFactory() {
       @Override
-      protected Storage create(final String id, final Window window) throws IOException {
+      protected Storage create(final String id, final int maximumSize) throws IOException {
         count.incrementAndGet();
         return createStorage();
       }
     };
 
     final String id = "id";
-    final Window window = createWindow();
-    storageFactory.createOrGet(id, window);
-    storageFactory.createOrGet(id, window);
+    storageFactory.createOrGet(id, 1, 1);
+    storageFactory.createOrGet(id, 1, 1);
 
     Assert.assertEquals(1, count.get());
   }
@@ -91,10 +83,10 @@ public class StorageFactoryTest {
   public void shouldCreationFailureBePropagated() throws IOException {
     new StorageFactory() {
       @Override
-      protected Storage create(final String id, final Window window) throws IOException {
+      protected Storage create(final String id, final int maximumSize) throws IOException {
         throw new IOException();
       }
-    }.createOrGet("id", createWindow());
+    }.createOrGet("id", 1, 1);
   }
 
   @Test
@@ -102,17 +94,16 @@ public class StorageFactoryTest {
     final AtomicInteger count = new AtomicInteger();
     final StorageFactory storageFactory = new StorageFactory() {
       @Override
-      protected Storage create(final String id, final Window window) throws IOException {
+      protected Storage create(final String id, final int maximumSize) throws IOException {
         count.incrementAndGet();
         return createStorage();
       }
     };
 
     final String id = "id";
-    final Window window = createWindow();
-    storageFactory.createOrGet(id, window);
+    storageFactory.createOrGet(id, 1, 1);
     storageFactory.close();
-    storageFactory.createOrGet(id, window);
+    storageFactory.createOrGet(id, 1, 1);
 
     Assert.assertEquals(2, count.get());
   }
@@ -122,14 +113,14 @@ public class StorageFactoryTest {
     final AtomicInteger count = new AtomicInteger();
     class InstrumentedStorage extends Storage implements Closeable {
       public InstrumentedStorage() {
-        super(createWindow());
+        super(1);
       }
       @Override
       public Iterable<Pair<Long, int[]>> all() throws IOException {
         throw new UnsupportedOperationException("Not supported yet.");
       }
       @Override
-      public void onConsolidation(long timestamp, int[] consolidates) throws Exception {
+      public void append(long timestamp, int[] consolidates) throws IOException {
       }
       @Override
       public void close() throws IOException {
@@ -138,14 +129,13 @@ public class StorageFactoryTest {
     }
     final StorageFactory storageFactory = new StorageFactory() {
       @Override
-      protected Storage create(final String id, final Window window) throws IOException {
+      protected Storage create(final String id, final int maximumSize) throws IOException {
         return new InstrumentedStorage();
       }
     };
 
     final String id = "id";
-    final Window window = createWindow();
-    storageFactory.createOrGet(id, window);
+    storageFactory.createOrGet(id, 1, 1);
     storageFactory.close();
 
     Assert.assertEquals(1, count.get());
@@ -155,14 +145,14 @@ public class StorageFactoryTest {
   public void shouldFailingCloseBeHandled() throws IOException {
     class FailingStorage extends Storage implements Closeable {
       public FailingStorage() {
-        super(createWindow());
+        super(1);
       }
       @Override
       public Iterable<Pair<Long, int[]>> all() throws IOException {
         throw new UnsupportedOperationException("Not supported yet.");
       }
       @Override
-      public void onConsolidation(long timestamp, int[] consolidates) throws Exception {
+      public void append(long timestamp, int[] consolidates) throws IOException {
       }
       @Override
       public void close() throws IOException {
@@ -171,14 +161,13 @@ public class StorageFactoryTest {
     }
     final StorageFactory storageFactory = new StorageFactory() {
       @Override
-      protected Storage create(final String id, final Window window) throws IOException {
+      protected Storage create(final String id, final int maximumSize) throws IOException {
         return new FailingStorage();
       }
     };
 
     final String id = "id";
-    final Window window = createWindow();
-    storageFactory.createOrGet(id, window);
+    storageFactory.createOrGet(id, 1, 1);
     storageFactory.close();
   }
 
@@ -187,7 +176,7 @@ public class StorageFactoryTest {
     final AtomicInteger count = new AtomicInteger();
     final StorageFactory storageFactory = new StorageFactory() {
       @Override
-      protected Storage create(final String id, final Window window) throws IOException {
+      protected Storage create(final String id, final int maximumSize) throws IOException {
         return createStorage();
       }
       @Override
@@ -205,15 +194,14 @@ public class StorageFactoryTest {
   public void shouldClosingExistingStorageBeSuccessful() throws IOException {
     final StorageFactory storageFactory = new StorageFactory() {
       @Override
-      protected Storage create(final String id, final Window window) throws IOException {
+      protected Storage create(final String id, final int maximumSize) throws IOException {
         return createStorage();
       }
     };
 
     final String id = "id";
-    final Window window = createWindow();
-    storageFactory.createOrGet(id, window);
-    storageFactory.close(id, window);
+    storageFactory.createOrGet(id, 1, 1);
+    storageFactory.close(id);
 
     Assert.assertTrue(Iterables.isEmpty(storageFactory.getStorages()));
   }
@@ -222,14 +210,13 @@ public class StorageFactoryTest {
   public void shouldClosingNonExistingStorageBeSafe() throws IOException {
     final StorageFactory storageFactory = new StorageFactory() {
       @Override
-      protected Storage create(final String id, final Window window) throws IOException {
+      protected Storage create(final String id, final int maximumSize) throws IOException {
         return createStorage();
       }
     };
 
-    final Window window = createWindow();
-    storageFactory.createOrGet("id", window);
-    storageFactory.close("id2", window);
+    storageFactory.createOrGet("id", 1, 1);
+    storageFactory.close("id2");
 
     Assert.assertFalse(Iterables.isEmpty(storageFactory.getStorages()));
   }

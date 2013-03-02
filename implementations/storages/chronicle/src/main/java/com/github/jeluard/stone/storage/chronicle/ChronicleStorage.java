@@ -17,7 +17,6 @@
 package com.github.jeluard.stone.storage.chronicle;
 
 import com.github.jeluard.guayaba.base.Pair;
-import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.spi.Storage;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.AbstractIterator;
@@ -34,17 +33,17 @@ public final class ChronicleStorage extends Storage {
   private final Chronicle chronicle;
 
   /**
-   * @param window 
-   * @param journal life-cycle is not handled here, expect a fully {@link Journal#open()} {@code journal}
+   * @param maximumSize 
+   * @param chronicle
    */
-  public ChronicleStorage(final Window window, final Chronicle chronicle) throws IOException {
-    super(window);
+  public ChronicleStorage(final int maximumSize, final Chronicle chronicle) throws IOException {
+    super(maximumSize);
 
     this.chronicle = Preconditions.checkNotNull(chronicle, "null chronicle");
   }
 
   @Override
-  public void onConsolidation(final long timestamp, final int[] consolidates) throws IOException {
+  public void append(final long timestamp, final int[] consolidates) throws IOException {
     final Excerpt excerpt = this.chronicle.createExcerpt();
     excerpt.startExcerpt(8+4+4*consolidates.length);
     excerpt.writeLong(timestamp);

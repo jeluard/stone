@@ -18,57 +18,46 @@ package com.github.jeluard.stone.spi;
 
 import com.carrotsearch.junitbenchmarks.AbstractBenchmark;
 import com.carrotsearch.junitbenchmarks.BenchmarkOptions;
-import com.github.jeluard.stone.api.Window;
-import com.github.jeluard.stone.consolidator.MaxConsolidator;
-import com.github.jeluard.stone.consolidator.MinConsolidator;
 
 import java.io.IOException;
 
-import org.joda.time.Duration;
 import org.junit.Test;
 
 @BenchmarkOptions(callgc = false, benchmarkRounds = 5, warmupRounds = 3)
 public abstract class BaseStorageBenchmark<T extends Storage> extends AbstractBenchmark {
 
-  protected abstract T createStorage(Window window) throws IOException;
+  protected abstract T createStorage(int maximumSize) throws IOException;
 
-  private Window createWindow(final int maxSize) {
-    return Window.of(Duration.standardSeconds(1)).persistedDuring(Duration.standardSeconds(maxSize)).consolidatedBy(MaxConsolidator.class, MinConsolidator.class);
-  }
+  @Test
+  public void benchCreation() throws Exception {
+    createStorage(10);
+  }  
 
   @Test
   public void bench100Consolidation() throws Exception {
-    final T storage = createStorage(createWindow(10));
+    final T storage = createStorage(10);
     final long now = System.currentTimeMillis();
     for (int i = 0; i < 100; i++) {
-      storage.onConsolidation(now+Duration.standardSeconds(i).getMillis(), new int[]{i, i+1});
+      storage.append(now+i, new int[]{i, i+1});
     }
   }
 
   @Test
   public void bench100ConsolidationNoRoll() throws Exception {
-    final T storage = createStorage(createWindow(101));
+    final T storage = createStorage(101);
     final long now = System.currentTimeMillis();
     for (int i = 0; i < 100; i++) {
-      storage.onConsolidation(now+Duration.standardSeconds(i).getMillis(), new int[]{i, i+1});
+      storage.append(now+i, new int[]{i, i+1});
     }
   }
 
   @Test
   public void bench1KConsolidationNoRoll() throws Exception {
-    final T storage = createStorage(createWindow(1001));
+    final T storage = createStorage(1001);
+    final long now = System.currentTimeMillis();
     for (int i = 0; i < 1000; i++) {
-      storage.onConsolidation(i, new int[]{i, i+1});
+      storage.append(now+i, new int[]{i, i+1});
     }
   }
-
-  /*@Test
-  @BenchmarkHistoryChart(labelWith = LabelType.CUSTOM_KEY, maxRuns = 20)
-  public void bench1MConsolidation() throws Exception {
-    final T storage = createStorage(createWindow(1000));
-    for (int i = 0; i < 1000*1000; i++) {
-      storage.onConsolidation(i, new int[]{i, i+1});
-    }
-  }*/
 
 }

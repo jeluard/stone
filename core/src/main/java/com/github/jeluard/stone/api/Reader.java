@@ -22,13 +22,8 @@ import com.google.common.base.Optional;
 import java.io.IOException;
 import javax.annotation.concurrent.ThreadSafe;
 
-import org.joda.time.DateTime;
-import org.joda.time.Interval;
-
 /**
  * Abstraction dealing with {@link TimeSeries} persistency access.
- * <br>
- * A {@link Reader} is specific to a single {@link Window} of a {@link TimeSeries}.
  */
 @ThreadSafe
 public interface Reader {
@@ -37,13 +32,13 @@ public interface Reader {
    * @return beginning of values stored, if any
    * @throws IOException 
    */
-  Optional<DateTime> beginning() throws IOException;
+  Optional<Long> beginning() throws IOException;
 
   /**
    * @return end of values stored, if any
    * @throws IOException 
    */
-  Optional<DateTime> end() throws IOException;
+  Optional<Long> end() throws IOException;
 
   /**
    * @return all data stored
@@ -52,10 +47,11 @@ public interface Reader {
   Iterable<Pair<Long, int[]>> all() throws IOException;
 
   /**
-   * @param interval
-   * @return all data stored during {@code interval}
+   * @param beginning
+   * @param end
+   * @return all data stored after {@code beginning} and before {@code end}
    * @throws IOException 
    */
-  Iterable<Pair<Long, int[]>> during(Interval interval) throws IOException;
+  Iterable<Pair<Long, int[]>> during(long beginning, long end) throws IOException;
 
 }

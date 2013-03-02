@@ -17,42 +17,40 @@
 package com.github.jeluard.stone.spi;
 
 import com.github.jeluard.stone.api.Window;
-import com.github.jeluard.stone.consolidator.MaxConsolidator;
 
 import java.io.IOException;
 
-import org.joda.time.Duration;
 import org.junit.Test;
 
 public abstract class BaseStorageFactoryTest<U extends StorageFactory<V>, V extends Storage> {
-
-  private Window createWindow() {
-    return Window.of(Duration.standardSeconds(1)).persistedDuring(Duration.standardSeconds(10)).consolidatedBy(MaxConsolidator.class);
-  }
 
   protected abstract U createStorageFactory();
 
   @Test
   public void shouldCreationBeSuccessFul() throws IOException {
     final U storageFactory = createStorageFactory();
-    storageFactory.createOrGet("id", createWindow());
+    storageFactory.createOrGet("id", 1, 1);
   }
 
   @Test
   public void shouldClosingBeSuccessful() throws IOException {
     final U storageFactory = createStorageFactory();
     final String id = "id";
-    final Window window = createWindow();
-    storageFactory.createOrGet(id, window);
-    storageFactory.close(id, window);
+    storageFactory.createOrGet(id, 1, 1);
+    storageFactory.close(id);
+  }
+
+  @Test
+  public void shouldClosingInexistentBeSafe() throws IOException {
+    final U storageFactory = createStorageFactory();
+    storageFactory.close("id");
   }
 
   @Test
   public void shouldCloseBeSuccessful() throws IOException {
     final U storageFactory = createStorageFactory();
     final String id = "id";
-    final Window window = createWindow();
-    storageFactory.createOrGet(id, window);
+    storageFactory.createOrGet(id, 1, 1);
     storageFactory.close();
   }
 
@@ -60,9 +58,14 @@ public abstract class BaseStorageFactoryTest<U extends StorageFactory<V>, V exte
   public void shouldDeleteBeSuccessful() throws IOException {
     final U storageFactory = createStorageFactory();
     final String id = "id";
-    final Window window = createWindow();
-    storageFactory.createOrGet(id, window);
+    storageFactory.createOrGet(id, 1, 1);
     storageFactory.delete(id);
+  }
+
+  @Test
+  public void shouldDeletingInexistentBeSafe() throws IOException {
+    final U storageFactory = createStorageFactory();
+    storageFactory.delete("id");
   }
 
 }
