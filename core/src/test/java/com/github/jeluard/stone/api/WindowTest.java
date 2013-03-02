@@ -48,13 +48,13 @@ public class WindowTest extends AbstractTest<Window> {
   }
 
   @Test(expected=IllegalArgumentException.class)
-  public void shouldZeroAsDurationBeInvalid() {
-    Window.of(0).consolidatedBy(MaxConsolidator.class);
+  public void shouldNegativeDurationBeInvalid() {
+    Window.of(-1).consolidatedBy(MaxConsolidator.class);
   }
 
   @Test
   public void shouldWindowBeCorrectlyCreated() {
-    Assert.assertEquals(WindowTest.DURATION_ONE, Window.of(WindowTest.DURATION_ONE).consolidatedBy(MaxConsolidator.class));
+    Assert.assertEquals(WindowTest.DURATION_ONE, Window.of(WindowTest.DURATION_ONE).consolidatedBy(MaxConsolidator.class).getSize());
     Assert.assertEquals(Collections.singletonList(MaxConsolidator.class), Window.of(WindowTest.DURATION_ONE).consolidatedBy(MaxConsolidator.class).getConsolidatorTypes());
   }
 

@@ -30,12 +30,8 @@ import org.junit.Test;
 
 public class StorageTest {
 
-  private Window createWindow() {
-    return Window.of(1000).consolidatedBy(MaxConsolidator.class);
-  }
-
-  private Storage createStorage(final Window window, final Iterable<Pair<Long, int[]>> all) {
-    return new Storage(window.getSize()) {
+  private Storage createStorage(final int maximumSize, final Iterable<Pair<Long, int[]>> all) {
+    return new Storage(maximumSize) {
       @Override
       public void append(long timestamp, int[] data) throws IOException {
       }
@@ -48,7 +44,7 @@ public class StorageTest {
 
   @Test
   public void shouldBeginningReturnAbsentWhenAllIsEmpty() throws IOException {
-    final Storage storage = createStorage(createWindow(), new LinkedList<Pair<Long, int[]>>());
+    final Storage storage = createStorage(1000, new LinkedList<Pair<Long, int[]>>());
 
     Assert.assertFalse(storage.beginning().isPresent());
   }
@@ -57,7 +53,7 @@ public class StorageTest {
   public void shouldBeginningReturnFirstFromAll() throws IOException {
     final long millis = System.currentTimeMillis();
     final long millis2 = millis + 1;
-    final Storage storage = createStorage(createWindow(), Arrays.asList(new Pair<Long, int[]>(millis, new int[0]), new Pair<Long, int[]>(millis2, new int[0])));
+    final Storage storage = createStorage(1000, Arrays.asList(new Pair<Long, int[]>(millis, new int[0]), new Pair<Long, int[]>(millis2, new int[0])));
 
     Assert.assertTrue(storage.end().isPresent());
     Assert.assertEquals(millis, (long) storage.beginning().get());
@@ -65,7 +61,7 @@ public class StorageTest {
 
   @Test
   public void shouldEndReturnAbsentWhenAllIsEmpty() throws IOException {
-    final Storage storage = createStorage(createWindow(), new LinkedList<Pair<Long, int[]>>());
+    final Storage storage = createStorage(1000, new LinkedList<Pair<Long, int[]>>());
 
     Assert.assertFalse(storage.end().isPresent());
   }
@@ -74,7 +70,7 @@ public class StorageTest {
   public void shouldEndReturnLastFromAll() throws IOException {
     final long millis = System.currentTimeMillis();
     final long millis2 = millis + 1;
-    final Storage storage = createStorage(createWindow(), Arrays.asList(new Pair<Long, int[]>(millis, new int[0]), new Pair<Long, int[]>(millis2, new int[0])));
+    final Storage storage = createStorage(1000, Arrays.asList(new Pair<Long, int[]>(millis, new int[0]), new Pair<Long, int[]>(millis2, new int[0])));
 
     Assert.assertTrue(storage.end().isPresent());
     Assert.assertEquals(millis2, (long) storage.end().get());
@@ -86,7 +82,7 @@ public class StorageTest {
     final long millis2 = millis + 1;
     final long millis3 = millis + 2;
     final long millis4 = millis + 3;
-    final Storage storage = createStorage(createWindow(), Arrays.asList(new Pair<Long, int[]>(millis, new int[0]), 
+    final Storage storage = createStorage(1000, Arrays.asList(new Pair<Long, int[]>(millis, new int[0]), 
                 new Pair<Long, int[]>(millis2, new int[0]),
                 new Pair<Long, int[]>(millis3, new int[0]),
                 new Pair<Long, int[]>(millis4, new int[0])));
@@ -105,7 +101,7 @@ public class StorageTest {
     final long millis3 = millis + 2;
     final long millis4 = millis + 3;
     final long millis5 = millis + 4;
-    final Storage storage = createStorage(createWindow(), Arrays.asList(new Pair<Long, int[]>(millis, new int[0]), 
+    final Storage storage = createStorage(1000, Arrays.asList(new Pair<Long, int[]>(millis, new int[0]), 
                 new Pair<Long, int[]>(millis2, new int[0]),
                 new Pair<Long, int[]>(millis3, new int[0]),
                 new Pair<Long, int[]>(millis4, new int[0])));
@@ -123,7 +119,7 @@ public class StorageTest {
     final long millis2 = millis + 1;
     final long millis3 = millis + 2;
     final long millis4 = millis + 3;
-    final Storage storage = createStorage(createWindow(), Arrays.asList(new Pair<Long, int[]>(millis, new int[0]), 
+    final Storage storage = createStorage(1000, Arrays.asList(new Pair<Long, int[]>(millis, new int[0]), 
                 new Pair<Long, int[]>(millis2, new int[0]),
                 new Pair<Long, int[]>(millis3, new int[0]),
                 new Pair<Long, int[]>(millis4, new int[0])));
@@ -138,14 +134,6 @@ public class StorageTest {
     Assert.assertEquals(millis2, (long) result2.next().first);
     Assert.assertEquals(millis3, (long) result2.next().first);
     Assert.assertFalse(result.hasNext());
-  }
-
-  @Test
-  public void shouldMaximumSizeBeInferredFromWindow() {
-    final Window window = Window.of(1000).consolidatedBy(MaxConsolidator.class);
-    final Storage storage = createStorage(window, new LinkedList<Pair<Long, int[]>>());
-
-    Assert.assertEquals(100, storage.getMaximumSize());
   }
 
 }
