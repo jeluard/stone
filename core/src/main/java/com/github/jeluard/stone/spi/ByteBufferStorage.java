@@ -34,7 +34,7 @@ public abstract class ByteBufferStorage extends Storage {
    * @param ints
    * @param buffer 
    */
-  protected final void put(final long timestamp, final ByteBuffer buffer) {
+  private void put(final long timestamp, final ByteBuffer buffer) {
     buffer.putLong(timestamp);
   }
 
@@ -53,7 +53,7 @@ public abstract class ByteBufferStorage extends Storage {
    * @param ints
    * @param buffer 
    */
-  protected final void put(final int[] ints, final ByteBuffer buffer) {
+  private void put(final int[] ints, final ByteBuffer buffer) {
     for (final int i : ints) {
       buffer.putInt(i);
     }
