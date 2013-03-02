@@ -18,7 +18,6 @@ package com.github.jeluard.stone.storage.chronicle;
 
 import com.github.jeluard.stone.helper.Loggers;
 import com.github.jeluard.stone.spi.StorageFactory;
-import com.google.common.base.Preconditions;
 import com.higherfrequencytrading.chronicle.Chronicle;
 import com.higherfrequencytrading.chronicle.impl.IntIndexedChronicle;
 

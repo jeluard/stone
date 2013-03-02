@@ -17,7 +17,6 @@
 package com.github.jeluard.stone.spi;
 
 import com.github.jeluard.guayaba.annotation.Idempotent;
-import com.github.jeluard.guayaba.base.Pair;
 import com.github.jeluard.guayaba.util.concurrent.ConcurrentMaps;
 import com.github.jeluard.stone.helper.Loggers;
 import com.google.common.base.Preconditions;

@@ -21,7 +21,7 @@ package com.github.jeluard.stone.api;
  */
 public interface ConsolidationListener {
 
-  public interface Persistent extends ConsolidationListener {
+  interface Persistent extends ConsolidationListener {
 
     /**
      * @return latest (most recent) timestamp persisted

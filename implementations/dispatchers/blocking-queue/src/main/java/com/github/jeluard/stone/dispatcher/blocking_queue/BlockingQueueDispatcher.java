@@ -17,7 +17,6 @@
 package com.github.jeluard.stone.dispatcher.blocking_queue;
 
 import com.github.jeluard.guayaba.util.concurrent.ThreadFactoryBuilders;
-import com.github.jeluard.stone.api.Consolidator;
 import com.github.jeluard.stone.api.Listener;
 import com.github.jeluard.stone.helper.Loggers;
 import com.github.jeluard.stone.spi.Dispatcher;
@@ -31,7 +30,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * {@link Dispatcher} implementation executing {@link Dispatcher#accumulateAndPersist(com.github.jeluard.stone.api.Window, com.github.jeluard.stone.api.Consolidator[], long, long, long, int)}
+ * {@link Dispatcher} implementation executing {@link Listener#onPublication(long, long, int)}
  * through a {@link ExecutorService} waiting for new execution to be available via a {@link BlockingQueue}.
  */
 public class BlockingQueueDispatcher extends Dispatcher {
@@ -78,7 +77,6 @@ public class BlockingQueueDispatcher extends Dispatcher {
   private static final Logger LOGGER = Loggers.create("dispatcher.blocking-queue");
 
   private final BlockingQueue<Entry> queue;
-  private final ExecutorService executorService;
   private static final String CONSUMERS_THREAD_NAME_FORMAT = "BlockingQueueDispatcher-Consumers #%d";
 
   public BlockingQueueDispatcher(final BlockingQueue<Entry> queue, final ExecutorService executorService, final int consumers) {
@@ -89,10 +87,10 @@ public class BlockingQueueDispatcher extends Dispatcher {
     super(exceptionHandler);
 
     this.queue = Preconditions.checkNotNull(queue, "null queue");
-    this.executorService = Preconditions.checkNotNull(executorService, "null executorService");
+    Preconditions.checkNotNull(executorService, "null executorService");
 
     for (int i = 0; i < consumers; i++) {
-      this.executorService.submit(new Consumer());
+      executorService.submit(new Consumer());
     }
   }
 

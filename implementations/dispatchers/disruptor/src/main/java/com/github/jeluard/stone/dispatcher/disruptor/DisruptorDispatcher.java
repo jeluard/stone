@@ -92,7 +92,7 @@ public class DisruptorDispatcher extends Dispatcher implements Cancelable {
     });
     this.disruptor.handleEventsWith(new EventHandler<Event>() {
       @Override
-      public void onEvent(final Event event, final long sequence, final boolean endOfBatch) throws Exception {
+      public void onEvent(final Event event, final long sequence, final boolean endOfBatch) {
         event.listener.onPublication(event.previousTimestamp, event.currentTimestamp, event.value);
       }
     });

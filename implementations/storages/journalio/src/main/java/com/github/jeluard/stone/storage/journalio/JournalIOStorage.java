@@ -174,7 +174,7 @@ public final class JournalIOStorage extends ByteBufferStorage implements Closeab
   }
 
   @Override
-  public final void close() throws IOException {
+  public void close() throws IOException {
     this.journal.close();
   }
 

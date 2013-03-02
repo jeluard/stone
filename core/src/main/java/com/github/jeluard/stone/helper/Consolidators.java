@@ -19,7 +19,6 @@ package com.github.jeluard.stone.helper;
 import com.github.jeluard.guayaba.base.Preconditions2;
 import com.github.jeluard.guayaba.lang.Iterables2;
 import com.github.jeluard.stone.api.Consolidator;
-import com.github.jeluard.stone.api.Window;
 import com.google.common.base.Preconditions;
 
 import java.lang.reflect.Constructor;
@@ -71,7 +70,7 @@ public final class Consolidators {
   /**
    * @param consolidatorTypes
    * @param maxSamples
-   * @return all {@link Consolidator} mapping to {@link Window#getConsolidatorTypes()}
+   * @return all {@link Consolidator} instances
    * @see #createConsolidator(java.lang.Class)
    */
   public static Consolidator[] createConsolidators(final List<? extends Class<? extends Consolidator>> consolidatorTypes, final int maxSamples) {
