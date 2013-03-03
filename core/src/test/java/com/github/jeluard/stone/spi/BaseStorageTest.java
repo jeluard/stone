@@ -19,6 +19,7 @@ package com.github.jeluard.stone.spi;
 import com.github.jeluard.guayaba.base.Pair;
 import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 
 import java.io.IOException;
 
@@ -26,6 +27,10 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public abstract class BaseStorageTest<T extends Storage> {
+
+  protected final T createEmptyStorage() throws IOException {
+    return createStorage(0);
+  }
 
   protected final T createStorage() throws IOException {
     return createStorage(10);
@@ -85,14 +90,9 @@ public abstract class BaseStorageTest<T extends Storage> {
   }
 
   @Test
-  public void shouldNotServeValueOlderThanDuration() throws Exception {
-    final int maxSize = 10;
-    final T storage = createStorage(maxSize);
-    final long now = System.currentTimeMillis();
-    storage.append(now, new int[]{1, 2});
-    storage.append(now + 11, new int[]{1, 2});
-
-    Assert.assertEquals(1, Iterables.size(storage.all()));
+  public void shouldEmptyStorageBeEmpty() throws IOException {
+    final T storage = createEmptyStorage();
+    Assert.assertTrue(Iterables.isEmpty(storage.all()));
   }
 
   @Test
