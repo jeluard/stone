@@ -68,7 +68,7 @@ public final class Window {
   private final List<? extends Class<? extends Consolidator>> consolidatorTypes;
   private final List<? extends ConsolidationListener> consolidationListeners;
 
-  private Window(final int size, final List<? extends Class<? extends Consolidator>> consolidatorTypes, final List<? extends ConsolidationListener> consolidationListeners) {
+  public Window(final int size, final List<? extends Class<? extends Consolidator>> consolidatorTypes, final List<? extends ConsolidationListener> consolidationListeners) {
     this.size = size;
     this.consolidatorTypes = Collections.unmodifiableList(new ArrayList<Class<? extends Consolidator>>(Preconditions2.checkNotEmpty(consolidatorTypes, "null consolidatorTypes")));
     this.consolidationListeners = Collections.unmodifiableList(new ArrayList<ConsolidationListener>(Preconditions.checkNotNull(consolidationListeners, "null consolidationListeners")));
