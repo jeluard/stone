@@ -17,8 +17,6 @@
 package com.github.jeluard.stone.spi;
 
 import com.github.jeluard.guayaba.base.Pair;
-import com.github.jeluard.stone.api.Window;
-import com.github.jeluard.stone.consolidator.MaxConsolidator;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -40,6 +38,14 @@ public class StorageTest {
         return all;
       }
     };
+  }
+
+  @Test
+  public void shouldMaximumSizeBeAccessible() throws IOException {
+    final int maximumSize = 1000;
+    final Storage storage = createStorage(maximumSize, new LinkedList<Pair<Long, int[]>>());
+
+    Assert.assertEquals(maximumSize, storage.getMaximumSize());
   }
 
   @Test

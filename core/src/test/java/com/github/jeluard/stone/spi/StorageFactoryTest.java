@@ -47,6 +47,19 @@ public class StorageFactoryTest {
     };
   }
 
+
+  @Test(expected=IllegalArgumentException.class)
+  public void shouldInvalidDurationBeRejected() throws IOException {
+    final StorageFactory storageFactory = new StorageFactory() {
+      @Override
+      protected Storage create(final String id, final int maximumSize) throws IOException {
+        return createStorage();
+      }
+    };
+
+    storageFactory.createOrGet("id", 2, 3);
+  }
+
   @Test
   public void shouldCreatedStorageBeAccessible() throws IOException {
     final StorageFactory storageFactory = new StorageFactory() {
@@ -219,6 +232,18 @@ public class StorageFactoryTest {
     storageFactory.close("id2");
 
     Assert.assertFalse(Iterables.isEmpty(storageFactory.getStorages()));
+  }
+
+  @Test
+  public void shouldDeletingNonExistingStorageBeSafe() throws IOException {
+    final StorageFactory storageFactory = new StorageFactory() {
+      @Override
+      protected Storage create(final String id, final int maximumSize) throws IOException {
+        return createStorage();
+      }
+    };
+
+    storageFactory.delete("id");
   }
 
 }
