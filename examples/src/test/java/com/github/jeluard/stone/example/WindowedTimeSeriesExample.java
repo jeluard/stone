@@ -22,8 +22,7 @@ import com.github.jeluard.stone.consolidator.MaxConsolidator;
 import com.github.jeluard.stone.dispatcher.sequential.SequentialDispatcher;
 import com.github.jeluard.stone.helper.Storages;
 import com.github.jeluard.stone.spi.Storage;
-import com.github.jeluard.stone.spi.StorageFactory;
-import com.github.jeluard.stone.storage.memory.MemoryStorageFactory;
+import com.github.jeluard.stone.storage.memory.MemoryStorage;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -32,8 +31,7 @@ import java.util.logging.Logger;
 public class WindowedTimeSeriesExample {
 
   public static void main(final String[] args) throws IOException {
-    final StorageFactory storageFactory = new MemoryStorageFactory();
-    final Storage storage = storageFactory.createOrGet("id", 1, 1000);
+    final Storage storage = new MemoryStorage(1000);
     final int size = 10;
     final Window window = Window.of(size).listenedBy(Storages.asConsolidationListener(storage, Logger.getAnonymousLogger())).consolidatedBy(MaxConsolidator.class);
     final WindowedTimeSeries windowedTimeSeries = new WindowedTimeSeries("id", 1, Arrays.asList(window), new SequentialDispatcher());
