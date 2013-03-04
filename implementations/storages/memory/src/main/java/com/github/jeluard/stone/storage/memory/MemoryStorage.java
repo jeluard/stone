@@ -22,9 +22,9 @@ import com.github.jeluard.stone.spi.Storage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 /**
  * An in-memory {@link Storage} implementation.
@@ -32,16 +32,14 @@ import java.util.concurrent.atomic.AtomicLongArray;
 public final class MemoryStorage extends Storage {
 
   private final AtomicLong index = new AtomicLong(0);
-  private final int nbValues;
   private final AtomicLongArray timestamps;
-  private final AtomicIntegerArray values;
+  private final AtomicReferenceArray<int[]> values;
 
   public MemoryStorage(final int maximumSize) {
     super(maximumSize);
 
-    this.nbValues = 1;//TODO
     this.timestamps = new AtomicLongArray(getMaximumSize());
-    this.values = new AtomicIntegerArray(getMaximumSize()*nbValues);
+    this.values = new AtomicReferenceArray<int[]>(getMaximumSize());
   }
 
   @Override
@@ -53,11 +51,8 @@ public final class MemoryStorage extends Storage {
       if (timestamp == 0L) {
         break;
       }
-      final int[] consolidates = new int[this.nbValues];
-      for (int j = 0; j < this.nbValues; j++) {
-        consolidates[j] = this.values.get(i*this.nbValues+j);
-      }
-      all.add(new Pair<Long, int[]>(timestamp, consolidates));
+
+      all.add(new Pair<Long, int[]>(timestamp, this.values.get(i)));
     }
     return all;
   }
@@ -70,9 +65,7 @@ public final class MemoryStorage extends Storage {
   public void append(final long timestamp, final int[] values) {
     final int currentIndex = index();
     this.timestamps.set(currentIndex, timestamp);
-    for (int i = 0; i < values.length; i++) {
-      this.values.set(currentIndex + i, values[i]);
-    }
+    this.values.set(currentIndex, values);
   }
 
 }
