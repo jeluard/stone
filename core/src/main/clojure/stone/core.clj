@@ -1,5 +1,6 @@
 (ns stone.core
-  (:import (com.github.jeluard.stone.api ConsolidationListener Listener Reader TimeSeries Window WindowedTimeSeries)
+  (:import (com.github.jeluard.guayaba.base Pair)
+           (com.github.jeluard.stone.api ConsolidationListener Listener Reader TimeSeries Window WindowedTimeSeries)
            (com.github.jeluard.stone.spi Storage)
            (com.github.jeluard.stone.helper Loggers Storages)
            (com.google.common.base Optional)))
@@ -22,11 +23,17 @@
 (defn end [^Reader reader]
   (.get (.beginning reader)))
 
+(defn lazy-pairs [^Iterator iter]
+  (lazy-seq
+    (when (.hasNext iter)
+      (let [^Pair pair (.next iter)]
+        (cons (vector (.first pair) (vec (.second pair))) (lazy-pairs iter))))))
+
 (defn all [^Reader reader]
-  (.all reader))
+  (lazy-pairs (.iterator (.all reader))))
 
 (defn during [^Reader reader before after]
-  (.during reader before after))
+  (lazy-pairs (.iterator (.during reader before after))))
 
 (defn -wrap-fn-as-consolidation-listener [fn]
   (reify ConsolidationListener
