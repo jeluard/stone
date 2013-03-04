@@ -19,7 +19,6 @@ package com.github.jeluard.stone.spi;
 import com.github.jeluard.guayaba.base.Pair;
 import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
 
 import java.io.IOException;
 
