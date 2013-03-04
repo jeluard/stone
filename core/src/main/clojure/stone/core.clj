@@ -3,7 +3,8 @@
            (com.github.jeluard.stone.api ConsolidationListener Listener Reader TimeSeries Window WindowedTimeSeries)
            (com.github.jeluard.stone.spi Storage)
            (com.github.jeluard.stone.helper Loggers Storages)
-           (com.google.common.base Optional)))
+           (com.google.common.base Optional)
+           (java.util Iterator)))
 
 (set! *warn-on-reflection* true)
 
