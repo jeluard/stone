@@ -27,6 +27,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
 import journal.io.api.Journal;
@@ -70,7 +71,8 @@ public final class JournalIOStorage extends ByteBufferStorage implements Closeab
 
   private final Journal journal;
   private final WriteCallback writeCallback;
-  private volatile int writes;
+  private final AtomicInteger writes;
+  private volatile boolean isFull = false;
 
   /**
    * @param maximumSize 
@@ -82,11 +84,20 @@ public final class JournalIOStorage extends ByteBufferStorage implements Closeab
 
     this.journal = Preconditions.checkNotNull(journal, "null journal");
     this.writeCallback = Preconditions.checkNotNull(writeCallback, "null writeCallback");
-    this.writes = Iterables.size(all());
+    this.writes = new AtomicInteger(Iterables.size(all()));
   }
 
   private boolean isFull() {
-    return this.writes >= getMaximumSize();
+    if (this.isFull) {
+      return true;
+    }
+
+    final int size = this.writes.incrementAndGet();
+    if (size > getMaximumSize()) {
+      this.isFull = true;
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -100,13 +111,10 @@ public final class JournalIOStorage extends ByteBufferStorage implements Closeab
 
   @Override
   protected void append(final ByteBuffer buffer) throws IOException {
-    final boolean isFull = isFull();
-
     this.journal.write(buffer.array(), Journal.WriteType.SYNC, this.writeCallback);
-    this.writes++;//No need to sync as atomicity is not needed: we only care when writes is > maximumSize
 
     //If maximuSize elements are stored remove the first one.
-    if (isFull) {
+    if (isFull()) {
       removeFirst();
     }
   }
