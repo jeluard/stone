@@ -22,7 +22,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 
 import java.io.IOException;
-import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -104,18 +104,7 @@ public abstract class BaseStorageTest<T extends Storage> {
       storage.append(i+1, new int[]{1, 2});
     }
 
-    final long first = storage.beginning().get();
-    long previous = first;
-    final Iterable<Pair<Long, int[]>> all = storage.all();
-
-    Assert.assertEquals(maxSize, Iterators.size(all.iterator()));
-
-    for (final Pair<Long, int[]> pair : all) {
-      if (pair.first < previous) {
-        Assert.fail();
-      }
-      previous = pair.first;
-    }
+    assertElementsOrder(maxSize, storage);
   }
 
   @Test
@@ -127,6 +116,58 @@ public abstract class BaseStorageTest<T extends Storage> {
     }
 
     Assert.assertEquals(3*maxSize, (long) Iterables.getLast(storage.all()).first);
+  }
+
+  @Test
+  public void shouldSupportAppendFromMultipleThread() throws Exception {
+    final int maxSize = 10;
+    final T storage = createStorage(maxSize);
+    
+    final AtomicLong timestamp = new AtomicLong();
+    final Thread thread1 = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        for (int i = 0; i < maxSize; i++) {
+          try {
+            storage.append(timestamp.incrementAndGet(), new int[]{1, 2});
+          } catch (IOException e) {
+          }
+        }
+      }
+    });
+    final Thread thread2 = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        for (int i = 0; i < maxSize; i++) {
+          try {
+            storage.append(timestamp.incrementAndGet(), new int[]{3, 4});
+          } catch (IOException e) {
+          }
+        }
+      }
+    });
+
+    thread1.start();
+    thread2.start();
+
+    thread1.join();
+    thread2.join();
+
+    Assert.assertEquals(timestamp.get(), (long) storage.end().get());
+    assertElementsOrder(maxSize, storage);
+  }
+
+  private void assertElementsOrder(final int maxSize, final Storage storage) throws IOException {
+    long previous = storage.beginning().get();
+    final Iterable<Pair<Long, int[]>> all = storage.all();
+    Assert.assertEquals(maxSize, Iterators.size(all.iterator()));
+
+    for (final Pair<Long, int[]> pair : all) {
+      if (pair.first < previous) {
+        Assert.fail(pair.first+" must be greater than "+previous);
+      }
+      previous = pair.first;
+    }
   }
 
 }
