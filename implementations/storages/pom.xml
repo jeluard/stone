@@ -16,7 +16,7 @@
   </parent>
 
   <modules>
-    <module>chronicle</module>
+    <!-- Disabled for now as implementation is incomplete module>chronicle</module-->
     <module>journalio</module>
     <module>memory</module>
   </modules>

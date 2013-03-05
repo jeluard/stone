@@ -27,6 +27,9 @@ import java.io.IOException;
 import java.util.Iterator;
 
 /**
+ * A {@link Storage} implementation relying on <a href="https://github.com/peter-lawrey/Java-Chronicle">Java Chronicle</a>.
+ *
+ * WARNING this implementation is not complete: it does not keep a constant size (nothing ever removed) and does not reorder data.
  */
 public final class ChronicleStorage extends Storage {
 
@@ -36,7 +39,7 @@ public final class ChronicleStorage extends Storage {
    * @param maximumSize 
    * @param chronicle
    */
-  public ChronicleStorage(final int maximumSize, final Chronicle chronicle) throws IOException {
+  public ChronicleStorage(final int maximumSize, final Chronicle chronicle) {
     super(maximumSize);
 
     this.chronicle = Preconditions.checkNotNull(chronicle, "null chronicle");
@@ -60,17 +63,17 @@ public final class ChronicleStorage extends Storage {
       @Override
       public Iterator<Pair<Long, int[]>> iterator() {
         return new AbstractIterator<Pair<Long, int[]>>() {
-          final Excerpt excerpt = chronicle.createExcerpt();
+          private final Excerpt excerpt = ChronicleStorage.this.chronicle.createExcerpt();
           @Override
           protected Pair<Long, int[]> computeNext() {
-            if (excerpt.nextIndex()) {
-              final long timestamp = excerpt.readLong();
-              final int nbConsolidates = excerpt.readInt();
+            if (this.excerpt.nextIndex()) {
+              final long timestamp = this.excerpt.readLong();
+              final int nbConsolidates = this.excerpt.readInt();
               final int[] consolidates = new int[nbConsolidates];
               for (int i = 0; i < nbConsolidates; i++) {
-                consolidates[i] = excerpt.readInt();
+                consolidates[i] = this.excerpt.readInt();
               }
-              excerpt.finish();
+              this.excerpt.finish();
               return new Pair<Long, int[]>(timestamp, consolidates);
             }
             return endOfData();
