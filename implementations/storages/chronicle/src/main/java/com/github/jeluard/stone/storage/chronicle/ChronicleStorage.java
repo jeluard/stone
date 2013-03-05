@@ -30,6 +30,7 @@ import java.util.Iterator;
  * A {@link Storage} implementation relying on <a href="https://github.com/peter-lawrey/Java-Chronicle">Java Chronicle</a>.
  *
  * WARNING this implementation is not complete: it does not keep a constant size (nothing ever removed) and does not reorder data.
+ * A complete implementation could pre-create all needed chronicles and logically mark the not yet used as disabled.
  */
 public final class ChronicleStorage extends Storage {
 
