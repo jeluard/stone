@@ -17,11 +17,11 @@
 package com.github.jeluard.stone.storage.journalio;
 
 import com.github.jeluard.guayaba.test.junit.LoggerRule;
-import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.spi.BaseStorageTest;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 
 import journal.io.api.Journal;
 import journal.io.api.Location;
@@ -72,6 +72,7 @@ public class JournalIOStorageTest extends BaseStorageTest<JournalIOStorage> {
   @Test
   public void shouldCloseBeDelegatedToUnderlyingJournal() throws IOException {
     final Journal mock = Mockito.mock(Journal.class);
+    Mockito.when(mock.redo()).thenReturn(Collections.<Location>emptyList());
     final JournalIOStorage storage = new JournalIOStorage(10, mock, JournalIOStorage.DEFAULT_WRITE_CALLBACK);
     storage.close();
 
@@ -81,6 +82,7 @@ public class JournalIOStorageTest extends BaseStorageTest<JournalIOStorage> {
   @Test
   public void shouldCompactBeDelegatedToUnderlyingJournal() throws IOException {
     final Journal mock = Mockito.mock(Journal.class);
+    Mockito.when(mock.redo()).thenReturn(Collections.<Location>emptyList());
     final JournalIOStorage storage = new JournalIOStorage(10, mock, JournalIOStorage.DEFAULT_WRITE_CALLBACK);
     storage.compact();
 

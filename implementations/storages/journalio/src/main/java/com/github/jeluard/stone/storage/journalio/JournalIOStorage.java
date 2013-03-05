@@ -21,6 +21,7 @@ import com.github.jeluard.stone.spi.ByteBufferStorage;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.AbstractIterator;
+import com.google.common.collect.Iterables;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -69,6 +70,7 @@ public final class JournalIOStorage extends ByteBufferStorage implements Closeab
 
   private final Journal journal;
   private final WriteCallback writeCallback;
+  private volatile int writes;
 
   /**
    * @param maximumSize 
@@ -80,28 +82,33 @@ public final class JournalIOStorage extends ByteBufferStorage implements Closeab
 
     this.journal = Preconditions.checkNotNull(journal, "null journal");
     this.writeCallback = Preconditions.checkNotNull(writeCallback, "null writeCallback");
+    this.writes = Iterables.size(all());
   }
 
-  private void removeUntil(final long until) throws IOException {
-    for (final Location location : this.journal.redo()) {
-      final long timestamp = getTimestamp(this.journal.read(location, Journal.ReadType.SYNC));
-      if (timestamp >= until) {
-        //This value belongs to the window: stop iterating.
-        break;
-      }
+  private boolean isFull() {
+    return this.writes >= getMaximumSize();
+  }
 
-      //This value does not belong to the window (it's before): delete it.
-      //Deletion during iteration is safe.
-      this.journal.delete(location);
-    }
+  /**
+   * Remove first value currently stored.
+   *
+   * @throws IOException 
+   */
+  private void removeFirst() throws IOException {
+    this.journal.delete(this.journal.redo().iterator().next());
   }
 
   @Override
   protected void append(final ByteBuffer buffer) throws IOException {
-    //Calculate current window beginning then deletes all values outside of it.
-    //removeUntil(lowerBound(timestamp));
+    final boolean isFull = isFull();
 
     this.journal.write(buffer.array(), Journal.WriteType.SYNC, this.writeCallback);
+    this.writes++;//No need to sync as atomicity is not needed: we only care when writes is > maximumSize
+
+    //If maximuSize elements are stored remove the first one.
+    if (isFull) {
+      removeFirst();
+    }
   }
 
   /**
