@@ -19,6 +19,7 @@ package com.github.jeluard.stone.api;
 import com.github.jeluard.guayaba.test.junit.LoggerRule;
 import com.github.jeluard.stone.helper.Loggers;
 import com.github.jeluard.stone.spi.Dispatcher;
+import com.google.common.base.Optional;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -131,6 +132,15 @@ public class TimeSeriesTest {
     Assert.assertTrue(timeSeries.publish(now, 0));
     Assert.assertFalse(timeSeries.publish(now+1, 0));
     Assert.assertTrue(timeSeries.publish(now+2, 0));
+    timeSeries.close();
+  }
+
+  @Test
+  public void shouldTimestampEqualOrInfoeriorToLatestBeRejected() throws IOException {
+    final long now = System.currentTimeMillis();
+    final TimeSeries timeSeries = new TimeSeries("id", 2, Optional.of(now), Arrays.asList(createListener()), Mockito.mock(Dispatcher.class));
+    Assert.assertFalse(timeSeries.publish(now, 0));
+    Assert.assertFalse(timeSeries.publish(now-1, 0));
     timeSeries.close();
   }
 
