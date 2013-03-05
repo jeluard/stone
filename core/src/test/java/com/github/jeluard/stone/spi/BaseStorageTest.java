@@ -19,8 +19,10 @@ package com.github.jeluard.stone.spi;
 import com.github.jeluard.guayaba.base.Pair;
 import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -98,13 +100,17 @@ public abstract class BaseStorageTest<T extends Storage> {
   public void shouldValuesBeInOrderAfterACycle() throws Exception {
     final int maxSize = 10;
     final T storage = createStorage(maxSize);
-    for (int i = 0; i < 3*maxSize; i++) {
+    for (int i = 0; i < 3*maxSize+maxSize/2; i++) {
       storage.append(i+1, new int[]{1, 2});
     }
 
     final long first = storage.beginning().get();
     long previous = first;
-    for (final Pair<Long, int[]> pair : storage.all()) {
+    final Iterable<Pair<Long, int[]>> all = storage.all();
+
+    Assert.assertEquals(maxSize, Iterators.size(all.iterator()));
+
+    for (final Pair<Long, int[]> pair : all) {
       if (pair.first < previous) {
         Assert.fail();
       }
