@@ -19,10 +19,10 @@
   ([id granularity latestTimestamp listeners dispatcher] (TimeSeries. id granularity latestTimestamp (map -wrap-as-listener listeners) dispatcher)))
 
 (defn beginning [^Reader reader]
-  (.get (.beginning reader)))
+  (.orNull (.beginning reader)))
 
 (defn end [^Reader reader]
-  (.get (.beginning reader)))
+  (.orNull (.beginning reader)))
 
 (defn lazy-pairs [^Iterator iter]
   (lazy-seq
