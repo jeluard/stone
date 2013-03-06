@@ -104,7 +104,7 @@ public class WindowedTimeSeries extends TimeSeries {
     }
 
     private long recordBeginningTimestampIfNeeded(final long timestamp) {
-      if (this.beginningTimestampOrDefault == WindowListener.DEFAULT_BEGINNING_TIMESTAMP) {
+      if (timestamp == TimeSeries.DEFAULT_LATEST_TIMESTAMP) {
         this.beginningTimestampOrDefault = timestamp;
       }
       return this.beginningTimestampOrDefault;
@@ -126,7 +126,7 @@ public class WindowedTimeSeries extends TimeSeries {
      */
     @Override
     public void onPublication(final long previousTimestamp, final long currentTimestamp, final int value) {
-      final long beginningTimestamp = recordBeginningTimestampIfNeeded(currentTimestamp);
+      final long beginningTimestamp = recordBeginningTimestampIfNeeded(previousTimestamp);
       final long currentWindowId = windowId(beginningTimestamp, currentTimestamp);
       final long previousWindowId = windowId(beginningTimestamp, previousTimestamp);
       if (currentWindowId != previousWindowId) {

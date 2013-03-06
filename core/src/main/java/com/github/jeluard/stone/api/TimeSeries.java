@@ -47,7 +47,7 @@ public class TimeSeries implements Identifiable<String> {
   private final int granularity;
   private final Listener[] listeners;
   private final Dispatcher dispatcher;
-  private static final long DEFAULT_LATEST_TIMESTAMP = 0L;
+  static final long DEFAULT_LATEST_TIMESTAMP = 0L;
   private long latestTimestamp;
 
   public TimeSeries(final String id, final int granularity, final List<? extends Listener> listeners, final Dispatcher dispatcher) {
