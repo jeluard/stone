@@ -31,8 +31,8 @@ import org.mockito.Mockito;
 
 public class WindowTest extends AbstractTest<Window> {
 
-  private static final int DURATION_ONE = 1;
   private static final int DURATION_TWO = 2;
+  private static final int DURATION_THREE = 3;
 
   @Rule
   public LoggerRule loggerRule = new LoggerRule(Loggers.BASE_LOGGER);
@@ -44,30 +44,35 @@ public class WindowTest extends AbstractTest<Window> {
 
   @Override
   protected Window createInstance() throws Exception {
-    return Window.of(WindowTest.DURATION_ONE).consolidatedBy(MaxConsolidator.class);
+    return Window.of(WindowTest.DURATION_TWO).consolidatedBy(MaxConsolidator.class);
   }
 
   @Test(expected=IllegalArgumentException.class)
-  public void shouldNegativeDurationBeInvalid() {
+  public void shouldNegativeSizeBeInvalid() {
     Window.of(-1).consolidatedBy(MaxConsolidator.class);
+  }
+
+  @Test(expected=IllegalArgumentException.class)
+  public void shouldTooSmallSizeBeInvalid() {
+    Window.of(1).consolidatedBy(MaxConsolidator.class);
   }
 
   @Test
   public void shouldWindowBeCorrectlyCreated() {
-    Assert.assertEquals(WindowTest.DURATION_ONE, Window.of(WindowTest.DURATION_ONE).consolidatedBy(MaxConsolidator.class).getSize());
-    Assert.assertEquals(Collections.singletonList(MaxConsolidator.class), Window.of(WindowTest.DURATION_ONE).consolidatedBy(MaxConsolidator.class).getConsolidatorTypes());
+    Assert.assertEquals(WindowTest.DURATION_TWO, Window.of(WindowTest.DURATION_TWO).consolidatedBy(MaxConsolidator.class).getSize());
+    Assert.assertEquals(Collections.singletonList(MaxConsolidator.class), Window.of(WindowTest.DURATION_TWO).consolidatedBy(MaxConsolidator.class).getConsolidatorTypes());
   }
 
   @Test
   public void shouldListenerBeAccessibleIfProvided() {
-    Assert.assertFalse (Window.of(WindowTest.DURATION_ONE).listenedBy(Mockito.mock(ConsolidationListener.class)).consolidatedBy(MaxConsolidator.class).getConsolidationListeners().isEmpty());
+    Assert.assertFalse (Window.of(WindowTest.DURATION_TWO).listenedBy(Mockito.mock(ConsolidationListener.class)).consolidatedBy(MaxConsolidator.class).getConsolidationListeners().isEmpty());
   }
 
   @Test
   public void shouldEqualsRelyOnAllArgument() {
-    Assert.assertFalse(Window.of(WindowTest.DURATION_ONE).consolidatedBy(MaxConsolidator.class).equals(Window.of(WindowTest.DURATION_TWO).consolidatedBy(MaxConsolidator.class)));
-    Assert.assertFalse(Window.of(WindowTest.DURATION_ONE).consolidatedBy(MaxConsolidator.class).equals(Window.of(WindowTest.DURATION_ONE).consolidatedBy(MinConsolidator.class)));
-    Assert.assertFalse(Window.of(WindowTest.DURATION_ONE).listenedBy(Mockito.mock(ConsolidationListener.class)).consolidatedBy(MaxConsolidator.class).equals(Window.of(WindowTest.DURATION_ONE).consolidatedBy(MaxConsolidator.class)));
+    Assert.assertFalse(Window.of(WindowTest.DURATION_TWO).consolidatedBy(MaxConsolidator.class).equals(Window.of(WindowTest.DURATION_THREE).consolidatedBy(MaxConsolidator.class)));
+    Assert.assertFalse(Window.of(WindowTest.DURATION_TWO).consolidatedBy(MaxConsolidator.class).equals(Window.of(WindowTest.DURATION_TWO).consolidatedBy(MinConsolidator.class)));
+    Assert.assertFalse(Window.of(WindowTest.DURATION_TWO).listenedBy(Mockito.mock(ConsolidationListener.class)).consolidatedBy(MaxConsolidator.class).equals(Window.of(WindowTest.DURATION_TWO).consolidatedBy(MaxConsolidator.class)));
   }
 
 }
