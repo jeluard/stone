@@ -186,28 +186,6 @@ public class WindowedTimeSeries extends TimeSeries {
     return Optional.<Long>fromNullable(timestamp);
   }
 
-  /**
-   * @param consolidators
-   * @return all consolidators identifiers (MaxConsolidator => max)
-   */
-  protected static Collection<String> extractConsolidatorIdentifiers(final Collection<? extends Class<? extends Consolidator>> consolidators) {
-    return Collections2.transform(consolidators, new Function<Class<? extends Consolidator>, String>() {
-      @Override
-      public String apply(final Class<? extends Consolidator> input) {
-        final String simpleName = input.getSimpleName();
-        if (simpleName.endsWith(WindowedTimeSeries.CONSOLIDATOR_SUFFIX)) {
-          return simpleName.substring(0, simpleName.length()-WindowedTimeSeries.CONSOLIDATOR_SUFFIX.length()).toLowerCase();
-        }
-        return simpleName;
-      }
-    });
-  }
-
-  protected static String createStorageId(final String id, final Window window) {
-    final Collection<String> consolidatorIdentifiers = extractConsolidatorIdentifiers(window.getConsolidatorTypes());
-    return Joiner.on("-").join(consolidatorIdentifiers)+"@"+window.getSize();
-  }
-
   protected static List<WindowListener> createWrappedConsolidationListeners(final String id, final int granularity, final List<Window> windows) throws IOException {
     final List<WindowListener> windowListeners = new ArrayList<WindowListener>(windows.size());
     for (final Window window : windows) {
