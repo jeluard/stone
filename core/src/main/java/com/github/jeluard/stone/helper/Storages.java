@@ -18,6 +18,7 @@ package com.github.jeluard.stone.helper;
 
 import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.spi.Storage;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import java.io.IOException;
@@ -28,6 +29,38 @@ import java.util.logging.Logger;
  * Helper methods for {@link Storage}.
  */
 public final class Storages {
+
+  private static class StorageWrapper implements ConsolidationListener, ConsolidationListener.Persistent {
+
+    private final Storage storage;
+    private final Logger logger;
+
+    public StorageWrapper(final Storage storage, final Logger logger) {
+      this.storage = storage;
+      this.logger = logger;
+    }
+
+    @Override
+    public void onConsolidation(final long timestamp, final int[] consolidates) {
+      try {
+        this.storage.append(timestamp, consolidates);
+      } catch (IOException e) {
+        if (this.logger.isLoggable(Level.WARNING)) {
+          this.logger.log(Level.WARNING, "Got exception while appending", e);
+        }
+      }
+    }
+
+    @Override
+    public Optional<Long> getLatestTimestamp() {
+      try {
+        return this.storage.end();
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    
+  }
 
   private Storages() {
   }
@@ -40,18 +73,7 @@ public final class Storages {
   public static ConsolidationListener asConsolidationListener(final Storage storage, final Logger logger) {
     Preconditions.checkNotNull(storage, "null storage");
 
-    return new ConsolidationListener() {
-      @Override
-      public void onConsolidation(final long timestamp, final int[] consolidates) {
-        try {
-          storage.append(timestamp, consolidates);
-        } catch (IOException e) {
-          if (logger.isLoggable(Level.WARNING)) {
-            logger.log(Level.WARNING, "Got exception while appending", e);
-          }
-        }
-      }
-    };
+    return new StorageWrapper(storage, logger);
   }
   
 }

@@ -75,6 +75,10 @@ public class TimeSeries implements Identifiable<String> {
     return this.id;
   }
 
+  protected final long getLatestTimestamp() {
+    return this.latestTimestamp;
+  }
+
   /**
    * @param currentTimestamp
    * @return true if timestamp is after previous one (considering granularity)

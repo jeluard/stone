@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -55,15 +56,6 @@ public class WindowedTimeSeries extends TimeSeries {
     }
 
     /**
-     * @param beginning
-     * @param timestamp
-     * @return id of the {@link Window} containing {@code timestamp}
-     */
-    private long windowId(final long beginning, final long timestamp) {
-      return (timestamp - beginning) / this.size;
-    }
-
-    /**
      * Propagates {@code timestamp}/{@code value} to all {@code consolidators} {@link Consolidator#accumulate(long, int)}.
      *
      * @param timestamp
@@ -91,19 +83,27 @@ public class WindowedTimeSeries extends TimeSeries {
       this.consolidationListener.onConsolidation(timestamp, generateConsolidates());
     }
 
-    private long windowEnd(final long timestamp, final long windowId) {
-      return timestamp + windowId * this.size;
+    /**
+     * @param timestamp
+     * @return id of the {@link Window} containing {@code timestamp}
+     */
+    private long windowId(final long timestamp) {
+      return (timestamp - this.beginningTimestampOrDefault) / this.size;
     }
 
-    private boolean isLatestFromWindow(final long timestamp, final long beginning) {
-      return (timestamp - beginning) % this.size == 0;
+    private long windowEnd(final long windowId) {
+      return this.beginningTimestampOrDefault + windowId * this.size;
     }
 
-    private long recordBeginningTimestampIfNeeded(final long timestamp) {
-      if (timestamp == TimeSeries.DEFAULT_LATEST_TIMESTAMP) {
-        this.beginningTimestampOrDefault = timestamp;
+    private boolean isLatestFromWindow(final long timestamp) {
+      final long elapsed = timestamp - this.beginningTimestampOrDefault;
+      return elapsed != 0 && ((elapsed+1) % this.size == 0);
+    }
+
+    private void recordBeginningTimestampIfNeeded(final long previousTimestamp, final long currentTimestamp) {
+      if (previousTimestamp == TimeSeries.DEFAULT_LATEST_TIMESTAMP) {
+        this.beginningTimestampOrDefault = currentTimestamp;
       }
-      return this.beginningTimestampOrDefault;
     }
 
     /**
@@ -122,21 +122,23 @@ public class WindowedTimeSeries extends TimeSeries {
      */
     @Override
     public void onPublication(final long previousTimestamp, final long currentTimestamp, final int value) {
-      final long beginningTimestamp = recordBeginningTimestampIfNeeded(previousTimestamp);
-      final long currentWindowId = windowId(beginningTimestamp, currentTimestamp);
-      final long previousWindowId = windowId(beginningTimestamp, previousTimestamp);
+      recordBeginningTimestampIfNeeded(previousTimestamp, currentTimestamp);
+      final long currentWindowId = windowId(currentTimestamp);
+      final long previousWindowId = windowId(previousTimestamp);
       final boolean newWindow = currentWindowId != previousWindowId;
-      //New window, previous timestamp didn't triggered a consolidation (wasn't last slot): trigger it now.
-      if (newWindow && !isLatestFromWindow(previousTimestamp, beginningTimestamp)) {
-        final long previousWindowEnd = windowEnd(beginningTimestamp, previousWindowId);
-        generateConsolidatesThenNotify(previousWindowEnd);
+      //New window, previous timestamp didn't trigger a consolidation (wasn't last slot): trigger it now.
+      if (newWindow) {
+        if (!isLatestFromWindow(previousTimestamp)) {
+          final long previousWindowEnd = windowEnd(previousWindowId);
+          generateConsolidatesThenNotify(previousWindowEnd);
+        }
       }
 
       accumulate(currentTimestamp, value);
 
-      //Same window, last slot: trigger a consolidation.
-      if (!newWindow && isLatestFromWindow(currentTimestamp, beginningTimestamp)) {
-        final long currentWindowEnd = windowEnd(beginningTimestamp, currentWindowId);
+      //Last slot: trigger a consolidation.
+      if (isLatestFromWindow(currentTimestamp)) {
+        final long currentWindowEnd = windowEnd(currentWindowId);
         generateConsolidatesThenNotify(currentWindowEnd);
       }
     }
@@ -153,25 +155,17 @@ public class WindowedTimeSeries extends TimeSeries {
     super(id, granularity, extractLatestIfAny(windows), createWrappedConsolidationListeners(id, granularity, windows), dispatcher);
   }
 
-  private static Optional<Long> extractLatestIfAny(final Window window) throws IOException {
-    Long timestamp = null;
-    for (final ConsolidationListener consolidationListener  : window.getConsolidationListeners()) {
-      if (consolidationListener instanceof ConsolidationListener.Persistent) {
-        final long latestTimestamp = ((ConsolidationListener.Persistent) consolidationListener).getLatestTimestamp();
-        if (timestamp == null || latestTimestamp > timestamp) {
-          timestamp = latestTimestamp;
-        }
-      }
-    }
-    return Optional.<Long>fromNullable(timestamp);
-  }
-
   private static Optional<Long> extractLatestIfAny(final List<Window> windows) throws IOException {
     Long timestamp = null;
     for (final Window window : windows) {
       for (final ConsolidationListener consolidationListener  : window.getConsolidationListeners()) {
         if (consolidationListener instanceof ConsolidationListener.Persistent) {
-          final long latestTimestamp = ((ConsolidationListener.Persistent) consolidationListener).getLatestTimestamp();
+          final Optional<Long> latestTimestampOptional = ((ConsolidationListener.Persistent) consolidationListener).getLatestTimestamp();
+          if (!latestTimestampOptional.isPresent()) {
+            continue;
+          }
+
+          final long latestTimestamp = latestTimestampOptional.get();
           if (timestamp == null || latestTimestamp > timestamp) {
             timestamp = latestTimestamp;
           }
@@ -184,7 +178,7 @@ public class WindowedTimeSeries extends TimeSeries {
   protected static List<WindowListener> createWrappedConsolidationListeners(final String id, final int granularity, final List<Window> windows) throws IOException {
     final List<WindowListener> windowListeners = new ArrayList<WindowListener>(windows.size());
     for (final Window window : windows) {
-      final Optional<Long> latestTimestamp = extractLatestIfAny(window);
+      final Optional<Long> latestTimestamp = extractLatestIfAny(Arrays.asList(window));
       for (final ConsolidationListener consolidationListener : window.getConsolidationListeners()) {
         windowListeners.add(new WindowListener(window.getSize(), granularity, latestTimestamp, consolidationListener, window.getConsolidatorTypes()));
       }

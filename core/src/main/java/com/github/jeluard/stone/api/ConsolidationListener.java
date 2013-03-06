@@ -16,6 +16,8 @@
  */
 package com.github.jeluard.stone.api;
 
+import com.google.common.base.Optional;
+
 /**
  * A listener to hook the consolidation process.
  */
@@ -26,7 +28,7 @@ public interface ConsolidationListener {
     /**
      * @return latest (most recent) timestamp persisted
      */
-    long getLatestTimestamp();
+    Optional<Long> getLatestTimestamp();
 
   }
 
