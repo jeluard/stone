@@ -125,8 +125,9 @@ public class WindowedTimeSeries extends TimeSeries {
       final long beginningTimestamp = recordBeginningTimestampIfNeeded(previousTimestamp);
       final long currentWindowId = windowId(beginningTimestamp, currentTimestamp);
       final long previousWindowId = windowId(beginningTimestamp, previousTimestamp);
+      final boolean newWindow = currentWindowId != previousWindowId;
       //New window, previous timestamp didn't triggered a consolidation (wasn't last slot): trigger it now.
-      if (currentWindowId != previousWindowId && !isLatestFromWindow(previousTimestamp, beginningTimestamp)) {
+      if (newWindow && !isLatestFromWindow(previousTimestamp, beginningTimestamp)) {
         final long previousWindowEnd = windowEnd(beginningTimestamp, previousWindowId);
         generateConsolidatesThenNotify(previousWindowEnd);
       }
@@ -134,7 +135,7 @@ public class WindowedTimeSeries extends TimeSeries {
       accumulate(currentTimestamp, value);
 
       //Same window, last slot: trigger a consolidation.
-      if (currentWindowId == previousWindowId && isLatestFromWindow(currentTimestamp, beginningTimestamp)) {
+      if (!newWindow && isLatestFromWindow(currentTimestamp, beginningTimestamp)) {
         final long currentWindowEnd = windowEnd(beginningTimestamp, currentWindowId);
         generateConsolidatesThenNotify(currentWindowEnd);
       }
