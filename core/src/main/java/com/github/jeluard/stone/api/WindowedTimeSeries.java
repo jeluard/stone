@@ -19,15 +19,11 @@ package com.github.jeluard.stone.api;
 import com.github.jeluard.guayaba.base.Preconditions2;
 import com.github.jeluard.stone.helper.Consolidators;
 import com.github.jeluard.stone.spi.Dispatcher;
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Collections2;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
