@@ -70,6 +70,8 @@ storage.during(now, now+5);
 A clojure binding is available.
 
 ```clojure
+(def dispatcher (SequentialDispatcher.))
+
 (def storage (MemoryStorage. 1000))
 
 (def windows (list (window 3 (list MaxConsolidator MinConsolidator)
@@ -77,9 +79,10 @@ A clojure binding is available.
 
 (def wts (create-windowed-ts "windowed-timeseries" windows dispatcher))
 
-(st/publish wts now 1)
+(publish wts now 1)
+(publish wts (+ 2 now) 2)
 
-(println (take 1 (st/all storage)))
+(println (take 1 (all storage)))
 ```
 
 More [examples](tree/master/examples/src/test) explore advanced features.
