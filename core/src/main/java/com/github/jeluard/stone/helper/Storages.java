@@ -70,7 +70,7 @@ public final class Storages {
    * @param logger
    * @return {@code Storage} wrapped as a {@link ConsolidationListener}
    */
-  public static ConsolidationListener asConsolidationListener(final Storage storage, final Logger logger) {
+  public static ConsolidationListener.Persistent asConsolidationListener(final Storage storage, final Logger logger) {
     Preconditions.checkNotNull(storage, "null storage");
 
     return new StorageWrapper(storage, logger);

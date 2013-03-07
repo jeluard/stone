@@ -54,4 +54,21 @@ public class StoragesTest extends AbstractHelperClassTest {
     consolidationListener.onConsolidation(System.currentTimeMillis(), new int[0]);
   }
 
+  @Test
+  public void shouldLatestTimestampDelegateToEnd() throws IOException {
+    final Storage storage = Mockito.mock(Storage.class);
+    final ConsolidationListener.Persistent consolidationListener = Storages.asConsolidationListener(storage, Loggers.BASE_LOGGER);
+    consolidationListener.getLatestTimestamp();
+
+    Mockito.verify(storage).end();
+  }
+
+  @Test(expected =RuntimeException.class)
+  public void shouldEndFailureBePropagated() throws IOException {
+    final Storage storage = Mockito.mock(Storage.class);
+    Mockito.doThrow(new IOException()).when(storage).end();
+    final ConsolidationListener.Persistent consolidationListener = Storages.asConsolidationListener(storage, Loggers.BASE_LOGGER);
+    consolidationListener.getLatestTimestamp();
+  }
+
 }
