@@ -123,6 +123,7 @@ public class TimeSeries implements Identifiable<String> {
 
     final long previousTimestamp = recordTimestamp(timestamp);
 
+    //TODO propagate result. Using enum?
     this.dispatcher.dispatch(previousTimestamp, timestamp, value, this.listeners);
 
     return true;
