@@ -12,7 +12,7 @@ This greatly reduce the amount of data to store and remove the processing phase 
 * ```Simplicity``` API is has simple as it can be. Advanced features are built on top of simple abstractions.
 * ```Robustness``` built to run for months 
 * ```Performance``` low GC impact and optimised [streaming algorithms](http://en.wikipedia.org/wiki/Streaming_algorithm)
-* ```Extensibility```various [SPI](http://en.wikipedia.org/wiki/Service_provider_interface) offer clean extension points
+* ```Extensibility```various [SPI](http://en.wikipedia.org/wiki/Service_provider_interface) offer clean extension points (see provided [implementations](implementations))
 
 ## Getting started
 
