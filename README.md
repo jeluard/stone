@@ -6,13 +6,12 @@ Contrary to most other timeseries database a consolidation process pre-calculate
 This greatly reduce the amount of data to store and remove the processing phase at read time. It also implies you must know in advance your consolidation logic.
 
 ## Principles
-http://spray.io/introduction/#what-is-spray
 
-## Philosophy
+
 
 ## Getting started
 
-Necessary jars are available in maven central:
+All dependencies are available in maven central:
 
 ```xml
 <dependency>
@@ -23,32 +22,67 @@ Necessary jars are available in maven central:
 ```
 Dependending on the components you choose to use you will need to include some other jars.
 
-```java
-//Define how published values will be consolidated: every minute using *max* algorithm and kept up to 1 hour.
-final Window window = Window.of(Duration.standardMinutes(1)).persistedDuring(Duration.standardHours(1)).consolidatedBy(MaxConsolidator.class);
+Java API usage:
 
-//Create the TimeSeries. A new storage will be created if needed.
-final TimeSeries timeSeries = new TimeSeries("pinger", Duration.millis(1), new Window[]{window}, new SequentialDispatcher(), new MemoryStorageFactory());
+```java
+//Create a TimeSeries. Each data published will be passed to all provided Listener.
+final TimeSeries timeSeries = new TimeSeries("timeseries", 1, Arrays.asList(new Listener() {
+  //Will be called for each value published
+  public void onPublication(long previousTimestamp, long currentTimestamp, int value) {
+    System.out.println("Received value"+value);
+  }
+}),new SequentialDispatcher());
 
 //Publish some values to the TimeSeries.
 timeSeries.publish(System.currentTimeMillis(), 123);
 ...
 
-//Access underlying persisted data
-final Map<Window, ? extends Reader> readers = timeSeries.getReaders();
-final Reader reader = readers.get(window);
-
-//Browse everything
-final Iterable<Pair<Long, int[]>> all = reader.all();
-
-//Or what happened during last day (for simplicity timezone concerns are ignored).
-final Iterable<Pair<Long, int[]>> lastDay = reader.during(new Interval(DateTime.now().minusDays(1), DateTime.now()));
-
 //Cleanup resources.
 timeSeries.close();
+
+//You can also create windowed TimeSeries. Data will then be consolidated each time window boundaries are crossed using ```Consolidators``` and passed to some ```ConsolidationListeners```.
+
+final Window window = Window.of(10).listenedBy(new ConsolidationListener(){
+  public void onConsolidation(long timestamp, int[] consolidates) {
+    System.out.println("Received consolidates"+Arrays.toString(consolidates));
+  }
+}).consolidatedBy(MinConsolidator.class, MaxConsolidator.class);
+final WindowedTimeSeries windowedTimeSeries = new WindowedTimeSeries("id", 1, Arrays.asList(window), new SequentialDispatcher());
+
+final long now = System.currentTimeMillis();
+
+windowedTimeSeries.publish(now, 123);
+windowedTimeSeries.publish(now+10, 234);
+
+windowedTimeSeries.close();
+
+//Storages can be used to provide persistency
+
+final Storage storage = new MemoryStorage(1000);
+final Window window = Window.of(10).listenedBy(Storages.asConsolidationListener(storage, Logger.getAnonymousLogger())).consolidatedBy(MaxConsolidator.class);
+final WindowedTimeSeries windowedTimeSeries = new WindowedTimeSeries("id", 1, Arrays.asList(window), new SequentialDispatcher());
+...
+storage.all();
+storage.during(now, now+5);
+
 ```
 
-More [examples]() explore advanced features.
+A clojure binding is available.
+
+```clojure
+(def storage (MemoryStorage. 1000))
+
+(def windows (list (window 3 (list MaxConsolidator MinConsolidator)
+                             (list storage (fn [a b] (println (str "Got consolidates " b)))))))
+
+(def wts (create-windowed-ts "windowed-timeseries" windows dispatcher))
+
+(st/publish wts now 1)
+
+(println (take 1 (st/all storage)))
+```
+
+More [examples](tree/master/examples/src/test) explore advanced features.
 
 ---
 
