@@ -79,9 +79,10 @@ public class WindowedTimeSeriesTest {
     final WindowedTimeSeries timeSeries = new WindowedTimeSeries("id", 1, Arrays.asList(window), new DumbDispatcher());
     timeSeries.publish(1, 1);
     timeSeries.publish(7, 1);
-    timeSeries.close();
 
     Mockito.verify(consolidationListener).onConsolidation(Mockito.anyLong(), Mockito.<int[]>any());
+
+    timeSeries.close();
   }
 
   @Test
@@ -94,6 +95,36 @@ public class WindowedTimeSeriesTest {
     timeSeries.close();
 
     Mockito.verify(consolidationListener, Mockito.times(2)).onConsolidation(Mockito.anyLong(), Mockito.<int[]>any());
+  }
+
+  @Test
+  public void shouldCloseTriggerConsolidationIfLatestPublicationWasntLastOfWindow() throws IOException {
+    final ConsolidationListener consolidationListener = Mockito.mock(ConsolidationListener.class);
+    final Window window = Window.of(3).listenedBy(consolidationListener).consolidatedBy(MaxConsolidator.class);
+    final WindowedTimeSeries timeSeries = new WindowedTimeSeries("id", 1, Arrays.asList(window), new DumbDispatcher());
+    timeSeries.publish(1, 1);
+    timeSeries.publish(2, 1);
+
+    Mockito.verify(consolidationListener, Mockito.never()).onConsolidation(Mockito.anyLong(), Mockito.<int[]>any());
+
+    timeSeries.close();
+
+    Mockito.verify(consolidationListener).onConsolidation(Mockito.anyLong(), Mockito.<int[]>any());
+  }
+
+  @Test
+  public void shouldCloseNotTriggerConsolidationIfLatestPublicationWasLastOfWindow() throws IOException {
+    final ConsolidationListener consolidationListener = Mockito.mock(ConsolidationListener.class);
+    final Window window = Window.of(3).listenedBy(consolidationListener).consolidatedBy(MaxConsolidator.class);
+    final WindowedTimeSeries timeSeries = new WindowedTimeSeries("id", 1, Arrays.asList(window), new DumbDispatcher());
+    timeSeries.publish(1, 1);
+    timeSeries.publish(3, 1);
+
+    Mockito.verify(consolidationListener).onConsolidation(Mockito.anyLong(), Mockito.<int[]>any());
+
+    timeSeries.close();
+
+    Mockito.verifyNoMoreInteractions(consolidationListener);
   }
 
 }

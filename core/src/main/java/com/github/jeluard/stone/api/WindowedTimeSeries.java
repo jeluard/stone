@@ -21,6 +21,7 @@ import com.github.jeluard.stone.helper.Consolidators;
 import com.github.jeluard.stone.spi.Dispatcher;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -184,6 +185,20 @@ public class WindowedTimeSeries extends TimeSeries {
       }
     }
     return windowListeners;
+  }
+
+  protected final Iterable<WindowListener> getWindowListeners() {
+    return Iterables.filter(getListeners(), WindowListener.class);
+  }
+
+  @Override
+  protected void cleanup() {
+    final long latestTimestamp = getLatestTimestamp();
+    for (final WindowListener windowListener : getWindowListeners()) {
+      if (!windowListener.isLatestFromWindow(latestTimestamp)) {
+        windowListener.generateConsolidatesThenNotify(latestTimestamp);
+      }
+    }
   }
 
 }
