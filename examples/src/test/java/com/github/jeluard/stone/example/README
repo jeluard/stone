@@ -80,6 +80,7 @@ https://github.com/jolby/rincanter
 http://jblas.org/
 http://www.cs.waikato.ac.nz/ml/weka/
 https://github.com/kovasb/session
+http://weber.ucsd.edu/~jhamilto/software.htm#book
 
 ## Bitmap indexes
 
@@ -114,8 +115,16 @@ http://pitest.org/quickstart/maven/
 https://github.com/daveray/rx-clj
 http://bl.ocks.org/benjchristensen/2657838
 
+http://eng.42go.com/a-simple-time-decaying-approximate-membership-filter/
+
 # Clojure
 
 https://github.com/dgrnbrg/vim-redl
 https://github.com/guns/vim-clojure-static
+http://michaelalynmiller.com/blog/2013/02/27/vim-tmux-clojure/
+https://github.com/cemerick/clojurescript.test
+https://github.com/hraberg/mimir
+https://github.com/ohpauleez/shoreleave
+
+http://eng.42go.com/a-simple-time-decaying-approximate-membership-filter/
 -->
