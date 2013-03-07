@@ -26,7 +26,6 @@
 (st/publish wts now 1)
 (st/publish wts (+ now 1) 2)
 (st/publish wts (+ now 2) 3)
-(st/publish wts (+ now 3) 4)
 
 (println (take 2 (st/all storage)))
 (println (str "First timestamp stored " (st/end storage)))
