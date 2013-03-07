@@ -82,7 +82,7 @@ public class WindowedTimeSeriesTest {
   }
 
   @Test
-  public void shouldConsolidationBeTriggeredWhenLastElementOfWindow2IsPublished() throws IOException {
+  public void shouldConsolidationBeTriggeredWhenLastElementOfWindowIsPublished2() throws IOException {
     final ConsolidationListener consolidationListener = Mockito.mock(ConsolidationListener.class);
     final Window window = Window.of(3).listenedBy(consolidationListener).consolidatedBy(MaxConsolidator.class);
     final WindowedTimeSeries timeSeries = new WindowedTimeSeries("id", 1, Arrays.asList(window), new DumbDispatcher());
@@ -178,12 +178,14 @@ public class WindowedTimeSeriesTest {
   public void shouldTimestampBeUsedWhenPersistentReturnsPresent() throws IOException {
     final ConsolidationListener consolidationListener1 = new PersistentConsolidationListener(Optional.<Long>of(2L));
     final ConsolidationListener consolidationListener2 = new PersistentConsolidationListener(Optional.<Long>of(1L));
-    final Window window = Window.of(3).listenedBy(consolidationListener1, consolidationListener2).consolidatedBy(MaxConsolidator.class);
+    final ConsolidationListener consolidationListener3 = new PersistentConsolidationListener(Optional.<Long>of(3L));
+    final Window window = Window.of(3).listenedBy(consolidationListener1, consolidationListener2, consolidationListener3).consolidatedBy(MaxConsolidator.class);
     final WindowedTimeSeries timeSeries = new WindowedTimeSeries("id", 1, Arrays.asList(window), new DumbDispatcher());
 
     Assert.assertFalse(timeSeries.publish(1, 1));
     Assert.assertFalse(timeSeries.publish(2, 1));
-    Assert.assertTrue(timeSeries.publish(3, 1));
+    Assert.assertFalse(timeSeries.publish(3, 1));
+    Assert.assertTrue(timeSeries.publish(4, 1));
 
     timeSeries.close();
   }
