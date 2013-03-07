@@ -1,6 +1,6 @@
 ![CI status](https://secure.travis-ci.org/jeluard/stone.png)
 
-Stone is a [timeseries database](http://en.wikipedia.org/wiki/Time_series_database) library focused on simplicity, efficiency and robustness. It does only one thing but well: storing values changing over time.
+Stone is a [time series database](http://en.wikipedia.org/wiki/Time_series_database) library focused on simplicity, efficiency and robustness. It does only one thing but well: storing values changing over time.
 
 Contrary to most other timeseries database a consolidation process pre-calculates what will be stored at publication time (inspired from [RRD](http://oss.oetiker.ch/rrdtool/) and [OLAP](http://en.wikipedia.org/wiki/Online_Analytical_Processing) databases).
 This greatly reduce the amount of data to store and remove the processing phase at read time.
