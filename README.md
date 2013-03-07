@@ -1,13 +1,18 @@
 ![CI status](https://secure.travis-ci.org/jeluard/stone.png)
 
-Stone is a [timeseries database](http://en.wikipedia.org/wiki/Time_series_database) library focused on simplicity, efficiency and robustness. It does only one thing but well: storing consolidates of values changing over time.
+Stone is a [timeseries database](http://en.wikipedia.org/wiki/Time_series_database) library focused on simplicity, efficiency and robustness. It does only one thing but well: storing values changing over time.
 
 Contrary to most other timeseries database a consolidation process pre-calculates what will be stored at publication time (inspired from [RRD](http://oss.oetiker.ch/rrdtool/) and [OLAP](http://en.wikipedia.org/wiki/Online_Analytical_Processing) databases).
-This greatly reduce the amount of data to store and remove the processing phase at read time. It also implies you must know in advance your consolidation logic.
+This greatly reduce the amount of data to store and remove the processing phase at read time.
 
 ## Principles
 
+```stone``` is built around key principles:
 
+* ```Simplicity``` API is has simple as it can be. Advanced features are built on top of simple abstractions.
+* ```Robustness``` built to run for months 
+* ```Performance``` low GC impact and optimised [streaming algorithms](http://en.wikipedia.org/wiki/Streaming_algorithm)
+* ```Extensibility```various [SPI](http://en.wikipedia.org/wiki/Service_provider_interface) offer clean extension points
 
 ## Getting started
 
@@ -40,7 +45,9 @@ timeSeries.publish(System.currentTimeMillis(), 123);
 //Cleanup resources.
 timeSeries.close();
 
-//You can also create windowed TimeSeries. Data will then be consolidated each time window boundaries are crossed using ```Consolidators``` and passed to some ```ConsolidationListeners```.
+//You can also create windowed TimeSeries.
+//Data will then be consolidated each time window boundaries are crossed using Consolidators
+//and passed to some ConsolidationListeners.
 
 final Window window = Window.of(10).listenedBy(new ConsolidationListener(){
   public void onConsolidation(long timestamp, int[] consolidates) {
@@ -62,8 +69,8 @@ final Storage storage = new MemoryStorage(1000);
 final Window window = Window.of(10).listenedBy(Storages.asConsolidationListener(storage, Logger.getAnonymousLogger())).consolidatedBy(MaxConsolidator.class);
 final WindowedTimeSeries windowedTimeSeries = new WindowedTimeSeries("id", 1, Arrays.asList(window), new SequentialDispatcher());
 ...
-storage.all();
-storage.during(now, now+5);
+final Iterable<Pair<Long, int[]>> all = storage.all();
+final Iterable<Pair<Long, int[]>> subset = storage.during(now, now+5);
 
 ```
 
@@ -75,7 +82,7 @@ A clojure binding is available.
 (def storage (MemoryStorage. 1000))
 
 (def windows (list (window 3 (list MaxConsolidator MinConsolidator)
-                             (list storage (fn [a b] (println (str "Got consolidates " b)))))))
+                             (list storage (fn [timestamp consolidates] (println (str "Got consolidates " consolidates)))))))
 
 (def wts (create-windowed-ts "windowed-timeseries" windows dispatcher))
 
@@ -85,7 +92,7 @@ A clojure binding is available.
 (println (take 1 (all storage)))
 ```
 
-More [examples](tree/master/examples/src/test) explore advanced features.
+More [examples](examples/src/test) explore advanced features.
 
 ---
 
