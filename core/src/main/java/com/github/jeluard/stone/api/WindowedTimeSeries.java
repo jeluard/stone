@@ -29,7 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- *
+ * A {@link TimeSeries} than trigger a consolidation process when {@link Window} boundaries are crossed.
  */
 public class WindowedTimeSeries extends TimeSeries {
 
