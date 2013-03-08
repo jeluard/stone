@@ -72,6 +72,13 @@ final WindowedTimeSeries windowedTimeSeries = new WindowedTimeSeries("id", 1, Ar
 final Iterable<Pair<Long, int[]>> all = storage.all();
 final Iterable<Pair<Long, int[]>> subset = storage.during(now, now+5);
 
+//Or you can you a Database to ease creation of WindowedTimeSeries sharing a StorageFactory and a Dispatcher
+final Database database = new Database(new SequentialDispatcher(), new MemoryStorageFactory());
+
+final TimeSeries timeSeries = database.createOrOpen("id", 1000, Window.of(10).consolidatedBy(MaxConsolidator.class));
+timeSeries.publish(System.currentTimeMillis(), 1);
+
+database.close();
 ```
 
 A clojure binding is available.
@@ -90,6 +97,15 @@ A clojure binding is available.
 (publish wts (+ 2 now) 2)
 
 (println (take 1 (all storage)))
+
+(def sf (.MemoryStorageFactory ))
+(def db (st/create-db dispatcher sf))
+
+(def ts-db (st/create-windowed-ts-from-db db "timeseries" 1000 windows))
+
+(st/publish ts-db now 1)
+
+(st/close db)
 ```
 
 More [examples](examples/src/test) explore advanced features.
