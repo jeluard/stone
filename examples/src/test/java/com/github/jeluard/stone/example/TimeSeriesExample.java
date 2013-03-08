@@ -24,7 +24,7 @@ import java.util.Arrays;
 
 public class TimeSeriesExample {
 
-  public static void main(final String[] main) {
+  public static void main(final String[] main) throws Exception {
     final TimeSeries timeSeries = new TimeSeries("id", 2, Arrays.asList(new Listener() {
       @Override
       public void onPublication(long previousTimestamp, long currentTimestamp, int value) {
