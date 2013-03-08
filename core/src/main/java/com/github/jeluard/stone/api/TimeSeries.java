@@ -21,9 +21,10 @@ import com.github.jeluard.guayaba.lang.Identifiable;
 import com.github.jeluard.stone.spi.Dispatcher;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Arrays;
-
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -41,7 +42,7 @@ import javax.annotation.concurrent.NotThreadSafe;
  * {@link TimeSeries} is not threadsafe and supposed to be manipulated from a unique thread.
  */
 @NotThreadSafe
-public class TimeSeries implements Identifiable<String> {
+public class TimeSeries implements Identifiable<String>, Closeable {
 
   private static final Set<String> IDS = new CopyOnWriteArraySet<String>();
 
@@ -130,6 +131,7 @@ public class TimeSeries implements Identifiable<String> {
   }
 
   @Idempotent
+  @Override
   public final void close() {
     try {
       cleanup();
