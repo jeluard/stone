@@ -1,12 +1,16 @@
 (ns stone.core
   (:import (com.github.jeluard.guayaba.base Pair)
            (com.github.jeluard.stone.api ConsolidationListener Listener Reader TimeSeries Window WindowedTimeSeries)
-           (com.github.jeluard.stone.spi Storage)
            (com.github.jeluard.stone.helper Loggers Storages)
+           (com.github.jeluard.stone.pattern Database)
+           (com.github.jeluard.stone.spi Storage)
            (com.google.common.base Optional)
+           (java.io Closeable)
            (java.util Iterator)))
 
 (set! *warn-on-reflection* true)
+
+(def ^:dynamic *default-granularity* 1)
 
 (defn -wrap-as-listener [fn]
   (reify Listener
@@ -14,7 +18,7 @@
       (fn previousTimestamp currentTimestamp value))))
 
 (defn create-ts
-  ([id listeners dispatcher] (create-ts id 1 listeners dispatcher))
+  ([id listeners dispatcher] (create-ts id *default-granularity* listeners dispatcher))
   ([id granularity listeners dispatcher] (create-ts id granularity (Optional/absent) listeners dispatcher))
   ([id granularity latestTimestamp listeners dispatcher] (TimeSeries. id granularity latestTimestamp (map -wrap-as-listener listeners) dispatcher)))
 
@@ -54,12 +58,21 @@
   ([size consolidatorTypes] (window size consolidatorTypes '()))
   ([size consolidatorTypes consolidationListeners] (Window. size consolidatorTypes (map -wrap-as-consolidation-listener consolidationListeners))))
 
+(defn create-db
+  [dispatcher storageFactory]
+  (Database. dispatcher storageFactory))
+
 (defn create-windowed-ts
-  ([id windows dispatcher] (create-windowed-ts id 1 windows dispatcher))
+  ([id windows dispatcher] (create-windowed-ts id *default-granularity* windows dispatcher))
   ([id granularity windows dispatcher] (WindowedTimeSeries. id granularity windows dispatcher)))
+
+(defn create-windowed-ts-from-db
+  ([^Database db id duration windows] (create-windowed-ts-from-db db id *default-granularity* duration windows))
+  ([^Database db id granularity duration windows] (.createOrOpen db id granularity duration (into-array windows))))
 
 (defn publish [^TimeSeries ts timestamp value]
   (.publish ts timestamp value))
 
-(defn close [^TimeSeries ts]
-  (.close ts))
+(defn close
+  ([^Closeable cl] (.close cl))
+  ([^Database db ^String id] (.close db id)))

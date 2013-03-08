@@ -3,7 +3,7 @@
   (:import
     (com.github.jeluard.stone.consolidator MaxConsolidator MinConsolidator)
     (com.github.jeluard.stone.dispatcher.sequential SequentialDispatcher)
-    (com.github.jeluard.stone.storage.memory MemoryStorage)))
+    (com.github.jeluard.stone.storage.memory MemoryStorage MemoryStorageFactory)))
 
 (def dispatcher (SequentialDispatcher.))
 
@@ -32,3 +32,14 @@
 (println (str "Latest timestamp stored " (st/end storage)))
 
 (st/close wts)
+
+;;
+
+(def sf (MemoryStorageFactory.))
+(def db (st/create-db dispatcher sf))
+
+(def ts-db (st/create-windowed-ts-from-db db "timeseries" 1000 windows))
+
+(st/publish ts-db now 1)
+
+(st/close db)

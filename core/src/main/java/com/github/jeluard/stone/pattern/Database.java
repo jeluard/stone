@@ -16,50 +16,79 @@
  */
 package com.github.jeluard.stone.pattern;
 
+import com.github.jeluard.guayaba.annotation.Idempotent;
+import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.api.Window;
+import com.github.jeluard.stone.api.WindowedTimeSeries;
+import com.github.jeluard.stone.helper.Loggers;
+import com.github.jeluard.stone.helper.Storages;
 import com.github.jeluard.stone.spi.Dispatcher;
+import com.github.jeluard.stone.spi.Storage;
 import com.github.jeluard.stone.spi.StorageFactory;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
+import java.io.Closeable;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * Main entry point to manage {@link TimeSeries} life cycle.
  */
 @ThreadSafe
-public final class Database {
+public final class Database implements Closeable {
 
   private static final int DEFAULT_GRANULARITY = 1;
 
-  private final StorageFactory<?> storageFactory;
   private final Dispatcher dispatcher;
-  private final ConcurrentMap<String, TimeSeries> timeSeriess = new ConcurrentHashMap<String, TimeSeries>();
+  private final StorageFactory<?> storageFactory;
+  private final ConcurrentMap<String, WindowedTimeSeries> timeSeriess = new ConcurrentHashMap<String, WindowedTimeSeries>();
 
   public Database(final Dispatcher dispatcher, final StorageFactory<?> storageFactory) {
     this.dispatcher = Preconditions.checkNotNull(dispatcher, "null dispatcher");
     this.storageFactory = Preconditions.checkNotNull(storageFactory, "null storageFactory");
   }
 
-  /**
-   * Create a {@link TimeSeries} with a default granularity of {@code Database#DEFAULT_GRANULARITY}.
-   *
-   * @param id
-   * @param windows
-   * @return
-   * @throws IOException
-   * @see #createOrOpen(java.lang.String, org.joda.time.Duration, com.github.jeluard.stone.api.Window[])
-   */
-  public TimeSeries createOrOpen(final String id, final Window ... windows) throws IOException {
-    return null;//createOrOpen(id, Database.DEFAULT_GRANULARITY, windows);
+  private Storage createStorage(final String id, final int granularity, final long duration) throws IOException {
+    return this.storageFactory.createOrGet(id, granularity, duration);
+  }
+
+  private Window enrichWindow(final Window window, final Storage storage) {
+    final List<ConsolidationListener> consolidationListeners = new ArrayList<ConsolidationListener>(1+window.getConsolidationListeners().size());
+    consolidationListeners.add(Storages.asConsolidationListener(storage, Loggers.BASE_LOGGER));
+    consolidationListeners.addAll(window.getConsolidationListeners());
+    return Window.of(window.getSize()).listenedBy(consolidationListeners.toArray(new ConsolidationListener[consolidationListeners.size()])).consolidatedBy(window.getConsolidatorTypes().toArray(new Class[window.getConsolidatorTypes().size()]));
+  }
+
+  private List<Window> enrichWindows(final Window[] windows, final Storage storage) {
+    final List<Window> enricherWindows = new ArrayList<Window>(windows.length);
+    for (final Window window : windows) {
+      enricherWindows.add(enrichWindow(window, storage));
+    }
+    return enricherWindows;
   }
 
   /**
-   * Create a {@link TimeSeries} using this database {@link Dispatcher} and {@link StorageFactory}.
+   * Create a {@link WindowedTimeSeries} with a default granularity of {@code Database#DEFAULT_GRANULARITY}.
+   *
+   * @param id
+   * @param duration
+   * @param windows
+   * @return
+   * @throws IOException
+   * @see #createOrOpen(java.lang.String, int, com.github.jeluard.stone.api.Window[])
+   */
+  public WindowedTimeSeries createOrOpen(final String id, final long duration, final Window ... windows) throws IOException {
+    return createOrOpen(id, Database.DEFAULT_GRANULARITY, duration, windows);
+  }
+
+  /**
+   * Create a {@link WindowedTimeSeries} using this database {@link Dispatcher} and {@link StorageFactory}.
    * <br>
    * During the life cycle of this {@link Database} a uniquely identified {@link TimeSeries} can be opened only once.
    * Calling this method twice with a same value for {@code id} will fail.
@@ -70,36 +99,49 @@ public final class Database {
    * @return
    * @throws IOException 
    */
-  /*public TimeSeries createOrOpen(final String id, final int granularity, final Window ... windows) throws IOException {
+  public WindowedTimeSeries createOrOpen(final String id, final int granularity, final long duration, final Window ... windows) throws IOException {
     Preconditions.checkNotNull(id, "null id");
-    Preconditions.checkNotNull(granularity, "null granularity");
     Preconditions.checkNotNull(windows, "null windows");
 
-    final WindowedTimeSeries timeSeries = new WindowedTimeSeries(id, granularity, Arrays.asList(windows), this.dispatcher) {
+    final Storage storage = createStorage(id, granularity, duration);
+    final WindowedTimeSeries timeSeries = new WindowedTimeSeries(id, granularity, enrichWindows(windows, storage), this.dispatcher) {
       @Override
       protected void cleanup() {
-        Database.this.timeSeriess.remove(id);
+        super.cleanup();
+
+        Database.this.close(id);
       }
     };
 
-    //If We can't have two TimeSeries with same id as TimeSeries enforce this.
+    //We can't have two TimeSeries with same id as TimeSeries enforce this.
     this.timeSeriess.putIfAbsent(id, timeSeries);
 
     return timeSeries;
-  }*/
+  }
 
-  private Optional<TimeSeries> remove(final String id) {
-    return Optional.fromNullable(this.timeSeriess.remove(id));
+  private void close(final TimeSeries timeSeries) {
+    timeSeries.close();
+  }
+
+  public void close(final String id) {
+    Preconditions.checkNotNull(id, "null id");
+
+    final TimeSeries timeSeries = this.timeSeriess.remove(id);
+    if (timeSeries != null) {
+      close(timeSeries);
+    }
   }
 
   /**
-   * Remove and close all currently used {@link TimeSeries}. Do not delete any data.
+   * Remove and close all currently used {@link WindowedTimeSeries}. Do not delete any data.
    * <br>
    * Any previously created {@link TimeSeries} will be unusable and will have to be re-created.
    */
-  public void reset() {
+  @Idempotent
+  @Override
+  public void close() {
     for (final TimeSeries timeSeries : this.timeSeriess.values()) {
-      timeSeries.close();
+      close(timeSeries);
     }
   }
 
