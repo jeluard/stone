@@ -75,8 +75,8 @@ public final class Window {
     this.consolidationListeners = Collections.unmodifiableList(new ArrayList<ConsolidationListener>(Preconditions.checkNotNull(consolidationListeners, "null consolidationListeners")));
 
     if (consolidationListeners.isEmpty()) {
-      if (Loggers.BASE_LOGGER.isLoggable(Level.INFO)) {
-        Loggers.BASE_LOGGER.log(Level.INFO, "No {0}: all data will be discarded", ConsolidationListener.class.getSimpleName());
+      if (Loggers.BASE_LOGGER.isLoggable(Level.FINE)) {
+        Loggers.BASE_LOGGER.log(Level.FINE, "No {0}: all data will be discarded", ConsolidationListener.class.getSimpleName());
       }
     }
   }
