@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.logging.Level;
 
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -106,7 +107,7 @@ public final class Database implements Closeable {
     final Storage storage = createStorage(id, granularity, duration);
     final WindowedTimeSeries timeSeries = new WindowedTimeSeries(id, granularity, enrichWindows(windows, storage), this.dispatcher) {
       @Override
-      protected void cleanup() {
+      protected void cleanup() throws IOException {
         super.cleanup();
 
         Database.this.close(id);
@@ -119,11 +120,12 @@ public final class Database implements Closeable {
     return timeSeries;
   }
 
-  private void close(final TimeSeries timeSeries) {
+  private void close(final TimeSeries timeSeries) throws IOException {
     timeSeries.close();
+    this.storageFactory.close(timeSeries.getId());
   }
 
-  public void close(final String id) {
+  public void close(final String id) throws IOException {
     Preconditions.checkNotNull(id, "null id");
 
     final TimeSeries timeSeries = this.timeSeriess.remove(id);
@@ -141,7 +143,13 @@ public final class Database implements Closeable {
   @Override
   public void close() {
     for (final TimeSeries timeSeries : this.timeSeriess.values()) {
-      close(timeSeries);
+      try {
+        close(timeSeries);
+      } catch (IOException e) {
+        if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
+          Loggers.BASE_LOGGER.log(Level.WARNING, "Got exception while closing <"+timeSeries+">", e);
+        }
+      }
     }
   }
 

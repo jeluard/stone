@@ -192,7 +192,7 @@ public class WindowedTimeSeries extends TimeSeries {
   }
 
   @Override
-  protected void cleanup() {
+  protected void cleanup() throws IOException {
     final long latestTimestamp = getLatestTimestamp();
     for (final WindowListener windowListener : getWindowListeners()) {
       if (!windowListener.isLatestFromWindow(latestTimestamp)) {

@@ -23,6 +23,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -132,7 +133,7 @@ public class TimeSeries implements Identifiable<String>, Closeable {
 
   @Idempotent
   @Override
-  public final void close() {
+  public final void close() throws IOException {
     try {
       cleanup();
     } finally {
@@ -144,7 +145,7 @@ public class TimeSeries implements Identifiable<String>, Closeable {
    * Extension point. Called during {@link #close()}.
    */
   @Idempotent
-  protected void cleanup() {
+  protected void cleanup() throws IOException {
   }
 
 }
