@@ -23,8 +23,10 @@ import com.github.jeluard.stone.consolidator.MaxConsolidator;
 import com.github.jeluard.stone.spi.Dispatcher;
 import com.github.jeluard.stone.spi.Storage;
 import com.github.jeluard.stone.spi.StorageFactory;
+import com.google.common.base.Optional;
 
 import java.io.IOException;
+import org.junit.Assert;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -32,11 +34,13 @@ import org.mockito.Mockito;
 public class DatabaseTest {
 
   protected WindowedTimeSeries create(final Database database, final String id) throws IOException {
-    return database.createOrOpen(id, 1, Window.of(1).consolidatedBy(MaxConsolidator.class));
+    return database.createOrOpen(id, 1, Window.of(2).consolidatedBy(MaxConsolidator.class));
   }
 
-  protected StorageFactory createStorageFactory() {
-    return createStorageFactory(Mockito.mock(Storage.class));
+  protected StorageFactory createStorageFactory() throws IOException {
+    final Storage storage = Mockito.mock(Storage.class);
+    Mockito.when(storage.end()).thenReturn(Optional.<Long>absent());
+    return createStorageFactory(storage);
   }
 
   protected StorageFactory createStorageFactory(final Storage storage) {
@@ -54,10 +58,10 @@ public class DatabaseTest {
     final String id = "id";
 
     create(database, id);
-    database.close(id);
+    Assert.assertTrue(database.close(id));
 
     create(database, id);
-    database.close(id);
+    Assert.assertTrue(database.close(id));
   }
 
   @Test
@@ -65,19 +69,21 @@ public class DatabaseTest {
     final Database database = new Database(Mockito.mock(Dispatcher.class), createStorageFactory());
     final String id = "id";
     create(database, id);
-    database.close(id);
-    database.close(id);
+    Assert.assertTrue(database.close(id));
+    Assert.assertFalse(database.close(id));
   }
 
   @Test
   public void shouldClosedTSNotBeRemovable() throws IOException {
     final Database database = new Database(Mockito.mock(Dispatcher.class), createStorageFactory());
     final String id = "id";
-    final TimeSeries timeSeries = create(database, id);;
+    final TimeSeries timeSeries = create(database, id);
     timeSeries.close();
 
+    Assert.assertFalse(database.close(id));
+
     database.createOrOpen(id, 1);
-    database.close(id);
+    Assert.assertTrue(database.close(id));
   }
 
   @Test
@@ -87,8 +93,10 @@ public class DatabaseTest {
     create(database, id);
     database.close();
 
+    Assert.assertFalse(database.close(id));
+
     create(database, id);
-    database.close(id);
+    Assert.assertTrue(database.close(id));
   }
 
 }

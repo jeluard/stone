@@ -110,7 +110,8 @@ public final class Database implements Closeable {
       protected void cleanup() throws IOException {
         super.cleanup();
 
-        Database.this.close(id);
+        Database.this.timeSeriess.remove(id);
+        Database.this.cleanup(this);
       }
     };
 
@@ -120,18 +121,26 @@ public final class Database implements Closeable {
     return timeSeries;
   }
 
-  private void close(final TimeSeries timeSeries) throws IOException {
-    timeSeries.close();
+ private void cleanup(final TimeSeries timeSeries) throws IOException {
     this.storageFactory.close(timeSeries.getId());
   }
 
-  public void close(final String id) throws IOException {
+  private void close(final TimeSeries timeSeries) throws IOException {
+    timeSeries.close();
+
+    cleanup(timeSeries);
+  }
+
+  public boolean close(final String id) throws IOException {
     Preconditions.checkNotNull(id, "null id");
 
     final TimeSeries timeSeries = this.timeSeriess.remove(id);
     if (timeSeries != null) {
       close(timeSeries);
+      return true;
     }
+
+    return false;
   }
 
   /**
