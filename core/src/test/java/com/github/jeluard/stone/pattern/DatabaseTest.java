@@ -16,6 +16,7 @@
  */
 package com.github.jeluard.stone.pattern;
 
+import com.github.jeluard.guayaba.base.Pair;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.api.WindowedTimeSeries;
@@ -27,6 +28,7 @@ import com.google.common.base.Optional;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.LinkedList;
 import org.junit.Assert;
 
 import org.junit.Test;
@@ -34,9 +36,22 @@ import org.mockito.Mockito;
 
 public class DatabaseTest {
 
-  abstract class CloseableStorage extends Storage implements Closeable {
+  class CloseableStorage extends Storage implements Closeable {
     public CloseableStorage() {
       super(0);
+    }
+    @Override
+    public void append(long timestamp, int[] values) throws IOException {
+    }
+
+    @Override
+    public Iterable<Pair<Long, int[]>> all() throws IOException {
+      return new LinkedList<Pair<Long, int[]>>();
+    }
+
+    @Override
+    public void close() throws IOException {
+      throw new IOException("Expected.");
     }
   }
 
@@ -108,8 +123,7 @@ public class DatabaseTest {
 
   @Test
   public void shouldFailingTimeSeriesNotBePropagated() throws IOException {
-    final CloseableStorage storage = Mockito.mock(CloseableStorage.class);
-    Mockito.doThrow(new IOException()).when(storage).close();
+    final CloseableStorage storage = new CloseableStorage();
     final Database database = new Database(Mockito.mock(Dispatcher.class), createStorageFactory());
     create(database, "id1");
     create(database, "id2");
