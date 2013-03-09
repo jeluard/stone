@@ -204,6 +204,6 @@ In clojure:
 
 More [examples](examples/src/test) explore advanced features.
 
----
+## License
 
 Released under [Apache 2 license](http://www.apache.org/licenses/LICENSE-2.0.html).
