@@ -130,20 +130,22 @@ public final class Database implements Closeable {
     Preconditions.checkNotNull(windows, "null windows");
 
     final Map<Window, Storage> storages = new HashMap<Window, Storage>();
-    final List<Window> enricherWindows = new ArrayList<Window>(windows.length);
+    final List<Window> enrichedWindows = new ArrayList<Window>(windows.length);
     for (final Window window : windows) {
       final String storageId = createStorageId(id, window);
       final Storage storage = createStorage(storageId, granularity, duration);
-      enricherWindows.add(enrichWindow(window, storage));
+      enrichedWindows.add(enrichWindow(window, storage));
       storages.put(window, storage);
     }
-    final WindowedTimeSeries timeSeries = new WindowedTimeSeries(id, granularity, enricherWindows, this.dispatcher) {
+    final WindowedTimeSeries timeSeries = new WindowedTimeSeries(id, granularity, enrichedWindows, this.dispatcher) {
       @Override
       protected void cleanup() throws IOException {
         super.cleanup();
 
         Database.this.timeSeriess.remove(id);
-        Database.this.storageFactory.close(id);
+        for (final Window window : enrichedWindows) {
+          Database.this.storageFactory.close(createStorageId(id, window));
+        }
       }
     };
 
