@@ -136,7 +136,23 @@ public class TimeSeriesTest {
   }
 
   @Test
-  public void shouldTimestampEqualOrInfoeriorToLatestBeRejected() throws IOException {
+  public void shouldGranularityBeRespected() throws IOException {
+    final TimeSeries timeSeries = new TimeSeries("id", 3, Arrays.asList(createListener()), Mockito.mock(Dispatcher.class));
+    final long now = System.currentTimeMillis();
+    Assert.assertTrue(timeSeries.publish(now, 0));
+    //Granularity of 3, there must be 2 skipped in between 2 timestamps
+    //2 (1, 2) skipped, minimum necessary
+    Assert.assertTrue(timeSeries.publish(now+3, 0));
+    //3 (4, 5, 6) skipped
+    Assert.assertTrue(timeSeries.publish(now+7, 0));
+    Assert.assertFalse(timeSeries.publish(now+8, 0));
+    Assert.assertFalse(timeSeries.publish(now+9, 0));
+    Assert.assertTrue(timeSeries.publish(now+10, 0));
+    timeSeries.close();
+  }
+
+  @Test
+  public void shouldTimestampEqualOrInferiorToLatestBeRejected() throws IOException {
     final long now = System.currentTimeMillis();
     final TimeSeries timeSeries = new TimeSeries("id", 2, Optional.of(now), Arrays.asList(createListener()), Mockito.mock(Dispatcher.class));
     Assert.assertFalse(timeSeries.publish(now, 0));
