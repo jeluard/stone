@@ -147,9 +147,7 @@ database.close();
 In clojure:
 
 ```clojure
-(def dispatcher (SequentialDispatcher.))
-(def sf (.MemoryStorageFactory ))
-(def db (create-db dispatcher sf))
+(def db (create-db (SequentialDispatcher.) (MemoryStorageFactory.)))
 
 (def windows (list (window 3 (list MaxConsolidator MinConsolidator)
                              (list storage (fn [timestamp consolidates] (println (str "Got consolidates " consolidates)))))))
