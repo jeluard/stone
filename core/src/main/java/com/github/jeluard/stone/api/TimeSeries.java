@@ -48,7 +48,7 @@ import javax.annotation.concurrent.NotThreadSafe;
  * Once {@link #close()} has been called {@link #publish(long, int)} behaviour is undefined.
  * <br>
  * <br>
- * <b>WARNING</b> {@link TimeSeries} is not threadsafe and not supposed to be manipulated concurrently from different threads.
+ * <b>WARNING</b> {@link TimeSeries} is not threadsafe and not supposed to be manipulated concurrently from different threads. Note it can be manipulated by different threads as long as you ensure they don't call {@link #publish(long, int)} concurrently.
  */
 @NotThreadSafe
 public class TimeSeries implements Identifiable<String>, Closeable {
@@ -60,7 +60,7 @@ public class TimeSeries implements Identifiable<String>, Closeable {
   private final Listener[] listeners;
   private final Dispatcher dispatcher;
   static final long DEFAULT_LATEST_TIMESTAMP = 0L;
-  private long latestTimestamp;
+  private volatile long latestTimestamp;
 
   public TimeSeries(final String id, final int granularity, final List<? extends Listener> listeners, final Dispatcher dispatcher) {
     this(id, granularity, Optional.<Long>absent(), listeners, dispatcher);
