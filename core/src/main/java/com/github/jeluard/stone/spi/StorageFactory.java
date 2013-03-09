@@ -111,20 +111,18 @@ public abstract class StorageFactory<T extends Storage> implements Closeable {
    *
    * @param id
    * @param window
+   * @return true if provided id existed
    * @throws IOException 
    */
   @Idempotent
-  public final void close(final String id) throws IOException {
-    //TODO return boolean instead of logging non-existence?
+  public final boolean close(final String id) throws IOException {
     final T storage = this.cache.remove(id);
     if (storage == null) {
-      if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
-        Loggers.BASE_LOGGER.log(Level.WARNING, "{0} for {1} does not exist", new Object[]{Storage.class.getSimpleName(), id});
-      }
-      return;
+      return false;
     }
 
     close(storage);
+    return true;
   }
 
   /**
