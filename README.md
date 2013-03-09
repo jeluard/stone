@@ -18,7 +18,9 @@ This greatly reduce the amount of data to store and remove the processing phase 
 
 ### Dependencies
 
-All dependencies are available in maven central:
+All dependencies are available in maven central.
+
+With maven:
 
 ```xml
 <dependency>
@@ -27,6 +29,10 @@ All dependencies are available in maven central:
   <version>0.8-SNAPSHOT</version>
 </dependency>
 ```
+
+With leiningen:
+
+```[com.github.jeluard.stone/stone-core "0.8-SNAPSHOT"]```
 
 Dependending on the components you choose to use you will need to include some other jars.
 
