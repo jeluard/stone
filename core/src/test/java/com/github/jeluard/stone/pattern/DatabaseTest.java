@@ -29,8 +29,8 @@ import com.google.common.base.Optional;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.LinkedList;
-import org.junit.Assert;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 
