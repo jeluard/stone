@@ -25,6 +25,7 @@ import com.github.jeluard.stone.spi.Storage;
 import com.github.jeluard.stone.spi.StorageFactory;
 import com.google.common.base.Optional;
 
+import java.io.Closeable;
 import java.io.IOException;
 import org.junit.Assert;
 
@@ -32,6 +33,12 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 public class DatabaseTest {
+
+  abstract class CloseableStorage extends Storage implements Closeable {
+    public CloseableStorage() {
+      super(0);
+    }
+  }
 
   protected WindowedTimeSeries create(final Database database, final String id) throws IOException {
     return database.createOrOpen(id, 1, Window.of(2).consolidatedBy(MaxConsolidator.class));
@@ -97,6 +104,16 @@ public class DatabaseTest {
 
     create(database, id);
     Assert.assertTrue(database.close(id));
+  }
+
+  @Test
+  public void shouldFailingTimeSeriesNotBePropagated() throws IOException {
+    final CloseableStorage storage = Mockito.mock(CloseableStorage.class);
+    Mockito.doThrow(new IOException()).when(storage).close();
+    final Database database = new Database(Mockito.mock(Dispatcher.class), createStorageFactory());
+    create(database, "id1");
+    create(database, "id2");
+    database.close();
   }
 
 }
