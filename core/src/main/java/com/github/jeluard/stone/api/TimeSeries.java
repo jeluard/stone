@@ -33,14 +33,22 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import javax.annotation.concurrent.NotThreadSafe;
 
 /**
- * Main abstraction allowing to publish {@code timestamp}/{@code value} pair.
+ * Main abstraction allowing to publish {@code timestamp}/{@code value} pair. Provided {@code timestamp} must monotonically increased and compatible with {@code granularity}.
  * <br>
- * Each published value is passed to all associated {@link Listener}.
+ * If {@code granularity} is {@code 1} then {@code timestamp} can be any value (as long as it follows the monotonicity rule).
+ * <br>
+ * If {@code granularity} is greater than {@code 1} each successive {@code timestamp}s must have {@code granularity - 1} values in between. Note this does not imply only {@code granularity} multiples are accepted as there can be more than {@code granularity - 1} in between two timestamps.
+ * <br>
+ * An invalid {@code timestamp} will be signaled via return value of {@link #publish(long, int)}.
+ * <br>
+ * <br>
+ * Each accepted value then is passed to all associated {@link Listener}.
  * <br>
  * <br>
  * Once {@link #close()} has been called {@link #publish(long, int)} behaviour is undefined.
  * <br>
- * {@link TimeSeries} is not threadsafe and supposed to be manipulated from a unique thread.
+ * <br>
+ * <b>WARNING</b> {@link TimeSeries} is not threadsafe and not supposed to be manipulated concurrently from different threads.
  */
 @NotThreadSafe
 public class TimeSeries implements Identifiable<String>, Closeable {
