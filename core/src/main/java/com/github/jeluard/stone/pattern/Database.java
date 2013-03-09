@@ -31,6 +31,7 @@ import com.github.jeluard.stone.spi.Storage;
 import com.github.jeluard.stone.spi.StorageFactory;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 
@@ -152,16 +153,21 @@ public final class Database implements Closeable {
     return timeSeries;
   }
 
-  public Map<Window, ? extends Reader> getReader(final String id) {
-    return this.timeSeriess.get(id).second;
+  public Optional<Map<Window, ? extends Reader>> getReaders(final String id) {
+    final Pair<?, Map<Window, ? extends Reader>> pair = this.timeSeriess.get(id);
+    if (pair == null) {
+      return Optional.absent();
+    }
+
+    return Optional.<Map<Window, ? extends Reader>>of(pair.second);
   }
 
   public boolean close(final String id) throws IOException {
     Preconditions.checkNotNull(id, "null id");
 
-    final TimeSeries timeSeries = this.timeSeriess.remove(id).first;
-    if (timeSeries != null) {
-      timeSeries.close();
+    final Pair<WindowedTimeSeries, ?> pair = this.timeSeriess.remove(id);
+    if (pair != null) {
+      pair.first.close();
       return true;
     }
 
