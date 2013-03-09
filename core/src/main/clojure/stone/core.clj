@@ -2,9 +2,9 @@
   (:import (com.github.jeluard.guayaba.base Pair)
            (com.github.jeluard.stone.api ConsolidationListener Listener Reader TimeSeries Window WindowedTimeSeries)
            (com.github.jeluard.stone.helper Loggers Storages)
-           (com.github.jeluard.stone.pattern Database)
+           (com.github.jeluard.stone.pattern Database Poller)
            (com.github.jeluard.stone.spi Storage)
-           (com.google.common.base Optional)
+           (com.google.common.base Function Optional)
            (java.io Closeable)
            (java.util Iterator)))
 
@@ -73,6 +73,39 @@
 (defn publish [^TimeSeries ts timestamp value]
   (.publish ts timestamp value))
 
+(defn readers [^Database db id]
+  (.get (.getReaders db id)))
+
 (defn close
   ([^Closeable cl] (.close cl))
   ([^Database db ^String id] (.close db id)))
+
+;;
+
+(defn- wrap-fn-as-function [fn]
+  (reify Function
+    (apply [this input]
+      (fn input))))
+
+(defn- wrap-as-function [fn]
+  (if (instance? Function fn)
+    fn
+    (wrap-fn-as-function fn)))
+
+(defn create-poller
+  ([period windows metric-extractor dispatcher storage-factory scheduler-executor-service]
+    (create-poller period windows (Poller/defaultIdExtractor) metric-extractor dispatcher storage-factory scheduler-executor-service))
+  ([period windows id-extractor metric-extractor dispatcher storage-factory scheduler-executor-service]
+    (Poller. period windows (wrap-as-function id-extractor) (wrap-fn-as-function metric-extractor) dispatcher storage-factory scheduler-executor-service)))
+
+(defn enqueue [^Poller poller resource]
+  (.enqueue poller resource))
+
+(defn dequeue [^Poller poller resource]
+  (.dequeue poller resource))
+
+(defn start [^Poller poller]
+  (.start poller))
+
+(defn cancel [^Poller poller]
+  (.cancel poller))

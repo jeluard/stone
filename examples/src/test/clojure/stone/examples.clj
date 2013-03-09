@@ -1,8 +1,10 @@
 (ns stone.examples
   (:use [stone.core :as st])
   (:import
+    (com.github.jeluard.guayaba.util.concurrent Scheduler)
     (com.github.jeluard.stone.consolidator MaxConsolidator MinConsolidator)
     (com.github.jeluard.stone.dispatcher.sequential SequentialDispatcher)
+    (com.github.jeluard.stone.helper Loggers)
     (com.github.jeluard.stone.storage.memory MemoryStorage MemoryStorageFactory)))
 
 (def dispatcher (SequentialDispatcher.))
@@ -43,3 +45,14 @@
 (st/publish ts-db now 1)
 
 (st/close db)
+
+;;
+
+(def es (Scheduler/defaultExecutorService 10 (Loggers/BASE_LOGGER)))
+(def poller (st/create-poller 1000 windows (fn [s] (.length s)) dispatcher sf es))
+
+(st/enqueue poller "aaaa")
+
+(st/start poller)
+
+(st/cancel poller)

@@ -16,6 +16,8 @@ This greatly reduce the amount of data to store and remove the processing phase 
 
 ## Getting started
 
+### Dependencies
+
 All dependencies are available in maven central:
 
 ```xml
@@ -25,9 +27,14 @@ All dependencies are available in maven central:
   <version>0.8-SNAPSHOT</version>
 </dependency>
 ```
+
 Dependending on the components you choose to use you will need to include some other jars.
 
-Java API usage:
+### Core API
+
+```TimeSeries```
+
+In Java:
 
 ```java
 //Create a TimeSeries. Each data published will be passed to all provided Listener.
@@ -44,7 +51,25 @@ timeSeries.publish(System.currentTimeMillis(), 123);
 
 //Cleanup resources.
 timeSeries.close();
+```
 
+In clojure:
+
+```clojure
+(def dispatcher (SequentialDispatcher.))
+
+(def ts (create-ts "timeseries" (list (fn [a b c] (println (str "Got value " c)))) dispatcher))
+
+(publish ts 123 1)
+
+(close ts)
+```
+
+```Windowed time series```
+
+In java:
+
+```java
 //You can also create windowed TimeSeries.
 //Data will then be consolidated each time window boundaries are crossed using Consolidators
 //and passed to some ConsolidationListeners.
@@ -81,7 +106,7 @@ timeSeries.publish(System.currentTimeMillis(), 1);
 database.close();
 ```
 
-A clojure binding is available.
+In clojure:
 
 ```clojure
 (def dispatcher (SequentialDispatcher.))
@@ -98,14 +123,79 @@ A clojure binding is available.
 
 (println (take 1 (all storage)))
 
+(close wts)
+```
+
+### Patterns
+
+On top of basic API usage higher level patterns facilitates common usages.
+
+```Database```
+
+In java:
+
+```java
+//You can create a Database to ease creation of WindowedTimeSeries sharing a StorageFactory and a Dispatcher
+final Database database = new Database(new SequentialDispatcher(), new MemoryStorageFactory());
+
+final TimeSeries timeSeries = database.createOrOpen("id", 1000, Window.of(10).consolidatedBy(MaxConsolidator.class));
+timeSeries.publish(System.currentTimeMillis(), 1);
+
+database.close();
+```
+
+In clojure:
+
+```clojure
+(def dispatcher (SequentialDispatcher.))
 (def sf (.MemoryStorageFactory ))
-(def db (st/create-db dispatcher sf))
+(def db (create-db dispatcher sf))
 
-(def ts-db (st/create-windowed-ts-from-db db "timeseries" 1000 windows))
+(def windows (list (window 3 (list MaxConsolidator MinConsolidator)
+                             (list storage (fn [timestamp consolidates] (println (str "Got consolidates " consolidates)))))))
 
-(st/publish ts-db now 1)
+(def ts-db (create-windowed-ts-from-db db "timeseries" 1000 windows))
 
-(st/close db)
+(publish ts-db now 1)
+
+(close db)
+```
+
+```Poller```
+
+In java:
+
+```java
+//Poller helps when extracting periodically common values from a collection of resources
+final Poller<String> poller = new Poller<String>(1000, windows, Poller.<String>defaultIdExtractor(), new Function<String, Future<Integer>>() {
+  @Override
+  public Future<Integer> apply(final String input) {
+    return Futures.immediateFuture(input.length());
+  }
+}, new SequentialDispatcher(), new MemoryStorageFactory(), Scheduler.defaultExecutorService(10, Loggers.BASE_LOGGER));
+
+poller.add("aaaa");
+poller.add("bbbbb");
+poller.add("ccc");
+
+poller.start();
+
+pollers.remove("ccc");
+
+poller.cancel();
+```
+
+In clojure:
+
+```clojure
+(def es (Scheduler/defaultExecutorService 10 (Loggers/BASE_LOGGER)))
+(def poller (create-poller 1000 windows (fn [s] (.length s)) dispatcher sf es))
+
+(st/enqueue poller "aaaa")
+
+(st/start poller)
+
+(st/cancel poller)
 ```
 
 More [examples](examples/src/test) explore advanced features.
