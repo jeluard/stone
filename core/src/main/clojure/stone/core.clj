@@ -12,7 +12,7 @@
 
 (def ^:dynamic *default-granularity* 1)
 
-(defn -wrap-as-listener [fn]
+(defn- wrap-as-listener [fn]
   (reify Listener
     (onPublication [this previousTimestamp currentTimestamp value]
       (fn previousTimestamp currentTimestamp value))))
@@ -20,7 +20,7 @@
 (defn create-ts
   ([id listeners dispatcher] (create-ts id *default-granularity* listeners dispatcher))
   ([id granularity listeners dispatcher] (create-ts id granularity (Optional/absent) listeners dispatcher))
-  ([id granularity latestTimestamp listeners dispatcher] (TimeSeries. id granularity latestTimestamp (map -wrap-as-listener listeners) dispatcher)))
+  ([id granularity latestTimestamp listeners dispatcher] (TimeSeries. id granularity latestTimestamp (map wrap-as-listener listeners) dispatcher)))
 
 (defn beginning [^Reader reader]
   (.orNull (.beginning reader)))
@@ -40,23 +40,23 @@
 (defn during [^Reader reader before after]
   (lazy-pairs (.iterator (.during reader before after))))
 
-(defn -wrap-fn-as-consolidation-listener [fn]
+(defn- wrap-fn-as-consolidation-listener [fn]
   (reify ConsolidationListener
     (onConsolidation [this timestamp consolidates]
       (fn timestamp (vec consolidates)))))
 
-(defn -wrap-storage-as-consolidation-listener
-  ([storage] (-wrap-storage-as-consolidation-listener storage Loggers/BASE_LOGGER))
+(defn- wrap-storage-as-consolidation-listener
+  ([storage] (wrap-storage-as-consolidation-listener storage Loggers/BASE_LOGGER))
   ([storage logger] (Storages/asConsolidationListener storage logger)))
 
-(defn -wrap-as-consolidation-listener [x]
+(defn- wrap-as-consolidation-listener [x]
   (if (instance? Storage x)
-    (-wrap-storage-as-consolidation-listener x)
-    (-wrap-fn-as-consolidation-listener x)))
+    (wrap-storage-as-consolidation-listener x)
+    (wrap-fn-as-consolidation-listener x)))
 
 (defn window
   ([size consolidatorTypes] (window size consolidatorTypes '()))
-  ([size consolidatorTypes consolidationListeners] (Window. size consolidatorTypes (map -wrap-as-consolidation-listener consolidationListeners))))
+  ([size consolidatorTypes consolidationListeners] (Window. size consolidatorTypes (map wrap-as-consolidation-listener consolidationListeners))))
 
 (defn create-db
   [dispatcher storageFactory]
