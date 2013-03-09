@@ -187,7 +187,7 @@ public class WindowedTimeSeries extends TimeSeries {
     return windowListeners;
   }
 
-  protected final Iterable<WindowListener> getWindowListeners() {
+  public final Iterable<WindowListener> getWindowListeners() {
     return Iterables.filter(getListeners(), WindowListener.class);
   }
 

@@ -17,7 +17,10 @@
 package com.github.jeluard.stone.pattern;
 
 import com.github.jeluard.guayaba.annotation.Idempotent;
+import com.github.jeluard.guayaba.base.Pair;
 import com.github.jeluard.stone.api.ConsolidationListener;
+import com.github.jeluard.stone.api.Consolidator;
+import com.github.jeluard.stone.api.Reader;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.api.WindowedTimeSeries;
@@ -26,12 +29,18 @@ import com.github.jeluard.stone.helper.Storages;
 import com.github.jeluard.stone.spi.Dispatcher;
 import com.github.jeluard.stone.spi.Storage;
 import com.github.jeluard.stone.spi.StorageFactory;
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Collections2;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
@@ -45,10 +54,11 @@ import javax.annotation.concurrent.ThreadSafe;
 public final class Database implements Closeable {
 
   private static final int DEFAULT_GRANULARITY = 1;
+  private static final String CONSOLIDATOR_SUFFIX = "Consolidator";
 
   private final Dispatcher dispatcher;
   private final StorageFactory<?> storageFactory;
-  private final ConcurrentMap<String, WindowedTimeSeries> timeSeriess = new ConcurrentHashMap<String, WindowedTimeSeries>();
+  private final ConcurrentMap<String, Pair<WindowedTimeSeries, Map<Window, ? extends Reader>>> timeSeriess = new ConcurrentHashMap<String, Pair<WindowedTimeSeries, Map<Window, ? extends Reader>>>();
 
   public Database(final Dispatcher dispatcher, final StorageFactory<?> storageFactory) {
     this.dispatcher = Preconditions.checkNotNull(dispatcher, "null dispatcher");
@@ -66,14 +76,6 @@ public final class Database implements Closeable {
     return Window.of(window.getSize()).listenedBy(consolidationListeners.toArray(new ConsolidationListener[consolidationListeners.size()])).consolidatedBy(window.getConsolidatorTypes().toArray(new Class[window.getConsolidatorTypes().size()]));
   }
 
-  private List<Window> enrichWindows(final Window[] windows, final Storage storage) {
-    final List<Window> enricherWindows = new ArrayList<Window>(windows.length);
-    for (final Window window : windows) {
-      enricherWindows.add(enrichWindow(window, storage));
-    }
-    return enricherWindows;
-  }
-
   /**
    * Create a {@link WindowedTimeSeries} with a default granularity of {@code Database#DEFAULT_GRANULARITY}.
    *
@@ -86,6 +88,28 @@ public final class Database implements Closeable {
    */
   public WindowedTimeSeries createOrOpen(final String id, final long duration, final Window ... windows) throws IOException {
     return createOrOpen(id, Database.DEFAULT_GRANULARITY, duration, windows);
+  }
+
+  /**
+   * @param consolidators
+   * @return all consolidators identifiers (MaxConsolidator => max)
+   */
+  private Collection<String> extractConsolidatorIdentifiers(final Collection<? extends Class<? extends Consolidator>> consolidators) {
+    return Collections2.transform(consolidators, new Function<Class<? extends Consolidator>, String>() {
+      @Override
+      public String apply(final Class<? extends Consolidator> input) {
+        final String simpleName = input.getSimpleName();
+        if (simpleName.endsWith(Database.CONSOLIDATOR_SUFFIX)) {
+          return simpleName.substring(0, simpleName.length()-Database.CONSOLIDATOR_SUFFIX.length()).toLowerCase();
+        }
+        return simpleName;
+      }
+    });
+  }
+
+  private String createStorageId(final String id, final Window window) {
+    final Collection<String> consolidatorIdentifiers = extractConsolidatorIdentifiers(window.getConsolidatorTypes());
+    return id+":"+Joiner.on("-").join(consolidatorIdentifiers)+"@"+window.getSize();
   }
 
   /**
@@ -104,8 +128,15 @@ public final class Database implements Closeable {
     Preconditions.checkNotNull(id, "null id");
     Preconditions.checkNotNull(windows, "null windows");
 
-    final Storage storage = createStorage(id, granularity, duration);
-    final WindowedTimeSeries timeSeries = new WindowedTimeSeries(id, granularity, enrichWindows(windows, storage), this.dispatcher) {
+    final Map<Window, Storage> storages = new HashMap<Window, Storage>();
+    final List<Window> enricherWindows = new ArrayList<Window>(windows.length);
+    for (final Window window : windows) {
+      final String storageId = createStorageId(id, window);
+      final Storage storage = createStorage(storageId, granularity, duration);
+      enricherWindows.add(enrichWindow(window, storage));
+      storages.put(window, storage);
+    }
+    final WindowedTimeSeries timeSeries = new WindowedTimeSeries(id, granularity, enricherWindows, this.dispatcher) {
       @Override
       protected void cleanup() throws IOException {
         super.cleanup();
@@ -116,15 +147,19 @@ public final class Database implements Closeable {
     };
 
     //We can't have two TimeSeries with same id as TimeSeries enforce this.
-    this.timeSeriess.putIfAbsent(id, timeSeries);
+    this.timeSeriess.putIfAbsent(id, new Pair<WindowedTimeSeries, Map<Window, ? extends Reader>>(timeSeries, storages));
 
     return timeSeries;
+  }
+
+  public Map<Window, ? extends Reader> getReader(final String id) {
+    return this.timeSeriess.get(id).second;
   }
 
   public boolean close(final String id) throws IOException {
     Preconditions.checkNotNull(id, "null id");
 
-    final TimeSeries timeSeries = this.timeSeriess.remove(id);
+    final TimeSeries timeSeries = this.timeSeriess.remove(id).first;
     if (timeSeries != null) {
       timeSeries.close();
       return true;
@@ -141,7 +176,8 @@ public final class Database implements Closeable {
   @Idempotent
   @Override
   public void close() {
-    for (final TimeSeries timeSeries : this.timeSeriess.values()) {
+    for (final Pair<WindowedTimeSeries, ?> pair : this.timeSeriess.values()) {
+      final TimeSeries timeSeries = pair.first;
       try {
         timeSeries.close();
       } catch (IOException e) {
