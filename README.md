@@ -32,7 +32,7 @@ Dependending on the components you choose to use you will need to include some o
 
 ### Core API
 
-```TimeSeries```
+#### Time series
 
 In Java:
 
@@ -65,7 +65,7 @@ In clojure:
 (close ts)
 ```
 
-```Windowed time series```
+#### Windowed time series
 
 In java:
 
@@ -130,7 +130,7 @@ In clojure:
 
 On top of basic API usage higher level patterns facilitates common usages.
 
-```Database```
+#### Database
 
 In java:
 
@@ -161,7 +161,7 @@ In clojure:
 (close db)
 ```
 
-```Poller```
+#### Poller
 
 In java:
 
