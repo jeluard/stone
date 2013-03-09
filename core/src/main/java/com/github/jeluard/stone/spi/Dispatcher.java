@@ -42,7 +42,7 @@ public abstract class Dispatcher {
 
   }
 
-  private static final Logger LOGGER = Loggers.create("dispatcher");
+  static final Logger LOGGER = Loggers.create("dispatcher");
 
   private final ExceptionHandler exceptionHandler;
   protected static final ExceptionHandler DEFAULT_EXCEPTION_HANDLER = new ExceptionHandler() {

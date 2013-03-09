@@ -17,7 +17,7 @@
 
   <modules>
     <module>blocking-queue</module>
-    <module>disruptor</module>
+    <!-- Disruptor dispatcher needs some more love module>disruptor</module-->
     <module>sequential</module>
   </modules>
 
