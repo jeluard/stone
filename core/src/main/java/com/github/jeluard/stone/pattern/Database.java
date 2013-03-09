@@ -111,7 +111,7 @@ public final class Database implements Closeable {
         super.cleanup();
 
         Database.this.timeSeriess.remove(id);
-        Database.this.cleanup(this);
+        Database.this.storageFactory.close(id);
       }
     };
 
@@ -121,22 +121,12 @@ public final class Database implements Closeable {
     return timeSeries;
   }
 
- private void cleanup(final TimeSeries timeSeries) throws IOException {
-    this.storageFactory.close(timeSeries.getId());
-  }
-
-  private void close(final TimeSeries timeSeries) throws IOException {
-    timeSeries.close();
-
-    cleanup(timeSeries);
-  }
-
   public boolean close(final String id) throws IOException {
     Preconditions.checkNotNull(id, "null id");
 
     final TimeSeries timeSeries = this.timeSeriess.remove(id);
     if (timeSeries != null) {
-      close(timeSeries);
+      timeSeries.close();
       return true;
     }
 
@@ -153,7 +143,7 @@ public final class Database implements Closeable {
   public void close() {
     for (final TimeSeries timeSeries : this.timeSeriess.values()) {
       try {
-        close(timeSeries);
+        timeSeries.close();
       } catch (IOException e) {
         if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
           Loggers.BASE_LOGGER.log(Level.WARNING, "Got exception while closing <"+timeSeries+">", e);
