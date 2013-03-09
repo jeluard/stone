@@ -115,6 +115,7 @@ public abstract class StorageFactory<T extends Storage> implements Closeable {
    */
   @Idempotent
   public final void close(final String id) throws IOException {
+    //TODO return boolean instead of logging non-existence?
     final T storage = this.cache.remove(id);
     if (storage == null) {
       if (Loggers.BASE_LOGGER.isLoggable(Level.WARNING)) {
