@@ -124,9 +124,30 @@ public class DatabaseTest {
   @Test
   public void shouldFailingTimeSeriesNotBePropagated() throws IOException {
     final CloseableStorage storage = new CloseableStorage();
-    final Database database = new Database(Mockito.mock(Dispatcher.class), createStorageFactory());
+    final Database database = new Database(Mockito.mock(Dispatcher.class), createStorageFactory(storage));
     create(database, "id1");
     create(database, "id2");
+    database.close();
+  }
+
+  @Test
+  public void shouldReadersBeAccessibleWhenTimeSeriesExists() throws IOException {
+    final Database database = new Database(Mockito.mock(Dispatcher.class), createStorageFactory());
+    final String id = "id";
+    create(database, id);
+
+    Assert.assertTrue(database.getReaders(id).isPresent());
+
+    database.close();
+  }
+
+  @Test
+  public void shouldReadersNotBeAccessibleWhenTimeSeriesDoesNotExist() throws IOException {
+    final Database database = new Database(Mockito.mock(Dispatcher.class), createStorageFactory());
+    create(database, "id1");
+
+    Assert.assertFalse(database.getReaders("id2").isPresent());
+
     database.close();
   }
 
