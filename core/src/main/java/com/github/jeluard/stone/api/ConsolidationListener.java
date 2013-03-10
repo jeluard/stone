@@ -37,7 +37,7 @@ public interface ConsolidationListener {
    * <br>
    * Different thread might invoke this method but never concurrently. Consecutive {@code timestamp} values are guaranteed to be monotonically increasing.
    *
-   * @param timestamp
+   * @param timestamp end timestamp for window just crossed
    * @param consolidates 
    */
   void onConsolidation(long timestamp, int[] consolidates);

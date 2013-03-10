@@ -22,8 +22,8 @@ import com.google.common.base.Optional;
 
 import java.io.IOException;
 import java.util.Arrays;
-import org.junit.Assert;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -186,6 +186,17 @@ public class WindowedTimeSeriesTest {
     Assert.assertFalse(timeSeries.publish(2, 1));
     Assert.assertFalse(timeSeries.publish(3, 1));
     Assert.assertTrue(timeSeries.publish(4, 1));
+
+    timeSeries.close();
+  }
+
+  @Test
+  public void shouldLatestTimestampMatchEndOfWindow() throws IOException {
+    final ConsolidationListener consolidationListener = new PersistentConsolidationListener(Optional.<Long>of(2L));
+    final Window window = Window.of(2).listenedBy(consolidationListener).consolidatedBy(MaxConsolidator.class);
+    final WindowedTimeSeries timeSeries = new WindowedTimeSeries("id", 1, Arrays.asList(window), new DumbDispatcher());
+
+    Assert.assertEquals(2, timeSeries.getLatestTimestamp());
 
     timeSeries.close();
   }

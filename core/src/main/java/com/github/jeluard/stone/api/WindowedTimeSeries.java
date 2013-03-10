@@ -195,8 +195,11 @@ public class WindowedTimeSeries extends TimeSeries {
   protected void cleanup() throws IOException {
     final long latestTimestamp = getLatestTimestamp();
     for (final WindowListener windowListener : getWindowListeners()) {
+      //If a window holds data not flushed (to listeners) trigger notification
+      //This is the case when latestTimestamp is not the latest possible value of a window
       if (!windowListener.isLatestFromWindow(latestTimestamp)) {
-        windowListener.generateConsolidatesThenNotify(latestTimestamp);
+        final long windowEnd = windowListener.windowEnd(windowListener.windowId(latestTimestamp));
+        windowListener.generateConsolidatesThenNotify(windowEnd);
       }
     }
   }
