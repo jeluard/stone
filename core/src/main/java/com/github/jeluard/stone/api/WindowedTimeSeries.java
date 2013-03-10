@@ -40,7 +40,7 @@ public class WindowedTimeSeries extends TimeSeries {
 
     private final int size;
     private static final long DEFAULT_BEGINNING_TIMESTAMP = 0L;
-    private long beginningTimestampOrDefault = WindowListener.DEFAULT_BEGINNING_TIMESTAMP;
+    private volatile long beginningTimestampOrDefault = WindowListener.DEFAULT_BEGINNING_TIMESTAMP;
     private final Consolidator[] consolidators;
     private final int[] consolidates;
     private final ConsolidationListener consolidationListener;
