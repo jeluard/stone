@@ -86,14 +86,14 @@ public class WindowedTimeSeries extends TimeSeries {
 
     /**
      * @param timestamp
-     * @return id of the {@link Window} containing {@code timestamp}
+     * @return id of the {@link Window} containing {@code timestamp}; starts at 1
      */
     private long windowId(final long timestamp) {
-      return (timestamp - this.beginningTimestampOrDefault) / this.size;
+      return 1 + (timestamp - this.beginningTimestampOrDefault) / this.size;
     }
 
     private long windowEnd(final long windowId) {
-      return this.beginningTimestampOrDefault + windowId * this.size;
+      return this.beginningTimestampOrDefault + windowId * this.size - 1;
     }
 
     private boolean isLatestFromWindow(final long timestamp) {
@@ -139,8 +139,7 @@ public class WindowedTimeSeries extends TimeSeries {
 
       //Last slot: trigger a consolidation.
       if (isLatestFromWindow(currentTimestamp)) {
-        final long currentWindowEnd = windowEnd(currentWindowId);
-        generateConsolidatesThenNotify(currentWindowEnd);
+        generateConsolidatesThenNotify(currentTimestamp);
       }
     }
     
