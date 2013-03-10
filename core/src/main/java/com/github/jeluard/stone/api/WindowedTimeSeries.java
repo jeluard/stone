@@ -126,7 +126,7 @@ public class WindowedTimeSeries extends TimeSeries {
       recordBeginningTimestampIfNeeded(previousTimestamp, currentTimestamp);
       final long currentWindowId = windowId(currentTimestamp);
       final long previousWindowId = windowId(previousTimestamp);
-      final boolean newWindow = currentWindowId != previousWindowId;
+      final boolean newWindow = previousWindowId >= 0 && currentWindowId != previousWindowId;
       //New window, previous timestamp didn't trigger a consolidation (wasn't last slot): trigger it now.
       if (newWindow) {
         if (!isLatestFromWindow(previousTimestamp)) {

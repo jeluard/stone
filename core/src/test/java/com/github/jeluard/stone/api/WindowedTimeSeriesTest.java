@@ -112,6 +112,9 @@ public class WindowedTimeSeriesTest {
     final Window window = Window.of(3).listenedBy(consolidationListener).consolidatedBy(MaxConsolidator.class);
     final WindowedTimeSeries timeSeries = new WindowedTimeSeries("id", 1, Arrays.asList(window), new DumbDispatcher());
     timeSeries.publish(1, 1);
+
+    Mockito.verify(consolidationListener, Mockito.never()).onConsolidation(Mockito.anyLong(), Mockito.<int[]>any());
+
     timeSeries.publish(9, 1);
     timeSeries.close();
 
