@@ -23,14 +23,19 @@ import com.github.jeluard.stone.dispatcher.sequential.SequentialDispatcher;
 import com.github.jeluard.stone.helper.Storages;
 import com.github.jeluard.stone.spi.Storage;
 import com.github.jeluard.stone.storage.memory.MemoryStorage;
+import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 public class WindowedTimeSeriesExample {
 
-  public static void main(final String[] args) throws IOException {
+  @Test
+  public void simpleWindowedTimeSeries() throws IOException {
     final Storage storage = new MemoryStorage(1000);
     final int size = 10;
     final Window window = Window.of(size).listenedBy(Storages.asConsolidationListener(storage, Logger.getAnonymousLogger())).consolidatedBy(MaxConsolidator.class);
@@ -39,19 +44,28 @@ public class WindowedTimeSeriesExample {
     final int value = 1234;
 
     //Initiate first window => Consolidator#accumulate
-    windowedTimeSeries.publish(now, value);
+    Assert.assertTrue(windowedTimeSeries.publish(now, value));
 
     //Last element of first window, consolidation is triggered
-    windowedTimeSeries.publish(now + size - 1, value);
+    Assert.assertTrue(windowedTimeSeries.publish(now + size - 1, value));
+
+    Assert.assertEquals(now + size - 1, (long) storage.end().get());
+    Assert.assertEquals(1, Iterables.size(storage.all()));
 
     //Initiate second window (even if first logical window value is missing)
-    windowedTimeSeries.publish(now + size + 1, value);
+    Assert.assertTrue(windowedTimeSeries.publish(now + size + 1, value));
  
     //Initiate third window, force consolidation of second window
-    windowedTimeSeries.publish(now + 2*size + 2, value);
+    Assert.assertTrue(windowedTimeSeries.publish(now + 2*size + 2, value));
  
+    Assert.assertEquals(now + 2*size - 1, (long) storage.end().get());
+    Assert.assertEquals(2, Iterables.size(storage.all()));
+
     //Force consolidation of last (third) window
     windowedTimeSeries.close();
+
+    Assert.assertEquals(now + 3*size - 1, (long) storage.end().get());
+    Assert.assertEquals(3, Iterables.size(storage.all()));
   }
 
 }

@@ -24,6 +24,7 @@
 
   <properties>
     <guayabaVersion>0.9.1</guayabaVersion>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>
 
   <dependencies>
@@ -116,6 +117,31 @@
       </plugins>
     </pluginManagement>
     <plugins>
+      <plugin>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>2.14</version>
+        <configuration>
+          <includes>
+           <include>**/**Example.java</include>
+          </includes>
+        </configuration>
+    <executions>
+        <execution>
+            <id>failsafe-integration-tests</id>
+            <phase>integration-test</phase>
+            <goals>
+                <goal>integration-test</goal>
+            </goals>
+        </execution>
+        <execution>
+            <id>failsafe-verify</id>
+            <phase>verify</phase>
+            <goals>
+                <goal>verify</goal>
+            </goals>
+        </execution>
+    </executions>
+      </plugin>
       <plugin>
         <groupId>com.theoryinpractise</groupId>
         <artifactId>clojure-maven-plugin</artifactId>

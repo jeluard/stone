@@ -22,9 +22,13 @@ import com.github.jeluard.stone.dispatcher.sequential.SequentialDispatcher;
 
 import java.util.Arrays;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 public class TimeSeriesExample {
 
-  public static void main(final String[] main) throws Exception {
+  @Test
+  public void simpleTimeSeries() throws Exception {
     final TimeSeries timeSeries = new TimeSeries("id", 2, Arrays.asList(new Listener() {
       @Override
       public void onPublication(long previousTimestamp, long currentTimestamp, int value) {
@@ -33,9 +37,9 @@ public class TimeSeriesExample {
     }), new SequentialDispatcher());
 
     final long now = System.currentTimeMillis();
-    timeSeries.publish(now, 1);//return true, trigger listener
-    timeSeries.publish(now+1, 1);//return false as do not match provided granularity
-    timeSeries.publish(now+2, 1);//return true, trigger listener
+    Assert.assertTrue(timeSeries.publish(now, 1));//return true, trigger listener
+    Assert.assertFalse(timeSeries.publish(now+1, 1));//return false as do not match provided granularity
+    Assert.assertTrue(timeSeries.publish(now+2, 1));//return true, trigger listener
     timeSeries.close();
   }
 

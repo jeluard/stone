@@ -18,6 +18,7 @@ package com.github.jeluard.stone.example;
 
 import com.github.jeluard.guayaba.util.concurrent.Scheduler;
 import com.github.jeluard.stone.api.Window;
+import com.github.jeluard.stone.consolidator.MaxConsolidator;
 import com.github.jeluard.stone.dispatcher.sequential.SequentialDispatcher;
 import com.github.jeluard.stone.helper.Loggers;
 import com.github.jeluard.stone.pattern.Poller;
@@ -30,6 +31,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 public class PollerExample {
 
@@ -74,9 +78,11 @@ public class PollerExample {
     return builder.toString();
   }
 
-  public static void main(final String[] main) throws Exception {
+  @Test
+  public void simplePoller() throws Exception {
     final Triggerer triggerer = new Triggerer();
-    final List<Window> windows = Arrays.asList();
+    final Window window = Window.of(3).consolidatedBy(MaxConsolidator.class);
+    final List<Window> windows = Arrays.asList(window);
     final Poller<String> poller = new Poller<String>(1000, windows, Poller.<String>defaultIdExtractor(), new Function<String, Future<Integer>>() {
       @Override
       public Future<Integer> apply(final String input) {
@@ -90,6 +96,8 @@ public class PollerExample {
     final Thread thread = new Thread(triggerer, "Triggerer");
     thread.start();
 
+    final String test = "test";
+    poller.enqueue(test);
     poller.enqueue("abcdefghi");
     poller.enqueue("abcdefghij");
 
@@ -107,6 +115,8 @@ public class PollerExample {
     }
 
     Thread.sleep(10000);
+
+    Assert.assertEquals(test.length(), poller.getReaders().get(test).get(window).all().iterator().next().second[0]);
 
     poller.cancel();
   }

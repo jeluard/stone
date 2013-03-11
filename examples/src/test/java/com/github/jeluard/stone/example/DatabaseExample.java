@@ -23,9 +23,12 @@ import com.github.jeluard.stone.dispatcher.sequential.SequentialDispatcher;
 import com.github.jeluard.stone.pattern.Database;
 import com.github.jeluard.stone.storage.memory.MemoryStorageFactory;
 
+import org.junit.Test;
+
 public class DatabaseExample {
 
-  public static void main(final String[] main) throws Exception {
+  @Test
+  public void simpleDatabase() throws Exception {
     final Database database = new Database(new SequentialDispatcher(), new MemoryStorageFactory());
 
     final TimeSeries timeSeries = database.createOrOpen("id", 1000, Window.of(10).consolidatedBy(MaxConsolidator.class));
