@@ -125,22 +125,22 @@
            <include>**/**Example.java</include>
           </includes>
         </configuration>
-    <executions>
-        <execution>
+        <executions>
+          <execution>
             <id>failsafe-integration-tests</id>
             <phase>integration-test</phase>
             <goals>
-                <goal>integration-test</goal>
+              <goal>integration-test</goal>
             </goals>
-        </execution>
-        <execution>
+          </execution>
+          <execution>
             <id>failsafe-verify</id>
             <phase>verify</phase>
             <goals>
-                <goal>verify</goal>
+              <goal>verify</goal>
             </goals>
-        </execution>
-    </executions>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>com.theoryinpractise</groupId>
