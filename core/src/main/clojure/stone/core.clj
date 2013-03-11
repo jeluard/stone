@@ -74,7 +74,7 @@
   (.publish ts timestamp value))
 
 (defn readers [^Database db id]
-  (.get (.getReaders db id)))
+  (.orNull (.getReaders db id)))
 
 (defn close
   ([^Closeable cl] (.close cl))
