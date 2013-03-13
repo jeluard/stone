@@ -39,6 +39,11 @@
       <artifactId>stone-storage-memory</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.github.jeluard.stone.integrations</groupId>
+      <artifactId>stone-integration-incanter</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 
 </project>
