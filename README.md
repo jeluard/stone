@@ -40,6 +40,9 @@ Dependending on the components you choose to use you will need to include some o
 
 #### Time series
 
+`Time series` is the lowest level abstration. `timestamp/value` pairs can be published to a time series and if valid pushed to every registered `listeners`.
+A `timestamp` is valid if strictly greater than previously accepted one modulo specified `granularity`.
+
 In Java:
 
 ```java
@@ -73,6 +76,9 @@ In clojure:
 
 #### Windowed time series
 
+Windowed `time series` build on top of time series and introduce the `window` concept. While in the same window every accepted `timestamp/value` pair is pushed to specified `consolidators`.
+When the `window` threshold is crossed (a window holds `size` consecutive timestamps) `consolidates` are pushed to specified `consolidation listeners`.
+
 In java:
 
 ```java
@@ -102,14 +108,6 @@ final WindowedTimeSeries windowedTimeSeries = new WindowedTimeSeries("id", 1, Ar
 ...
 final Iterable<Pair<Long, int[]>> all = storage.all();
 final Iterable<Pair<Long, int[]>> subset = storage.during(now, now+5);
-
-//Or you can you a Database to ease creation of WindowedTimeSeries sharing a StorageFactory and a Dispatcher
-final Database database = new Database(new SequentialDispatcher(), new MemoryStorageFactory());
-
-final TimeSeries timeSeries = database.createOrOpen("id", 1000, Window.of(10).consolidatedBy(MaxConsolidator.class));
-timeSeries.publish(System.currentTimeMillis(), 1);
-
-database.close();
 ```
 
 In clojure:
@@ -138,10 +136,12 @@ On top of basic API usage higher level patterns facilitates common usages.
 
 #### Database
 
+A `database` ease creation of `windowed time series` sharing `dispatcher` and `storage factory`.
+Each time series created will have a `storage` instance created per `id/window` couple.
+
 In java:
 
 ```java
-//You can create a Database to ease creation of WindowedTimeSeries sharing a StorageFactory and a Dispatcher
 final Database database = new Database(new SequentialDispatcher(), new MemoryStorageFactory());
 
 final TimeSeries timeSeries = database.createOrOpen("id", 1000, Window.of(10).consolidatedBy(MaxConsolidator.class));
@@ -167,10 +167,11 @@ In clojure:
 
 #### Poller
 
+A poller helps keeping regularly track of a unique metric for a collection of similar resources.
+
 In java:
 
 ```java
-//Poller helps when extracting periodically common values from a collection of resources
 final Poller<String> poller = new Poller<String>(1000, windows, Poller.<String>defaultIdExtractor(), new Function<String, Future<Integer>>() {
   @Override
   public Future<Integer> apply(final String input) {
