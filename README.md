@@ -46,9 +46,8 @@ A `timestamp` is valid if strictly greater than previously accepted one modulo s
 In Java:
 
 ```java
-//Create a TimeSeries. Each data published will be passed to all provided Listener.
 final TimeSeries timeSeries = new TimeSeries("timeseries", 1, Arrays.asList(new Listener() {
-  //Will be called for each value published
+  //Will be called for each valid value published
   public void onPublication(long previousTimestamp, long currentTimestamp, int value) {
     System.out.println("Received value"+value);
   }
@@ -82,10 +81,6 @@ When the `window` threshold is crossed (a window holds `size` consecutive timest
 In java:
 
 ```java
-//You can also create windowed TimeSeries.
-//Data will then be consolidated each time window boundaries are crossed using Consolidators
-//and passed to some ConsolidationListeners.
-
 final Window window = Window.of(10).listenedBy(new ConsolidationListener(){
   public void onConsolidation(long timestamp, int[] consolidates) {
     System.out.println("Received consolidates"+Arrays.toString(consolidates));
