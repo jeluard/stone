@@ -17,6 +17,7 @@
 package com.github.jeluard.stone.api;
 
 import com.github.jeluard.stone.consolidator.MaxConsolidator;
+import com.github.jeluard.stone.consolidator.MinConsolidator;
 import com.github.jeluard.stone.spi.Dispatcher;
 import com.google.common.base.Optional;
 
@@ -72,13 +73,17 @@ public class WindowedTimeSeriesTest {
   @Test
   public void shouldConsolidationBeTriggeredWhenLastElementOfWindowIsPublished() throws IOException {
     final ConsolidationListener consolidationListener = Mockito.mock(ConsolidationListener.class);
-    final Window window = Window.of(2).listenedBy(consolidationListener).consolidatedBy(MaxConsolidator.class);
+    final Window window = Window.of(3).listenedBy(consolidationListener).consolidatedBy(MaxConsolidator.class);
     final WindowedTimeSeries timeSeries = new WindowedTimeSeries("id", 1, Arrays.asList(window), new DumbDispatcher());
     timeSeries.publish(1, 1);
     timeSeries.publish(2, 1);
-    timeSeries.close();
+    timeSeries.publish(3, 1);
 
     Mockito.verify(consolidationListener).onConsolidation(Mockito.anyLong(), Mockito.<int[]>any());
+
+    timeSeries.close();
+
+    Mockito.verifyNoMoreInteractions(consolidationListener);
   }
 
   @Test
@@ -91,6 +96,23 @@ public class WindowedTimeSeriesTest {
     timeSeries.close();
 
     Mockito.verify(consolidationListener).onConsolidation(Mockito.anyLong(), Mockito.<int[]>any());
+  }
+
+  @Test
+  public void shouldConsolidationBeTriggeredWhenLastElementOfWindowIsPublished3() throws IOException {
+    final ConsolidationListener consolidationListener = Mockito.mock(ConsolidationListener.class);
+    final Window window = Window.of(3).listenedBy(consolidationListener).consolidatedBy(MinConsolidator.class, MaxConsolidator.class);
+    final WindowedTimeSeries timeSeries = new WindowedTimeSeries("id", 1, Arrays.asList(window), new DumbDispatcher());
+    final long now = System.currentTimeMillis();
+    timeSeries.publish(now, 1);
+    timeSeries.publish(now+1, 2);
+    timeSeries.publish(now+2, 3);
+
+    Mockito.verify(consolidationListener).onConsolidation(Mockito.anyLong(), Mockito.<int[]>any());
+
+    timeSeries.close();
+
+    Mockito.verifyNoMoreInteractions(consolidationListener);
   }
 
   @Test
