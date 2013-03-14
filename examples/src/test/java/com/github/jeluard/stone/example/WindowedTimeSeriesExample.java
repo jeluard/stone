@@ -51,15 +51,17 @@ public class WindowedTimeSeriesExample {
 
     Assert.assertEquals(now + size - 1, (long) storage.end().get());
     Assert.assertEquals(1, Iterables.size(storage.all()));
+    Assert.assertEquals(value, storage.all().iterator().next().second[0]);
 
     //Initiate second window (even if first logical window value is missing)
-    Assert.assertTrue(windowedTimeSeries.publish(now + size + 1, value));
+    Assert.assertTrue(windowedTimeSeries.publish(now + size + 1, value+1));
  
     //Initiate third window, force consolidation of second window
     Assert.assertTrue(windowedTimeSeries.publish(now + 2*size + 2, value));
  
     Assert.assertEquals(now + 2*size - 1, (long) storage.end().get());
     Assert.assertEquals(2, Iterables.size(storage.all()));
+    Assert.assertEquals(value+1, storage.all().iterator().next().second[0]);
 
     //Force consolidation of last (third) window
     windowedTimeSeries.close();
