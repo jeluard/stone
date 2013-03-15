@@ -12,10 +12,18 @@
 
 (def ^:dynamic *default-granularity* 1)
 
-(defn- wrap-as-listener [fn]
+(defn- wrap-if-not-instance [type x wrapper]
+  (if (instance? type x)
+    x
+    (wrapper x)))
+
+(defn- wrap-fn-as-listener [fn]
   (reify Listener
     (onPublication [this previousTimestamp currentTimestamp value]
       (fn previousTimestamp currentTimestamp value))))
+
+(defn- wrap-as-listener [fn]
+  (wrap-if-not-instance Listener fn wrap-fn-as-listener))
 
 (defn create-ts
   ([id listeners dispatcher] (create-ts id *default-granularity* listeners dispatcher))
@@ -50,9 +58,10 @@
   ([storage logger] (Storages/asConsolidationListener storage logger)))
 
 (defn- wrap-as-consolidation-listener [x]
-  (if (instance? Storage x)
-    (wrap-storage-as-consolidation-listener x)
-    (wrap-fn-as-consolidation-listener x)))
+  (wrap-if-not-instance ConsolidationListener x
+    (if (instance? Storage x)
+      wrap-storage-as-consolidation-listener
+      wrap-fn-as-consolidation-listener)))
 
 (defn window
   ([size consolidatorTypes] (window size consolidatorTypes '()))
@@ -88,9 +97,7 @@
       (fn input))))
 
 (defn- wrap-as-function [fn]
-  (if (instance? Function fn)
-    fn
-    (wrap-fn-as-function fn)))
+  (wrap-if-not-instance Function fn wrap-fn-as-function))
 
 (defn create-poller
   ([period windows metric-extractor dispatcher storage-factory scheduler-executor-service]
