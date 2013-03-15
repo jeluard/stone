@@ -16,12 +16,16 @@
  */
 package com.github.jeluard.stone.example;
 
+import com.github.jeluard.stone.api.ConsolidationListener;
 import com.github.jeluard.stone.api.TimeSeries;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.consolidator.MaxConsolidator;
+import com.github.jeluard.stone.consolidator.MinConsolidator;
 import com.github.jeluard.stone.dispatcher.sequential.SequentialDispatcher;
 import com.github.jeluard.stone.pattern.Database;
 import com.github.jeluard.stone.storage.memory.MemoryStorageFactory;
+
+import java.util.Arrays;
 
 import org.junit.Test;
 
@@ -31,11 +35,13 @@ public class DatabaseExample {
   public void simpleDatabase() throws Exception {
     final Database database = new Database(new SequentialDispatcher(), new MemoryStorageFactory());
 
-    final TimeSeries timeSeries = database.createOrOpen("id", 1000, Window.of(10).consolidatedBy(MaxConsolidator.class));
+    final TimeSeries timeSeries = database.createOrOpen("id", 1000, Window.of(3).listenedBy(new ConsolidationListener() {
+      @Override
+      public void onConsolidation(long timestamp, int[] consolidates) {
+        System.out.println("Got consolidates:: "+ Arrays.toString(consolidates));
+      }
+    }).consolidatedBy(MaxConsolidator.class, MinConsolidator.class));
     timeSeries.publish(System.currentTimeMillis(), 1);
-
-    final TimeSeries timeSeries2 = database.createOrOpen("id2", 1000, Window.of(10).consolidatedBy(MaxConsolidator.class));
-    timeSeries2.publish(System.currentTimeMillis(), 1);
 
     database.close();
   }
