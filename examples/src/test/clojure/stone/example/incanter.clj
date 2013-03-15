@@ -1,4 +1,4 @@
-(ns stone.examples-incanter
+(ns stone.example.incanter
   (:use [stone.core :as st]
         [stone.incanter.core :as st-in]
         [incanter.core :as in]
