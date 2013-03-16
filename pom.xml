@@ -71,6 +71,11 @@
       <version>0.5.0</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>jline</groupId>
+      <artifactId>jline</artifactId>
+      <version>1.0</version>
+    </dependency>
   </dependencies>
 
   <dependencyManagement>
