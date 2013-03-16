@@ -1,8 +1,6 @@
 (ns stone.example.incanter
   (:use [stone.core :as st]
-        [stone.incanter.core :as st-in]
-        [incanter.core :as in]
-        [incanter.charts :as in-c])
+        [stone.incanter :as st-in])
   (:import
     (com.github.jeluard.stone.consolidator MaxConsolidator MinConsolidator)
     (com.github.jeluard.stone.dispatcher.sequential SequentialDispatcher)
@@ -17,12 +15,13 @@
 (def wts (st/create-windowed-ts "windowed-timeseries" windows dispatcher))
 
 (def now (System/currentTimeMillis))
-(st/publish wts now 1)
-(st/publish wts (+ now 1) 2)
-(st/publish wts (+ now 2) 3)
 
-(def data (st-in/fetch-dataset storage))
+(dotimes [i 1000]
+  (st/publish wts (+ now i) (rand-int 100)))
 
-;;(in/view (in-c/histogram data))
+;;(st-in/histogram storage 1)
+;;(st-in/time-series-plot storage 1)
+
+;;(view (time-series-plot :timestamp :value-1 :data data))
 
 (st/close wts)
