@@ -9,8 +9,7 @@
 (def dispatcher (SequentialDispatcher.))
 (def storage (MemoryStorage. 1000))
 
-(def windows (list (window 3 (list MaxConsolidator MinConsolidator)
-                             (list storage (fn [a b] (println (str "Got consolidates " b)))))))
+(def windows (list (window 3 (list MaxConsolidator MinConsolidator) (list storage))))
 
 (def wts (st/create-windowed-ts "windowed-timeseries" windows dispatcher))
 
@@ -19,9 +18,19 @@
 (dotimes [i 1000]
   (st/publish wts (+ now i) (rand-int 100)))
 
-;;(st-in/histogram storage 1)
-;;(st-in/time-series-plot storage 1)
+(def st-dataset (extract-dataset storage))
 
-;;(view (time-series-plot :timestamp :value-1 :data data))
+;;Usage:
+;;(use 'stone.incanter)
+;;(use 'stone.example.incanter)
+;;(use '(incanter core charts))
+;;
+;;(view (with-data st-dataset
+;;  (histogram (value-nth 1))))
+;;
+;;(view (with-data st-dataset
+;;  (time-series-plot timestamp (value-nth 1))))
+
+;;(st-in/histogram storage 1)
 
 (st/close wts)
