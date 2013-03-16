@@ -74,7 +74,7 @@ public final class MemoryStorage extends Storage {
   public void append(final long timestamp, final int[] values) {
     final int currentIndex = index();
     this.timestamps.set(currentIndex, timestamp);
-    this.values.set(currentIndex, values);
+    this.values.set(currentIndex, values.clone());
   }
 
 }

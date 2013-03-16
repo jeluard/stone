@@ -38,7 +38,7 @@ public interface ConsolidationListener {
    * Different thread might invoke this method but never concurrently. Consecutive {@code timestamp} values are guaranteed to be monotonically increasing.
    *
    * @param timestamp end timestamp for window just crossed
-   * @param consolidates 
+   * @param consolidates array of consolidated values in the {@link Window#getConsolidatorTypes()} order; array will be reused so don't store as is
    */
   void onConsolidation(long timestamp, int[] consolidates);
 

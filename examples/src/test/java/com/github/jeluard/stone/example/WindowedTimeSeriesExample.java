@@ -16,6 +16,7 @@
  */
 package com.github.jeluard.stone.example;
 
+import com.github.jeluard.guayaba.base.Pair;
 import com.github.jeluard.stone.api.Window;
 import com.github.jeluard.stone.api.WindowedTimeSeries;
 import com.github.jeluard.stone.consolidator.MaxConsolidator;
@@ -27,6 +28,7 @@ import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.logging.Logger;
 
 import org.junit.Assert;
@@ -61,7 +63,9 @@ public class WindowedTimeSeriesExample {
  
     Assert.assertEquals(now + 2*size - 1, (long) storage.end().get());
     Assert.assertEquals(2, Iterables.size(storage.all()));
-    Assert.assertEquals(value+1, storage.all().iterator().next().second[0]);
+    final Iterator<Pair<Long, int[]>> pair = storage.all().iterator();
+    pair.next();
+    Assert.assertEquals(value+1, pair.next().second[0]);
 
     //Force consolidation of last (third) window
     windowedTimeSeries.close();

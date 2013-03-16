@@ -89,6 +89,20 @@ public abstract class BaseStorageTest<T extends Storage> {
   }
 
   @Test
+  public void shouldNotRelyOnProvidedArray() throws Exception {
+    final T storage = createStorage();
+    final long timestamp = 12345L;
+    final int[] consolidates = new int[]{1};
+    storage.append(timestamp, consolidates);
+    consolidates[0] = 2;
+    storage.append(timestamp+1, consolidates);
+
+    final Iterator<Pair<Long, int[]>> iterator = storage.all().iterator();
+    Assert.assertArrayEquals(new int[]{1}, iterator.next().second);
+    Assert.assertArrayEquals(new int[]{2}, iterator.next().second);
+  }
+
+  @Test
   public void shouldNewConsolidatesBeLatestFromAll() throws Exception {
     final T storage = createStorage();
     final long timestamp = 12345L;
