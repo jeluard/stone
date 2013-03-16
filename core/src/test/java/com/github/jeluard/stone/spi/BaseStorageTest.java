@@ -22,6 +22,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Assert;
@@ -66,6 +67,24 @@ public abstract class BaseStorageTest<T extends Storage> {
     if (!Iterables.isEmpty(all)) {
       Assert.assertTrue(storage.beginning().isPresent());
       Assert.assertTrue(storage.end().isPresent());
+    }
+  }
+
+  @Test
+  public void shouldOlderValuesBeEvicted() throws Exception {
+    final int size = 10;
+    final T storage = createStorage(size);
+    final long timestamp = 12345L;
+    final int iterations = 25;
+    for (int i = 0; i < iterations; i++) {
+      storage.append(timestamp+i, new int[]{i});
+    }
+
+    final Iterator<Pair<Long, int[]>> iterator = storage.all().iterator();
+    for (int i = (iterations-size); i < iterations; i++) {
+      final Pair<Long, int[]> pair = iterator.next();
+      Assert.assertEquals(timestamp+i, (long) pair.first);
+      Assert.assertArrayEquals(new int[]{i}, pair.second);
     }
   }
 
