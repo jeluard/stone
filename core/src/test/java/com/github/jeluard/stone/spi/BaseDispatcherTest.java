@@ -65,6 +65,7 @@ public abstract class BaseDispatcherTest<T extends Dispatcher> {
     dispatcher.dispatch(now, now+1, 1, new Listener[0]);
   }
 
+  /*TODO
   @Test
   public void shouldListenerExceptionBeDelegated() {
     final Dispatcher.ExceptionHandler exceptionHandler = Mockito.mock(Dispatcher.ExceptionHandler.class);
@@ -73,7 +74,7 @@ public abstract class BaseDispatcherTest<T extends Dispatcher> {
     dispatcher.dispatch(now, now+1, 1, new Listener[]{createFailingListener()});
 
     Mockito.verify(exceptionHandler).onException(Mockito.<Exception>any());
-  }
+  }*/
 
   @Test
   public void shouldFailingExceptionListenerBeHandled() {
