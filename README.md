@@ -200,6 +200,21 @@ In clojure:
 
 More [examples](examples/src/test) explore advanced features.
 
+## Extensions
+
+A number of extension points are [defined](core/src/main/java/com/github/jeluard/stone/spi) with some defaults [implementations](implementations):
+* `dispatcher` responsible for calling `listeners` after a publication has been issued
+* `storage` which can be used to store generated consolidates
+
+## Integrations
+
+`stone` ships with integration [modules](integrations) for some popular tool.
+
+### Incanter
+
+Wrap time series data as a [dataset](https://github.com/liebke/incanter/wiki/datasets) and benefit from [incanter](https://github.com/liebke/incanter) [statistical](https://github.com/liebke/incanter/wiki/statistics-examples) and [charting](https://github.com/liebke/incanter/wiki/Sample-Plots-in-Incanter) power.
+Find some examples [here](examples/src/test/clojure/stone/example/incanter.clj).
+
 ## License
 
 Released under [Apache 2 license](http://www.apache.org/licenses/LICENSE-2.0.html).
