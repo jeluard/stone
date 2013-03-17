@@ -31,6 +31,4 @@
 ;;(view (with-data st-dataset
 ;;  (time-series-plot timestamp (value-nth 1))))
 
-;;(st-in/histogram storage 1)
-
 (st/close wts)
